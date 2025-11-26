@@ -47,9 +47,10 @@ python manage.py createsuperuser
 **Что делает:** 
 - Создаёт администратора для доступа к панели Django (`/admin`).
 
-## Установка django-phonenumber-field
+## Установка phonenumbers и django-phonenumber-field
 ```bash
+pip install phonenumbers
 pip install django-phonenumber-field
 ```
 **Что делает:** 
-- Устанавливает библиотеку django-phonenumber-field для работы с номерами телефонов
+- Устанавливает пакеты  phonenumbers и django-phonenumber-field для работы с номерами телефонов
