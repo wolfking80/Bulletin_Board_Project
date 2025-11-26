@@ -1,7 +1,8 @@
 from django.shortcuts import render
-from django.http import HttpResponse
+from ads.models import Advertisement
 
-# Create your views here.
 
-def homepage_view(request):
-  return HttpResponse('Главная страница КУПИ-ПРОДАЙ')
+def get_ads_list(request):
+  ads = Advertisement.objects.all()
+  
+  return render(request=request, template_name='ads/ad_list.html', context={'ads': ads})

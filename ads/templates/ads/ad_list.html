@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Объявления</title>
+</head>
+<body>
+  <h1>Все объявления</h1>
+
+  {% if ads %}
+    {% for ad in ads%}
+      <div class='ad-container' style = "text-align: center; border: 1px solid darkblue; margin: 20px; padding: 10px">
+        <h2>Название: {{ad.title}}</h2>
+        <p>Текст: {{ad.text}}</p>
+        <h3>Цена: {{ad.price}}</h3>
+        <p>Телефон: {{ad.contacts}}</p>
+        <small>Дата публикации: {{ad.created_at}}</small>
+      
+      </div>
+    {% endfor%}
+  {% else %}
+    <p>Объявления ещё никто не выложил! Будут завтра!</p>
+    
+  {% endif %}  
+</body>
+</html>
