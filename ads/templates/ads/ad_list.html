@@ -14,10 +14,9 @@
         {% if ad.goods_image %}
           <img src="{{ ad.goods_image.url }}" alt="{{ ad.title }}" style="max-width: 300px; max-height: 200px;">
         {% endif %}
-        <h2>Название: {{ad.title}}</h2>
+        <h2>Название: <a href="{% url 'ad_details' ad_id=ad.id %}">{{ad.title}}</a></h2>
         <p>Текст: {{ad.text}}</p>
         <h3>Цена: {{ad.price}}</h3>
-        <p>Телефон: {{ad.contacts}}</p>
         <small>Дата публикации: {{ad.created_at}}</small>
       
       </div>
