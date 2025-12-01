@@ -10,7 +10,10 @@
 </head>
 <body>
   <header>Это пока только заготовка шапки
-    <nav>А тут будет навигационное меню</nav>
+    <nav>
+      <a href = "{% url 'ad_list' %}">Все объявления</a>
+      <a href = "{% url 'ad_add' %}">Создать объявление</a>
+    </nav>
   </header>
   <main>{% block page_content %}{% endblock page_content %}</main>
   <footer>&copy; Все права защищены законодательством РФ 2025</footer>
