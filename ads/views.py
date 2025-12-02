@@ -19,15 +19,51 @@ def create_ad(request):
     return render(request, 'ads/ad_add.html')
   
   if request.method == "POST":
-    ad = Advertisement(
-      title = request.POST.get('title'),
-      text = request.POST.get('text'),
-      price = request.POST.get('price'),
-      contacts = request.POST.get('contacts')
+    title = request.POST.get('title').strip()
+    text = request.POST.get('text').strip()
+    price_str = request.POST.get('price', '').strip()
+    contacts = request.POST.get('contacts').strip()
+    
+    errors = {}
+    
+    if not title:
+      errors['title'] = "Заголовок объявления обязателен!"
+    if not text:
+      errors['text'] = "Текст объявления обязателен!"
+    if not contacts:
+            errors['contacts'] = "Контактный телефон обязателен!"
+            
+    price = None
+    if price_str:
+            try:
+                price = float(price_str)
+                if price < 0:
+                    errors['price'] = "Цена не может быть отрицательной!"
+            except ValueError:
+                errors['price'] = "Цена должна быть числом!"        
+      
+    
+    if not errors:
+      ad = Advertisement(
+      title = title,
+      text = text,
+      contacts = contacts
     )
-    if 'goods_image' in request.FILES:
-      ad.goods_image = request.FILES['goods_image']
+      if price is not None:
+        ad.price = price
+      if 'goods_image' in request.FILES:
+        ad.goods_image = request.FILES['goods_image']
       
-    ad.save()
-      
-    return redirect('ad_details', ad_id = ad.id)
+      ad.save()
+    
+      return redirect('ad_details', ad_id = ad.id)
+    
+    else:
+      context = {
+        'errors': errors,
+        'title': title,
+        'text': text,
+        'price': price_str,
+        'contacts': contacts
+      }
+      return render(request, 'ads/ad_add.html', context)
