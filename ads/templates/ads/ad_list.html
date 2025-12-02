@@ -13,7 +13,12 @@
             {% endif %}
             <h2>Название: <a href="{% url 'ad_details' ad_id=ad.id %}">{{ad.title}}</a></h2>
             <p>Текст: {{ad.text}}</p>
-            <h3>Цена: {{ad.price}}</h3>
+              Цена: 
+            {% if ad.price is not None %}
+              {{ ad.price }} руб.
+            {% else %}
+              Цена не указана
+            {% endif %}
             <small>Дата публикации: {{ad.created_at}}</small>
           </div>
         {% endfor%}

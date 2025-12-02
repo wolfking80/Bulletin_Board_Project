@@ -5,8 +5,11 @@
   {% block page_content %}
     <a href="{% url 'ad_list'%}">&larr;Назад</a>
     <h1>{{ad.title}}</h1>
-    <img src="{{ ad.goods_image.url }}" alt="{{ ad.title }}" style="max-width: 300px; max-height: 200px;">
+    {% if ad.goods_image %}
+      <img src="{{ ad.goods_image.url }}" alt="{{ ad.title }}" style="max-width: 300px; max-height: 200px;">
+    {% endif %}  
     <p>{{ad.text}}</p>
-    <p>Телефон: {{ad.contacts}}</p>
+    <p>{% if ad.price is not None %} Цена: {{ ad.price }} {% else %} Цена не указана {% endif %}</p>
+    <p>{% if ad.contacts %} {{ ad.contacts }} {% else %} Контакты не указаны {% endif %}</p>
     <small>Дата публикации: {{ad.created_at}}</small>
   {% endblock page_content %}
