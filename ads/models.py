@@ -4,8 +4,8 @@ from phonenumber_field.modelfields import PhoneNumberField
 # Create your models here.
 
 class Advertisement(models.Model):
-  title = models.CharField(max_length=200, verbose_name='Заголовок')
-  text = models.TextField(verbose_name='Описание')
+  title = models.CharField(max_length=200, blank=True, verbose_name='Заголовок')
+  text = models.TextField(blank=True, verbose_name='Описание')
   goods_image = models.ImageField(
     upload_to='advertisements/',
     verbose_name='Изображение товара',
@@ -22,7 +22,6 @@ class Advertisement(models.Model):
   contacts = PhoneNumberField(
     ("Контактный телефон"),
     blank=True,
-    null=True,
     help_text="В формате +7XXXXXXXXXX"
 )
   created_at = models.DateTimeField(auto_now_add=True)

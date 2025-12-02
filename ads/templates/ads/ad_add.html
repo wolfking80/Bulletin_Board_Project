@@ -8,57 +8,7 @@
     <form method = "POST" enctype="multipart/form-data">
       {% csrf_token %}
 
-      <div>
-        <label for="titleInput">Заголовок объявления:</label>
-        <input 
-          id="titleInput" 
-          name="title" 
-          type="text"
-          value = "{{ title|default:'' }}" 
-          placeholder="Название (максимум - 200 символов)">
-
-        {% if errors.title %}
-          <div class="errors-container">{{errors.title}}</div>
-        {% endif %}   
-      </div>
-      
-      <div>
-        <label for="textInput">Текст объявления:</label>
-        <textarea id="textInput" name="text" rows="5" >{{ text|default:'' }}</textarea>
-
-        {% if errors.text %}
-          <div class="errors-container">{{errors.text}}</div>
-        {% endif %} 
-      </div>
-
-      <div>
-        <label for="imageInput">Изображение товара (необязательно):</label>
-        <input id="imageInput" name="goods_image" type="file" accept="image/*">
-        <small>В формате JPG, PNG, GIF</small>
-      </div>
-
-      <div>
-        <label for="priceInput">Стоимость товара:</label>
-        <input id="priceInput" name="price" type="number" min="0" step="0.01" placeholder="0.00" value = "{{ price|default:'' }}">
-
-        {% if errors.price %}
-          <div class="errors-container">{{errors.price}}</div>
-        {% endif %} 
-      </div>
-
-      <div>
-        <label for="contactsInput">Контактный телефон:</label>
-        <input 
-          id="contactsInput" 
-          name="contacts" 
-          type="tel"
-          value="{{ contacts|default:'' }}"
-          placeholder="+7 (XXX) XXX-XX-XX">
-
-        {% if errors.contacts %}
-          <div class="errors-container">{{errors.contacts}}</div>
-        {% endif %} 
-      </div>
+      {{ form.as_p }}
 
       <button type="submit">Опубликовать объявление</button>
 
