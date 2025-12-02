@@ -15,9 +15,6 @@ def get_ad_details(request, ad_id):
 
 
 def create_ad(request):
-  if request.method == "GET":
-    return render(request, 'ads/ad_add.html')
-  
   if request.method == "POST":
     title = request.POST.get('title').strip()
     text = request.POST.get('text').strip()
@@ -67,3 +64,5 @@ def create_ad(request):
         'contacts': contacts
       }
       return render(request, 'ads/ad_add.html', context)
+    
+  return render(request, 'ads/ad_add.html')
