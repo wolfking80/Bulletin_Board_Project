@@ -22,7 +22,7 @@
         <!-- Тело карточки -->
         <div class="card-body">
           <h5 class="card-title">
-            <a href="{% url 'ad_details' ad_id=ad.id %}" class="text-decoration-none">
+            <a href="{% url 'ads:ad_details' ad_id=ad.id %}" class="text-decoration-none">
               {{ ad.title }}
             </a>
           </h5>
@@ -48,7 +48,7 @@
             <small class="text-muted">
               {{ ad.created_at|date:"d.m.Y H:i" }}
             </small>
-            <a href="{% url 'ad_details' ad_id=ad.id %}" class="btn btn-sm btn-outline-primary">
+            <a href="{% url 'ads:ad_details' ad_id=ad.id %}" class="btn btn-sm btn-outline-primary">
               Подробнее
             </a>
           </div>
@@ -64,7 +64,7 @@
     <h4 class="alert-heading">Объявлений пока нет!</h4>
     <p>Будьте первым, кто разместит объявление на нашей доске.</p>
     <hr>
-    <a href="{% url 'ad_add' %}" class="btn btn-success">
+    <a href="{% url 'ads:ad_add' %}" class="btn btn-success">
       Создать первое объявление
     </a>
   </div>

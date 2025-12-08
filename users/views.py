@@ -8,7 +8,7 @@ def register_view(request):
     
     if form.is_valid():
       form.save()
-      return redirect('ad_list')
+      return redirect('ads:ad_list')
     else:
       return render(request, 'users/register.html', {'form': form})
     

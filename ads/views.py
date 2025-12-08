@@ -23,7 +23,7 @@ def create_ad(request):
     form = AdvertisementForm(request.POST, request.FILES)
     if form.is_valid():
       ad = form.save()  # Сохраняем в БД
-      return redirect('ad_details', ad_id=ad.id)
+      return redirect('ads:ad_details', ad_id=ad.id)
   else:
       form = AdvertisementForm()
     
@@ -45,7 +45,7 @@ def update_ad(request, ad_id):
     if form.is_valid():
       updated_ad = form.save()
       
-      return redirect("ad_details", ad_id = updated_ad.id)
+      return redirect("ads:ad_details", ad_id = updated_ad.id)
     else:
       return render(request, 'ads/ad_form.html', {
         'form': form,
@@ -68,6 +68,6 @@ def delete_ad(request, ad_id):
   if request.method == "POST":
     ad.delete()
     
-    return redirect('ad_list')
+    return redirect('ads:ad_list')
   
   return render(request, 'ads/confirm_ad_delete.html', {'ad': ad})   
