@@ -4,6 +4,7 @@
 
   {% block page_content %}
     <a href="{% url 'ad_list'%}">&larr;Назад</a>
+
     <h1>{{ad.title}}</h1>
     {% if ad.goods_image %}
       <img src="{{ ad.goods_image.url }}" alt="{{ ad.title }}" style="max-width: 300px; max-height: 200px;">
@@ -11,5 +12,7 @@
     <p>{{ad.text}}</p>
     <p>{% if ad.price is not None %} Цена: {{ ad.price }} {% else %} Цена не указана {% endif %}</p>
     <p>{% if ad.contacts %} {{ ad.contacts }} {% else %} Контакты не указаны {% endif %}</p>
-    <small>Дата публикации: {{ad.created_at}}</small>
+    <p>Дата публикации: {{ad.created_at|date:"d.m.Y H:i"}}<p>
+
+  <a href="{% url 'edit_ad' ad.id %}">Редактировать объявление</a> 
   {% endblock page_content %}
