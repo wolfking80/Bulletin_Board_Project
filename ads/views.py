@@ -63,5 +63,11 @@ def update_ad(request, ad_id):
   
   
 def delete_ad(request, ad_id):
-  get_object_or_404(Advertisement, id = ad_id).delete()
-  return redirect('ad_list')    
+  ad = get_object_or_404(Advertisement, id = ad_id)
+  
+  if request.method == "POST":
+    ad.delete()
+    
+    return redirect('ad_list')
+  
+  return render(request, 'ads/confirm_ad_delete.html', {'ad': ad})   

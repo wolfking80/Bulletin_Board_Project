@@ -15,10 +15,6 @@
     <p>Дата публикации: {{ad.created_at|date:"d.m.Y H:i"}}<p>
 
   <a href="{% url 'edit_ad' ad.id %}">Редактировать объявление</a>
-
-  <form method="POST" action="{% url 'delete_ad' ad.id %}">
-      {% csrf_token %}
-
-      <button type='submit'>Удалить объявление</button>
-  </form>    
+  <a href="{% url 'delete_ad' ad.id %}">Удалить объявление</a>
+  
   {% endblock page_content %}
