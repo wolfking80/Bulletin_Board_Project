@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% load django_bootstrap5 %}
+
+{% block page_content %}
+  <form method="POST">
+    {% csrf_token %}
+    
+    <div class='w-50 mx-auto'>
+      <h1 class="text-center">Регистрация</h1>
+      {% bootstrap_form form %}
+      <button type="submit" class="btn btn-dark w-100">Создать аккаунт</button>
+    </div>
+  </form>
+{% endblock page_content %}
