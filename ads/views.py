@@ -16,18 +16,27 @@ def get_ad_details(request, ad_id):
 
 
 def create_ad(request):
+  title = "Создать объявление"
+  submit_button_text = "Опубликовать"
+  
   if request.method == "POST":
     form = AdvertisementForm(request.POST, request.FILES)
     if form.is_valid():
       ad = form.save()  # Сохраняем в БД
       return redirect('ad_details', ad_id=ad.id)
-    else:
+  else:
       form = AdvertisementForm()
     
-  return render(request, 'ads/ad_add.html', {'form': form})
+  return render(request, 'ads/ad_form.html', {
+    'form': form, 
+    'title': title,
+    'submit_button_text': submit_button_text
+    })
   
   
 def update_ad(request, ad_id):
+  title = "Редактировать объявление"
+  submit_button_text = "Сохранить"
   ad = get_object_or_404(Advertisement, id = ad_id)
   
   if request.method == "POST":
@@ -38,8 +47,16 @@ def update_ad(request, ad_id):
       
       return redirect("ad_details", ad_id = updated_ad.id)
     else:
-      return render(request, 'ads/ad_update.html', context={"form": form})
+      return render(request, 'ads/ad_form.html', {
+        'form': form,
+        'title': title,
+        'submit_button_text': submit_button_text
+        })
     
   form = AdvertisementForm(instance=ad)
   
-  return render(request, 'ads/ad_update.html', context={"form": form})  
+  return render(request, 'ads/ad_form.html', {
+    'form': form,
+    'title': title,
+    'submit_button_text': submit_button_text
+    })  
