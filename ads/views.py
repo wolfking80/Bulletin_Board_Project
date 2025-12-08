@@ -59,4 +59,9 @@ def update_ad(request, ad_id):
     'form': form,
     'title': title,
     'submit_button_text': submit_button_text
-    })  
+    })
+  
+  
+def delete_ad(request, ad_id):
+  get_object_or_404(Advertisement, id = ad_id).delete()
+  return redirect('ad_list')    
