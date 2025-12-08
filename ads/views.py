@@ -1,4 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+
 from ads.models import Advertisement
 from ads.forms import AdvertisementForm
 
@@ -15,6 +17,7 @@ def get_ad_details(request, ad_id):
   return render(request, 'ads/ad_details.html', {'ad': ad_for_view})
 
 
+@login_required
 def create_ad(request):
   title = "Создать объявление"
   submit_button_text = "Опубликовать"
@@ -33,7 +36,8 @@ def create_ad(request):
     'submit_button_text': submit_button_text
     })
   
-  
+
+@login_required 
 def update_ad(request, ad_id):
   title = "Редактировать объявление"
   submit_button_text = "Сохранить"
@@ -61,7 +65,8 @@ def update_ad(request, ad_id):
     'submit_button_text': submit_button_text
     })
   
-  
+
+@login_required 
 def delete_ad(request, ad_id):
   ad = get_object_or_404(Advertisement, id = ad_id)
   

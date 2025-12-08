@@ -31,10 +31,22 @@
               <a class="nav-link" aria-current="page" href="{% url 'ads:ad_add' %}">Добавить объявление</a>
             </li>
           </ul>
-          <ul class="navbar-nav">
+          <ul class="navbar-nav ms-auto">
+            {% if request.user.is_authenticated %}
+            <li class="nav-item">
+              <a class="nav-link disabled" href="#">Добро пожаловать, {{ request.user }}!</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" aria-current="page" href="{% url 'users:logout' %}">Выйти из аккаунта</a>
+            </li>
+            {% else %}
+            <li class="nav-item">
+              <a class="nav-link" aria-current="page" href="{% url 'users:login' %}">Войти</a>
+            </li>
             <li class="nav-item">
               <a class="nav-link" aria-current="page" href="{% url 'users:registration' %}">Регистрация</a>
             </li>
+            {% endif %}
           </ul>
         </div>
       </div>
