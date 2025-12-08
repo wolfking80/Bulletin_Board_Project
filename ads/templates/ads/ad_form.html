@@ -1,22 +1,49 @@
 {% extends 'base.html' %}
+{% load django_bootstrap5 %}
 
-{% block page_title %}{{ title }}{% endblock page_title %}
+{% block page_title %}{{ title }}{% endblock %}
 
-  {% block page_content %}
-    <h1>{{ title }}</h1>
-    
-    <form method = "POST" enctype="multipart/form-data">
-      {% csrf_token %}
+{% block page_content %}
+<div class="container mt-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <!-- Карточка с формой -->
+      <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+          <h2 class="card-title mb-0">{{ title }}</h2>
+        </div>
 
-      {% for field in form %}
-        <div>
-          {{ field.label_tag}}
-          {{ field }}
-          {{ field.errors }}
-        </div> 
-      {% endfor %}   
+        <div class="card-body">
+          <form method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+            {% csrf_token %}
 
-      <button type="submit">{{ submit_button_text }}</button>
+            <!-- Автоматическое отображение всей формы через bootstrap_form -->
+            {% bootstrap_form form %}
 
-    </form>  
-  {% endblock page_content %}
+            <!-- Кнопка отправки -->
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+              <button type="submit" class="btn btn-primary btn-lg px-4">
+                {{ submit_button_text }}
+              </button>
+              <a href="{% url 'ad_list' %}" class="btn btn-outline-secondary btn-lg px-4">
+                Отмена
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Информация о заполнении (опционально) -->
+      <div class="mt-3">
+        <div class="alert alert-info" role="alert">
+          <h6 class="alert-heading"><i class="bi bi-info-circle"></i> Подсказка:</h6>
+          <ul class="mb-0">
+            <li>Для изображений используйте форматы JPG, PNG или GIF</li>
+            <li>Укажите актуальные контакты для связи</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -3,22 +3,40 @@
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block page_title %}{% endblock page_title %}</title>
-    {% bootstrap_css %}
-    {% bootstrap_javascript %}
+  {% bootstrap_css %}
+  {% bootstrap_javascript %}
   <link rel="stylesheet" href="{% static 'css/core.css' %}">
 </head>
+
 <body>
   <header>Это пока только заготовка шапки
-    <nav>
-      <a href = "{% url 'ad_list' %}">Все объявления</a>
-      <a href = "{% url 'ad_add' %}">Создать объявление</a>
+    <nav class="navbar navbar-expand-sm bg-primary" data-bs-theme="dark">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="#">Bulletin_Board</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+          aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav me-auto">
+            <li class="nav-item">
+              <a class="nav-link" aria-current="page" href="{% url 'ad_list' %}">Объявления</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" aria-current="page" href="{% url 'ad_add' %}">Добавить объявление</a>
+            </li>
+          </ul>
+        </div>
+      </div>
     </nav>
   </header>
   <main>{% block page_content %}{% endblock page_content %}</main>
   <footer>&copy; Все права защищены законодательством РФ 2025</footer>
 </body>
+
 </html>

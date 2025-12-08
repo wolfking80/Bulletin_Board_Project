@@ -1,27 +1,73 @@
 {% extends 'base.html' %}
 
-{% block page_title %} {{ad.title}} {% endblock page_title %}
+{% block page_title %}Все объявления{% endblock %}
 
-  {% block page_content %}
+{% block page_content %}
+<div class="container mt-4">
+  <!-- Заголовок -->
     <h1>Все объявления</h1>
 
-      {% if ads %}
-        {% for ad in ads%}
-          <div class='ad-container' style = "text-align: center; border: 1px solid darkblue; margin: 20px; padding: 10px">
-            {% if ad.goods_image %}
-              <img src="{{ ad.goods_image.url }}" alt="{{ ad.title }}" style="max-width: 300px; max-height: 200px;">
+  {% if ads %}
+  <!-- Список в виде карточек -->
+  <div class="row">
+    {% for ad in ads %}
+    <div class="col-md-6 col-lg-4 mb-4">
+      <div class="card h-100">
+        <!-- Изображение -->
+        {% if ad.goods_image %}
+        <img src="{{ ad.goods_image.url }}" class="card-img-top" alt="{{ ad.title }}"
+          style="height: 200px; object-fit: cover;">
+        {% endif %}
+
+        <!-- Тело карточки -->
+        <div class="card-body">
+          <h5 class="card-title">
+            <a href="{% url 'ad_details' ad_id=ad.id %}" class="text-decoration-none">
+              {{ ad.title }}
+            </a>
+          </h5>
+
+          <p class="card-text">{{ ad.text|truncatechars:150 }}</p>
+
+          <div class="mb-2">
+            {% if ad.price is not None %}
+            <span class="badge bg-success fs-6">
+              {{ ad.price }} ₽
+            </span>
+            {% else %}
+            <span class="badge bg-secondary">
+              Цена не указана
+            </span>
             {% endif %}
-            <h2>Название: <a href="{% url 'ad_details' ad_id=ad.id %}">{{ad.title}}</a></h2>
-            <p>Текст: {{ad.text}}</p>
-            <p>{% if ad.price is not None %}
-                  Цена:{{ ad.price }}
-                {% else %} Цена не указана
-                {% endif %}</p>
-            <small>Дата публикации: {{ad.created_at}}</small>
           </div>
-        {% endfor%}
-      {% else %}
-    <p>Объявления ещё никто не выложил! Будут завтра!</p>
-    
-      {% endif %} 
-  {% endblock page_content %}
+        </div>
+
+        <!-- Футер карточки -->
+        <div class="card-footer bg-white">
+          <div class="d-flex justify-content-between align-items-center">
+            <small class="text-muted">
+              {{ ad.created_at|date:"d.m.Y H:i" }}
+            </small>
+            <a href="{% url 'ad_details' ad_id=ad.id %}" class="btn btn-sm btn-outline-primary">
+              Подробнее
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <!-- Сообщение при отсутствии объявлений -->
+  <div class="alert alert-info text-center py-5">
+    <h4 class="alert-heading">Объявлений пока нет!</h4>
+    <p>Будьте первым, кто разместит объявление на нашей доске.</p>
+    <hr>
+    <a href="{% url 'ad_add' %}" class="btn btn-success">
+      Создать первое объявление
+    </a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

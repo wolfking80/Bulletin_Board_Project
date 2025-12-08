@@ -1,20 +1,76 @@
 {% extends 'base.html' %}
 
-{% block page_title %} {{ad.title}} {% endblock page_title %}
+{% block page_content %}
+<div class="container mt-4">
+  <!-- Кнопка "Назад" БЕЗ ИКОНКИ -->
+  <div class="mb-4">
+    <a href="{% url 'ad_list' %}" class="btn btn-outline-secondary">
+      ← Назад
+    </a>
+  </div>
 
-  {% block page_content %}
-    <a href="{% url 'ad_list'%}">&larr;Назад</a>
+  <!-- Карточка с объявлением -->
+  <div class="card shadow">
+    <div class="card-header bg-primary text-white">
+      <h2 class="card-title mb-0">{{ad.title}}</h2>
+    </div>
 
-    <h1>{{ad.title}}</h1>
-    {% if ad.goods_image %}
-      <img src="{{ ad.goods_image.url }}" alt="{{ ad.title }}" style="max-width: 300px; max-height: 200px;">
-    {% endif %}  
-    <p>{{ad.text}}</p>
-    <p>{% if ad.price is not None %} Цена: {{ ad.price }} {% else %} Цена не указана {% endif %}</p>
-    <p>{% if ad.contacts %} {{ ad.contacts }} {% else %} Контакты не указаны {% endif %}</p>
-    <p>Дата публикации: {{ad.created_at|date:"d.m.Y H:i"}}<p>
+    <div class="card-body">
+      <!-- Изображение -->
+      {% if ad.goods_image %}
+      <div class="text-center mb-4">
+        <img src="{{ ad.goods_image.url }}" alt="{{ ad.title }}" class="img-fluid rounded" style="max-width: 300px; max-height: 200px">
+      </div>
+      {% endif %}
 
-  <a href="{% url 'edit_ad' ad.id %}">Редактировать объявление</a>
-  <a href="{% url 'delete_ad' ad.id %}">Удалить объявление</a>
-  
-  {% endblock page_content %}
+      <!-- Описание -->
+      <div class="mb-4">
+        <h5 class="text-secondary">Описание:</h5>
+        <p>{{ad.text}}</p>
+      </div>
+
+      <!-- Информация -->
+      <div class="row">
+        <div class="col-md-6">
+          <div class="mb-3">
+            <strong>Цена:</strong>
+            <span class="badge bg-success fs-6 ms-2">
+              {% if ad.price is not None %}
+              {{ ad.price }} ₽
+              {% else %}
+              Не указана
+              {% endif %}
+            </span>
+          </div>
+
+          <div class="mb-3">
+            <strong>Контакты:</strong>
+            <span class="ms-2">
+              {% if ad.contacts %}
+              {{ ad.contacts }}
+              {% else %}
+              <span class="text-muted">Не указаны</span>
+              {% endif %}
+            </span>
+          </div>
+
+          <div class="mb-3">
+            <strong>Дата публикации:</strong>
+            <span class="ms-2">{{ad.created_at|date:"d.m.Y H:i"}}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Кнопки БЕЗ ИКОНОК -->
+      <div class="mt-4 pt-3 border-top">
+        <a href="{% url 'edit_ad' ad.id %}" class="btn btn-warning me-2">
+          Редактировать
+        </a>
+        <a href="{% url 'delete_ad' ad.id %}" class="btn btn-danger">
+          Удалить
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
