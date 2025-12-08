@@ -16,12 +16,30 @@ def get_ad_details(request, ad_id):
 
 
 def create_ad(request):
-    if request.method == "POST":
-        form = AdvertisementForm(request.POST, request.FILES)
-        if form.is_valid():
-            ad = form.save()  # Сохраняем в БД
-            return redirect('ad_details', ad_id=ad.id)
+  if request.method == "POST":
+    form = AdvertisementForm(request.POST, request.FILES)
+    if form.is_valid():
+      ad = form.save()  # Сохраняем в БД
+      return redirect('ad_details', ad_id=ad.id)
     else:
-        form = AdvertisementForm()
+      form = AdvertisementForm()
     
-    return render(request, 'ads/ad_add.html', {'form': form})
+  return render(request, 'ads/ad_add.html', {'form': form})
+  
+  
+def update_ad(request, ad_id):
+  ad = get_object_or_404(Advertisement, id = ad_id)
+  
+  if request.method == "POST":
+    form = AdvertisementForm(request.POST, request.FILES, instance=ad)
+    
+    if form.is_valid():
+      updated_ad = form.save()
+      
+      return redirect("ad_details", ad_id = updated_ad.id)
+    else:
+      return render(request, 'ads/ad_update.html', context={"form": form})
+    
+  form = AdvertisementForm(instance=ad)
+  
+  return render(request, 'ads/ad_update.html', context={"form": form})  

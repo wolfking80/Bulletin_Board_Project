@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Редактировать объявление{% endblock page_title %}
+
+  {% block page_content %}
+    <h1>Редактировать объявление {{ form.title}}</h1>
+    
+    <form method = "POST" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      {% for field in form %}
+        <div>
+          {{ field.label_tag}}
+          {{ field }}
+          {{ field.errors }}
+        </div> 
+      {% endfor %}   
+
+      <button type="submit">Сохранить</button>
+
+    </form>  
+  {% endblock page_content %}
