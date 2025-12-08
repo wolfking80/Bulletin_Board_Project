@@ -1,4 +1,5 @@
 {% load static %}
+{% load django_bootstrap5 %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -6,6 +7,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block page_title %}{% endblock page_title %}</title>
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
   <link rel="stylesheet" href="{% static 'css/core.css' %}">
 </head>
 <body>

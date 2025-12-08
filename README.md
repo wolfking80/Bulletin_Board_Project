@@ -54,3 +54,33 @@ pip install django-phonenumber-field
 ```
 **Что делает:** 
 - Устанавливает пакеты  phonenumbers и django-phonenumber-field для работы с номерами телефонов
+
+## Установка django-bootstrap5
+```bash
+pip install django-bootstrap5
+```
+**Что делает:** 
+- Устанавливает пакет Django Bootstrap 5 — это интеграция фреймворка Bootstrap 5 с Django для удобной работы с фронтендом
+
+- Настройка в settings.py:
+
+INSTALLED_APPS = [
+    ...
+    'django_bootstrap5',
+    ...
+]
+
+- В шаблоне:
+{% load django_bootstrap5 %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+</head>
+<body>
+  ..............
+</body>
+</html>
+
