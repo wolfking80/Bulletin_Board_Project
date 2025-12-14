@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_bootstrap5',
+    'django-extensions',
     'ads',
     'users',
     'phonenumber_field.modelfields', 
