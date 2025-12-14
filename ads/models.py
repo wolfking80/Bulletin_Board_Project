@@ -1,7 +1,8 @@
 from django.db import models
 from phonenumber_field.modelfields import PhoneNumberField
+from django.contrib.auth import get_user_model
 
-# Create your models here.
+User = get_user_model()
 
 class Advertisement(models.Model):
   title = models.CharField(max_length=200, blank=True, verbose_name='Заголовок')
@@ -25,6 +26,7 @@ class Advertisement(models.Model):
     help_text="В формате +7XXXXXXXXXX"
 )
   created_at = models.DateTimeField(auto_now_add=True)
+  owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ads', verbose_name='Владелец')
   
   class Meta:
     verbose_name = 'объявление'
