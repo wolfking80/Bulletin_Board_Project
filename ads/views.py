@@ -25,7 +25,9 @@ def create_ad(request):
   if request.method == "POST":
     form = AdvertisementForm(request.POST, request.FILES)
     if form.is_valid():
-      ad = form.save()  # Сохраняем в БД
+      ad = form.save(commit=False)
+      ad.owner = request.user
+      ad.save()
       return redirect('ads:ad_details', ad_id=ad.id)
   else:
       form = AdvertisementForm()
