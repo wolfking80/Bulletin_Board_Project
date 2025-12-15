@@ -61,7 +61,7 @@
           <div>Автор объявления: {{ ad.owner }}</div>
         </div>
       </div>
-
+      {% if request.user == ad.owner %}
       <!-- Кнопки БЕЗ ИКОНОК -->
       <div class="mt-4 pt-3 border-top">
         <a href="{% url 'ads:edit_ad' ad.id %}" class="btn btn-warning me-2">
@@ -71,6 +71,7 @@
           Удалить
         </a>
       </div>
+      {% endif %}
     </div>
   </div>
 </div>

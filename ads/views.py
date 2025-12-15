@@ -45,6 +45,9 @@ def update_ad(request, ad_id):
   submit_button_text = "Сохранить"
   ad = get_object_or_404(Advertisement, id = ad_id)
   
+  if (request.user != ad.owner):
+    return render(request, 'ads/not_allowed.html')
+  
   if request.method == "POST":
     form = AdvertisementForm(request.POST, request.FILES, instance=ad)
     
@@ -71,6 +74,9 @@ def update_ad(request, ad_id):
 @login_required 
 def delete_ad(request, ad_id):
   ad = get_object_or_404(Advertisement, id = ad_id)
+  
+  if (request.user != ad.owner):
+    return render(request, 'ads/not_allowed.html')
   
   if request.method == "POST":
     ad.delete()
