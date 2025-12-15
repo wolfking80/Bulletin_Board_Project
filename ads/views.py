@@ -75,4 +75,8 @@ def delete_ad(request, ad_id):
     
     return redirect('ads:ad_list')
   
-  return render(request, 'ads/confirm_ad_delete.html', {'ad': ad})   
+  return render(request, 'ads/confirm_ad_delete.html', {'ad': ad})
+
+
+def main_page_view(request):
+  return render(request, template_name='ads/main_page.html')   
