@@ -134,4 +134,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_URL = 'users:login'
 
-DEFAULT_LOGIN_REDIRECT_URL = 'ads:ad_list'
+DEFAULT_LOGIN_REDIRECT_URL = 'users:profile'

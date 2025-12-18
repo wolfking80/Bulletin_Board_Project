@@ -58,7 +58,7 @@
             <strong>Дата публикации:</strong>
             <span class="ms-2">{{ad.created_at|date:"d.m.Y H:i"}}</span>
           </div>
-          <div>Автор объявления: {{ ad.owner }}</div>
+          <div>Автор объявления: <a href="{% url 'users:profile' username=ad.owner.username %}">{{ ad.owner }}</div>
         </div>
       </div>
       {% if request.user == ad.owner %}
