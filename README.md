@@ -103,3 +103,22 @@ python manage.py shell_plus --print-sql
 - Возможность просмотра генерируемых SQL-запросов
 - Удобная среда для тестирования кода и работы
 
+
+## Установка django-bootstrap-icons
+```bash
+pip install django-bootstrap-icons
+```
+**Что делает:** 
+- Устанавливает пакет Bootstrap Icons — официальную библиотеку иконок для Bootstrap.
+
+- Настройка в settings.py:
+
+INSTALLED_APPS = [
+    ...
+   'django_bootstrap_icons',
+    ...
+]
+
+- В шаблоне:
+{% load bootstrap_icons %}
+
