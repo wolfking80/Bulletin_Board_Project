@@ -3,71 +3,16 @@
 {% block page_title %}Профиль{% endblock page_title %}
 
 {% block page_content %}
+
+<div class="container mt-4">
+
   {% if user == request.user %}
     <h1>Мои объявления</h1>
   {% else %}
     <h1>Объявления пользователя {{ user }}</h1>
-  {% endif %}
+  {% endif %} 
 
-  <div class="container mt-4">
+  {% include 'ads/includes/ad_container.html' %}
 
-  {% if ads %}
-  <!-- Список в виде карточек -->
-  <div class="row">
-    {% for ad in ads %}
-    <div class="col-md-6 col-lg-4 mb-4">
-      <div class="card h-100">
-        <!-- Изображение -->
-        {% if ad.goods_image %}
-        <img src="{{ ad.goods_image.url }}" class="card-img-top" alt="{{ ad.title }}"
-          style="height: 200px; object-fit: cover;">
-        {% endif %}
-
-        <!-- Тело карточки -->
-        <div class="card-body">
-          <h5 class="card-title">
-            <a href="{% url 'ads:ad_details' ad_id=ad.id %}" class="text-decoration-none">
-              {{ ad.title }}
-            </a>
-          </h5>
-
-          <p class="card-text">{{ ad.text|truncatechars:150 }}</p>
-
-          <div class="mb-2">
-            {% if ad.price is not None %}
-            <span class="badge bg-success fs-6">
-              {{ ad.price }} ₽
-            </span>
-            {% else %}
-            <span class="badge bg-secondary">
-              Цена не указана
-            </span>
-            {% endif %}
-          </div>
-        </div>
-
-        <!-- Футер карточки -->
-        <div class="card-footer bg-white">
-          <div class="d-flex justify-content-between align-items-center">
-            <small class="text-muted">
-              {{ ad.created_at|date:"d.m.Y H:i" }}
-            </small>
-            <a href="{% url 'ads:ad_details' ad_id=ad.id %}" class="btn btn-sm btn-outline-primary">
-              Подробнее
-            </a>
-          </div>
-        </div>
-      </div>
-    </div>
-    {% endfor %}
-  </div>
-
-  {% else %}
-  <!-- Сообщение при отсутствии объявлений -->
-  <div class="alert alert-info text-center py-5">
-    <h4 class="alert-heading">Объявлений пока нет!</h4>
-    <hr>
-  </div>
-  {% endif %}
 </div>
 {% endblock page_content %}
