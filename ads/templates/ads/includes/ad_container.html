@@ -13,7 +13,7 @@
         <!-- Тело карточки -->
         <div class="card-body">
           <h5 class="card-title">
-            <a href="{% url 'ads:ad_details' ad_id=ad.id %}" class="text-decoration-none">
+            <a href="{% url 'ads:ad_details' ad_slug=ad.slug %}" class="text-decoration-none">
               {{ ad.title }}
             </a>
           </h5>
@@ -39,7 +39,7 @@
             <small class="text-muted">
               {{ ad.created_at|date:"d.m.Y H:i" }}
             </small>
-            <a href="{% url 'ads:ad_details' ad_id=ad.id %}" class="btn btn-sm btn-outline-primary">
+            <a href="{% url 'ads:ad_details' ad_slug=ad.slug %}" class="btn btn-sm btn-outline-primary">
               Подробнее
             </a>
           </div>

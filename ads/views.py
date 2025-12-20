@@ -11,8 +11,8 @@ def get_ads_list(request):
   return render(request=request, template_name='ads/ad_list.html', context={'ads': ads})
 
 
-def get_ad_details(request, ad_id):
-  ad_for_view = get_object_or_404(Advertisement, id=ad_id)
+def get_ad_details(request, ad_slug):
+  ad_for_view = get_object_or_404(Advertisement, slug=ad_slug)
   
   return render(request, 'ads/ad_details.html', {'ad': ad_for_view})
 
@@ -28,7 +28,7 @@ def create_ad(request):
       ad = form.save(commit=False)
       ad.owner = request.user
       ad.save()
-      return redirect('ads:ad_details', ad_id=ad.id)
+      return redirect('ads:ad_details', ad_slug=ad.slug)
   else:
       form = AdvertisementForm()
     
@@ -54,7 +54,7 @@ def update_ad(request, ad_id):
     if form.is_valid():
       updated_ad = form.save()
       
-      return redirect("ads:ad_details", ad_id = updated_ad.id)
+      return redirect("ads:ad_details", ad_slug = updated_ad.slug)
     else:
       return render(request, 'ads/ad_form.html', {
         'form': form,
