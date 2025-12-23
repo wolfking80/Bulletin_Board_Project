@@ -15,6 +15,12 @@
       <h2 class="card-title mb-0">{{ad.title}}</h2>
     </div>
 
+    <div>
+      {% if request.user == ad.owner %}
+        Статус: {{ ad.get_status_display }}
+      {% endif %}
+    </div>
+
     <div class="card-body">
       <!-- Изображение -->
       {% if ad.goods_image %}

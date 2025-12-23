@@ -7,6 +7,11 @@ from unidecode import unidecode
 User = get_user_model()
 
 class Advertisement(models.Model):
+  STATUS_CHOICES = (
+    ('published', 'Опубликован'),
+    ('under_review', 'На проверке'),
+    ('rejected', 'Отклонено')
+  )
   title = models.CharField(max_length=200, blank=True, verbose_name='Заголовок')
   text = models.TextField(blank=True, verbose_name='Описание')
   slug = models.SlugField(max_length=200, unique=True, editable=False, verbose_name='Слаг')
@@ -30,6 +35,7 @@ class Advertisement(models.Model):
 )
   created_at = models.DateTimeField(auto_now_add=True)
   owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ads', verbose_name='Владелец')
+  status = models.CharField(choices=STATUS_CHOICES, default='under_review', verbose_name="Статус")
   
   class Meta:
     verbose_name = 'объявление'

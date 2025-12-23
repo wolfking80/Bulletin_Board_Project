@@ -6,7 +6,7 @@ from ads.forms import AdvertisementForm
 
 
 def get_ads_list(request):
-  ads = Advertisement.objects.all()
+  ads = Advertisement.objects.filter(status="published")
   
   return render(request=request, template_name='ads/ad_list.html', context={'ads': ads})
 

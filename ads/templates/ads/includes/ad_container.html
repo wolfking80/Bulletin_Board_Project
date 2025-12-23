@@ -2,6 +2,9 @@
   <!-- Список в виде карточек -->
   <div class="row">
     {% for ad in ads %}
+
+      {% if user == request.user or ad.status == 'published' %}{% endif %}
+      
     <div class="col-md-6 col-lg-4 mb-4">
       <div class="card h-100">
         <!-- Изображение -->
