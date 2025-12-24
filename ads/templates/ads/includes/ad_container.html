@@ -1,65 +1,69 @@
 {% if ads %}
-  <!-- Список в виде карточек -->
-  <div class="row">
-    {% for ad in ads %}
+<!-- Список в виде карточек -->
+<div class="row">
+  {% for ad in ads %}
+    {% if request.user == ad.owner or ad.status == 'published' %}
+      <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100">
+          <!-- Изображение -->
+          {% if ad.goods_image %}
+          <img src="{{ ad.goods_image.url }}" class="card-img-top" alt="{{ ad.title }}"
+            style="height: 200px; object-fit: cover;">
+          {% endif %}
 
-      {% if user == request.user or ad.status == 'published' %}{% endif %}
-      
-    <div class="col-md-6 col-lg-4 mb-4">
-      <div class="card h-100">
-        <!-- Изображение -->
-        {% if ad.goods_image %}
-        <img src="{{ ad.goods_image.url }}" class="card-img-top" alt="{{ ad.title }}"
-          style="height: 200px; object-fit: cover;">
-        {% endif %}
+          <!-- Тело карточки -->
+          <div class="card-body">
+            <h5 class="card-title">
+              <a href="{% url 'ads:ad_details' ad_slug=ad.slug %}" class="text-decoration-none">
+                {{ ad.title }}
+              </a>
+            </h5>
 
-        <!-- Тело карточки -->
-        <div class="card-body">
-          <h5 class="card-title">
-            <a href="{% url 'ads:ad_details' ad_slug=ad.slug %}" class="text-decoration-none">
-              {{ ad.title }}
-            </a>
-          </h5>
+            <p class="mb-0">
+              <span class="text-muted me-2">Категория:</span>
+              <a href="{{ ad.category.get_absolute_url }}" class="fw-medium">
+                {{ ad.category.name }}
+              </a>
+            </p>
 
-          <p class="card-text">{{ ad.text|truncatechars:150 }}</p>
+            <p class="card-text">{{ ad.text|truncatechars:150 }}</p>
 
-          <div class="mb-2">
-            {% if ad.price is not None %}
-            <span class="badge bg-success fs-6">
-              {{ ad.price }} ₽
-            </span>
-            {% else %}
-            <span class="badge bg-secondary">
-              Цена не указана
-            </span>
-            {% endif %}
+            <div class="mb-2">
+              {% if ad.price is not None %}
+              <span class="badge bg-success fs-6">
+                {{ ad.price }} ₽
+              </span>
+              {% else %}
+              <span class="badge bg-secondary">Цена не указана</span>
+              {% endif %}
+            </div>
           </div>
-        </div>
 
-        <!-- Футер карточки -->
-        <div class="card-footer bg-white">
-          <div class="d-flex justify-content-between align-items-center">
-            <small class="text-muted">
-              {{ ad.created_at|date:"d.m.Y H:i" }}
-            </small>
-            <a href="{% url 'ads:ad_details' ad_slug=ad.slug %}" class="btn btn-sm btn-outline-primary">
-              Подробнее
-            </a>
+          <!-- Футер карточки -->
+          <div class="card-footer bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+              <small class="text-muted">
+                {{ ad.created_at|date:"d.m.Y H:i" }}
+              </small>
+              <a href="{% url 'ads:ad_details' ad_slug=ad.slug %}" class="btn btn-sm btn-outline-primary">
+                Подробнее
+              </a>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-    {% endfor %}
-  </div>
+    {% endif %}
+  {% endfor %}
+</div>
 
-  {% else %}
-  <!-- Сообщение при отсутствии объявлений -->
-  <div class="alert alert-info text-center py-5">
-    <h4 class="alert-heading">Объявлений пока нет!</h4>
-    <p>Будьте первым, кто разместит объявление на нашей доске.</p>
-    <hr>
-    <a href="{% url 'ads:ad_add' %}" class="btn btn-success">
-      Создать первое объявление
-    </a>
-  </div>
-  {% endif %}
+{% else %}
+<!-- Сообщение при отсутствии объявлений -->
+<div class="alert alert-info text-center py-5">
+  <h4 class="alert-heading">Объявлений пока нет!</h4>
+  <p>Будьте первым, кто разместит объявление на нашей доске.</p>
+  <hr>
+  <a href="{% url 'ads:ad_add' %}" class="btn btn-success">
+    Создать первое объявление
+  </a>
+</div>
+{% endif %}

@@ -1,5 +1,6 @@
 from django.db import models
 from phonenumber_field.modelfields import PhoneNumberField
+from django.urls import reverse
 from django.contrib.auth import get_user_model
 from django.utils.text import slugify
 from unidecode import unidecode
@@ -8,13 +9,19 @@ User = get_user_model()
 
 class Advertisement(models.Model):
   STATUS_CHOICES = (
-    ('published', 'Опубликован'),
+    ('published', 'Опубликовано'),
     ('under_review', 'На проверке'),
     ('rejected', 'Отклонено')
   )
   title = models.CharField(max_length=200, blank=True, verbose_name='Заголовок')
   text = models.TextField(blank=True, verbose_name='Описание')
   slug = models.SlugField(max_length=200, unique=True, editable=False, verbose_name='Слаг')
+  category = models.ForeignKey(
+    'Category',
+    related_name='ads',
+    on_delete=models.CASCADE,
+    verbose_name="Категория"
+  )
   goods_image = models.ImageField(
     upload_to='advertisements/',
     verbose_name='Изображение товара',
@@ -49,3 +56,23 @@ class Advertisement(models.Model):
     super().save(*args, **kwargs)
     self.slug = f"{slugify(unidecode(self.title))}-{self.pk}"
     super().save(*args, **kwargs)
+    
+    
+class Category(models.Model):
+  name = models.CharField(max_length=100, verbose_name='Название')
+  slug = models.SlugField(unique=True, editable=False, verbose_name="Слаг")
+
+  def save(self, *args, **kwargs):
+    self.slug = slugify(unidecode(self.name))
+    super().save(*args, **kwargs)
+
+  def __str__(self):
+    return self.name
+  
+  def get_absolute_url(self):
+    return reverse('ads:ads_category', kwargs={'category_slug': self.slug})
+  
+  class Meta:
+    verbose_name = 'Категория'
+    verbose_name_plural = "Категории"
+    db_table = "ads_categories"    

@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Объявления в категории {{ category.name }}{% endblock page_title %}
+
+{% block page_content %}
+<div class="container mt-4">
+  <a href="javascript:history.back()">&larr;Назад</a>
+  <h1>Объявления в категории: {{ category.name }}</h1>
+  
+  {% if ads %}
+    {% comment %} {% for ad in ads %} {% endcomment %}
+      {% include 'ads/includes/ad_container.html' %}
+    {% comment %} {% endfor %} {% endcomment %}
+  {% else %}
+    <p>В этой категории пока нет объявлений.</p>
+  {% endif %}
+</div>
+{% endblock page_content %}

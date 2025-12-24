@@ -4,11 +4,12 @@ from .models import Advertisement
 class AdvertisementForm(forms.ModelForm):
     class Meta:
         model = Advertisement
-        fields = ['title', 'text', 'price', 'contacts', 'goods_image']
+        fields = ['title', 'category', 'text', 'price', 'contacts', 'goods_image']
         widgets = {
             'title': forms.TextInput(attrs={
                 'placeholder': 'Название (максимум - 200 символов)'
             }),
+            'category': forms.Select(attrs={'class': 'form-control'}),
             'text': forms.Textarea(attrs={
                 'rows': 5,
                 'placeholder': 'Подробное описание товара...'
@@ -27,11 +28,15 @@ class AdvertisementForm(forms.ModelForm):
         }
         labels = {
             'title': 'Заголовок объявления',
+            'category': 'Категория:',
             'text': 'Текст объявления',
             'price': 'Стоимость товара',
             'contacts': 'Контактный телефон',
             'goods_image': 'Изображение товара (необязательно)'
         }
+        help_texts = {
+      'category': " Выберите категорию для своего объявления..."
+    }
     
     
     def clean_title(self):
