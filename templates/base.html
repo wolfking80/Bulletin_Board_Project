@@ -27,29 +27,46 @@
         <div class="collapse navbar-collapse" id="navbarNav">
           <ul class="navbar-nav me-auto">
             <li class="nav-item">
-              <a class="nav-link" aria-current="page" href="{% url 'ads:ad_list' %}">Объявления</a>
+              <a class="nav-link 
+                {% if request.resolver_match.url_name == 'ad_list' %}active{% endif %}"
+                href="{% url 'ads:ad_list' %}">Объявления
+              </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" aria-current="page" href="{% url 'ads:ad_add' %}">Добавить объявление</a>
+              <a class="nav-link 
+                {% if request.resolver_match.url_name == 'ad_add' %}active{% endif %}"
+                href="{% url 'ads:ad_add' %}">Добавить объявление
+              </a>
             </li>
           </ul>
           <ul class="navbar-nav ms-auto">
             {% if request.user.is_authenticated %}
             <li class="nav-item">
-              <a class="nav-link d-flex align-items-center" href="{% url 'users:profile' request.user.username %}">
+              <a class="nav-link d-flex align-items-center 
+                {% if request.resolver_match.url_name == 'profile' and request.resolver_match.kwargs.username == request.user.username %}active{% endif %}"
+                href="{% url 'users:profile' request.user.username %}">
                 {% bs_icon 'person-circle' size='1.1em' extra_classes='me-2' %}
                 <span>{{ request.user.username|truncatechars:15 }}</span>
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" aria-current="page" href="{% url 'users:logout' %}">Выйти из аккаунта</a>
+              <a class="nav-link 
+                {% if request.resolver_match.url_name == 'logout' %}active{% endif %}"
+                href="{% url 'users:logout' %}">Выйти из аккаунта
+              </a>
             </li>
             {% else %}
             <li class="nav-item">
-              <a class="nav-link" aria-current="page" href="{% url 'users:login' %}">Войти</a>
+              <a class="nav-link 
+                {% if request.resolver_match.url_name == 'login' %}active{% endif %}"
+                href="{% url 'users:login' %}">Войти
+              </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" aria-current="page" href="{% url 'users:registration' %}">Регистрация</a>
+              <a class="nav-link 
+              {% if request.resolver_match.url_name == 'registration' %}active{% endif %}"
+              href="{% url 'users:registration' %}">Регистрация
+            </a>
             </li>
             {% endif %}
           </ul>
