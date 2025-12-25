@@ -8,7 +8,7 @@ from ads.forms import AdvertisementForm
 def get_ads_list(request):
   ads = Advertisement.objects.filter(status="published")
   
-  return render(request=request, template_name='ads/ad_list.html', context={'ads': ads})
+  return render(request=request, template_name='ads/pages/ad_list.html', context={'ads': ads})
 
 
 def get_category_ads(request, category_slug):
@@ -19,13 +19,13 @@ def get_category_ads(request, category_slug):
     'category': category,
     'ads': ads
   }
-  return render(request, 'ads/ads_category.html', context)
+  return render(request, 'ads/pages/ads_category.html', context)
 
 
 def get_ad_details(request, ad_slug):
   ad_for_view = get_object_or_404(Advertisement, slug=ad_slug)
   
-  return render(request, 'ads/ad_details.html', {'ad': ad_for_view})
+  return render(request, 'ads/pages/ad_details.html', {'ad': ad_for_view})
 
 
 @login_required
@@ -43,7 +43,7 @@ def create_ad(request):
   else:
       form = AdvertisementForm()
     
-  return render(request, 'ads/ad_form.html', {
+  return render(request, 'ads/pages/ad_form.html', {
     'form': form, 
     'title': title,
     'submit_button_text': submit_button_text
@@ -57,7 +57,7 @@ def update_ad(request, ad_id):
   ad = get_object_or_404(Advertisement, id = ad_id)
   
   if (request.user != ad.owner):
-    return render(request, 'ads/not_allowed.html')
+    return render(request, 'ads/pages/not_allowed.html')
   
   if request.method == "POST":
     form = AdvertisementForm(request.POST, request.FILES, instance=ad)
@@ -67,7 +67,7 @@ def update_ad(request, ad_id):
       
       return redirect("ads:ad_details", ad_slug = updated_ad.slug)
     else:
-      return render(request, 'ads/ad_form.html', {
+      return render(request, 'ads/pages/ad_form.html', {
         'form': form,
         'title': title,
         'submit_button_text': submit_button_text
@@ -75,7 +75,7 @@ def update_ad(request, ad_id):
     
   form = AdvertisementForm(instance=ad)
   
-  return render(request, 'ads/ad_form.html', {
+  return render(request, 'ads/pages/ad_form.html', {
     'form': form,
     'title': title,
     'submit_button_text': submit_button_text
@@ -87,15 +87,15 @@ def delete_ad(request, ad_id):
   ad = get_object_or_404(Advertisement, id = ad_id)
   
   if (request.user != ad.owner):
-    return render(request, 'ads/not_allowed.html')
+    return render(request, 'ads/pages/not_allowed.html')
   
   if request.method == "POST":
     ad.delete()
     
     return redirect('ads:ad_list')
   
-  return render(request, 'ads/confirm_ad_delete.html', {'ad': ad})
+  return render(request, 'ads/pages/confirm_ad_delete.html', {'ad': ad})
 
 
 def main_page_view(request):
-  return render(request, template_name='ads/main_page.html')   
+  return render(request, template_name='ads/pages/main_page.html')   

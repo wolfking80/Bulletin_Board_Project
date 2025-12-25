@@ -17,11 +17,11 @@ def register_view(request):
       form.save()
       return redirect('users:login')
     else:
-      return render(request, 'users/register.html', {'form': form})
+      return render(request, 'users/pages/register.html', {'form': form})
     
   form = UserCreationForm()
   
-  return render(request, 'users/register.html', {'form': form})
+  return render(request, 'users/pages/register.html', {'form': form})
 
 
 def login_view(request):
@@ -36,11 +36,11 @@ def login_view(request):
       else:
         return redirect(next_url)
     else:
-      return render(request, 'users/login.html', {'form': form})
+      return render(request, 'users/pages/login.html', {'form': form})
 
   form = AuthenticationForm()
 
-  return render(request, 'users/login.html', {'form': form})
+  return render(request, 'users/pages/login.html', {'form': form})
 
 
 def logout_view(request):
@@ -57,4 +57,4 @@ def profile_view(request, username):
     'ads': ads
   }
 
-  return render(request, 'users/profile.html', context)
+  return render(request, 'users/pages/profile.html', context)
