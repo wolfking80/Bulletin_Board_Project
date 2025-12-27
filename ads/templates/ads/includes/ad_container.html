@@ -26,6 +26,10 @@
               </a>
             </p>
 
+            {% if ad.subcategory %}
+              <span class="badge bg-info">{{ ad.subcategory.name }}</span>
+            {% endif %}
+
             <p class="card-text">{{ ad.text|truncatechars:150 }}</p>
 
             <div class="mb-2">

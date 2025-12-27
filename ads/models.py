@@ -28,6 +28,22 @@ class Category(models.Model):
     db_table = "ads_categories"
     
     
+class SubCategory(models.Model):
+  name = models.CharField(max_length=100, verbose_name='Название')
+  category = models.ForeignKey(Category,
+    on_delete=models.CASCADE,
+    related_name='subcategories',
+    verbose_name="Категория"
+    )
+    
+  def __str__(self):
+    return f"{self.name} ({self.category.name})"
+    
+  class Meta:
+    verbose_name = 'Подкатегория'
+    verbose_name_plural = "Подкатегории"
+    
+    
 class Advertisement(models.Model):
   STATUS_CHOICES = (
     ('published', 'Опубликовано'),
@@ -42,6 +58,13 @@ class Advertisement(models.Model):
     on_delete=models.CASCADE,
     verbose_name="Категория"
   )
+  subcategory = models.ForeignKey(
+    SubCategory,
+    on_delete=models.SET_NULL,  # Если удалить подкатегорию - у объявлений будет NULL
+    null=True,                  # Может быть пустым
+    blank=True,                 # Необязательное в форме
+    verbose_name="Тип сделки"
+    )
   goods_image = models.ImageField(
     upload_to='advertisements/',
     verbose_name='Изображение товара',

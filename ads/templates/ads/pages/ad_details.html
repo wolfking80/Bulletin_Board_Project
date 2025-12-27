@@ -23,6 +23,10 @@
 
     <p>Категория: <a href="{{ ad.category.get_absolute_url }}">{{ ad.category.name }}</a></p>
 
+    {% if ad.subcategory %}
+      <span class="badge bg-info text-wrap" style="max-width: 150px">{{ ad.subcategory.name }}</span>
+    {% endif %}
+
     <div class="card-body">
       <!-- Изображение -->
       {% if ad.goods_image %}
