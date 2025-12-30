@@ -27,6 +27,14 @@
       <span class="badge bg-info text-wrap" style="max-width: 150px">{{ ad.subcategory.name }}</span>
     {% endif %}
 
+    <p>Теги: 
+    {% for tag in ad.tags.all %}
+      <a href="{{ tag.get_absolute_url }}">#{{ tag.name }}</a>{% if not forloop.last %}, {% endif %}
+    {% empty %}
+      нет тегов
+    {% endfor %}
+    </p>
+
     <div class="card-body">
       <!-- Изображение -->
       {% if ad.goods_image %}

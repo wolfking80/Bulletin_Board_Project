@@ -49,6 +49,7 @@ def create_ad(request):
       ad = form.save(commit=False)
       ad.owner = request.user
       ad.save()
+      form.save_m2m()
       return redirect('ads:ad_details', ad_slug=ad.slug)
   else:
       form = AdvertisementForm()

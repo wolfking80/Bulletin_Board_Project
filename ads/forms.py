@@ -4,13 +4,14 @@ from .models import Advertisement
 class AdvertisementForm(forms.ModelForm):
     class Meta:
         model = Advertisement
-        fields = ['title', 'category', 'subcategory','text', 'price', 'contacts', 'goods_image']
+        fields = ['title', 'category', 'subcategory', 'tags', 'text', 'price', 'contacts', 'goods_image']
         widgets = {
             'title': forms.TextInput(attrs={
                 'placeholder': 'Название (максимум - 200 символов)'
             }),
             'category': forms.Select(attrs={'class': 'form-select'}),
             'subcategory': forms.Select(attrs={'class': 'form-select'}),
+            'tags': forms.SelectMultiple(attrs={'class': 'form-control'}),
             'text': forms.Textarea(attrs={
                 'rows': 5,
                 'placeholder': 'Подробное описание товара...'
@@ -30,6 +31,7 @@ class AdvertisementForm(forms.ModelForm):
         labels = {
             'title': 'Заголовок объявления',
             'category': 'Категория:',
+            'tags': 'Теги:',
             'text': 'Текст объявления',
             'price': 'Стоимость товара',
             'contacts': 'Контактный телефон',
