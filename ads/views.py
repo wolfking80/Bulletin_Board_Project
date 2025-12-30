@@ -49,7 +49,12 @@ def create_ad(request):
       ad = form.save(commit=False)
       ad.owner = request.user
       ad.save()
-      form.save_m2m()
+      
+      tags = form.cleaned_data.get('tags_input')
+      for tag_name in tags:
+        tag, _ = Tag.objects.get_or_create(name=tag_name)
+        ad.tags.add(tag)
+        
       return redirect('ads:ad_details', ad_slug=ad.slug)
   else:
       form = AdvertisementForm()
@@ -76,6 +81,12 @@ def update_ad(request, ad_id):
     if form.is_valid():
       updated_ad = form.save()
       
+      tags = form.cleaned_data.get('tags_input')
+      ad.tags.clear()
+      for tag_name in tags:
+        tag, _ = Tag.objects.get_or_create(name=tag_name)
+        ad.tags.add(tag)
+      
       return redirect("ads:ad_details", ad_slug = updated_ad.slug)
     else:
       return render(request, 'ads/pages/ad_form.html', {
@@ -84,7 +95,8 @@ def update_ad(request, ad_id):
         'submit_button_text': submit_button_text
         })
     
-  form = AdvertisementForm(instance=ad)
+  existing_tags = ", ".join(tag.name for tag in ad.tags.all())
+  form = AdvertisementForm(instance=ad, initial={'tags_input': existing_tags})
   
   return render(request, 'ads/pages/ad_form.html', {
     'form': form,

@@ -2,16 +2,23 @@ from django import forms
 from .models import Advertisement
 
 class AdvertisementForm(forms.ModelForm):
+    tags_input = forms.CharField(
+    required=False,
+    widget=forms.TextInput(attrs={
+      'class': 'form-control',
+      'placeholder': 'Введите теги через запятую...'
+    }),
+    label="Теги"
+  )
     class Meta:
         model = Advertisement
-        fields = ['title', 'category', 'subcategory', 'tags', 'text', 'price', 'contacts', 'goods_image']
+        fields = ['title', 'category', 'subcategory', 'text', 'price', 'contacts', 'goods_image']
         widgets = {
             'title': forms.TextInput(attrs={
                 'placeholder': 'Название (максимум - 200 символов)'
             }),
             'category': forms.Select(attrs={'class': 'form-select'}),
             'subcategory': forms.Select(attrs={'class': 'form-select'}),
-            'tags': forms.SelectMultiple(attrs={'class': 'form-control'}),
             'text': forms.Textarea(attrs={
                 'rows': 5,
                 'placeholder': 'Подробное описание товара...'
@@ -31,7 +38,6 @@ class AdvertisementForm(forms.ModelForm):
         labels = {
             'title': 'Заголовок объявления',
             'category': 'Категория:',
-            'tags': 'Теги:',
             'text': 'Текст объявления',
             'price': 'Стоимость товара',
             'contacts': 'Контактный телефон',
@@ -72,3 +78,14 @@ class AdvertisementForm(forms.ModelForm):
       if price is not None and price < 0:
         raise forms.ValidationError("Цена не может быть отрицательной!")
       return price
+    
+    
+    def clean_tags_input(self):
+      """
+      Разбивает строку на список тегов:
+      - удаляет лишние пробелы вокруг
+      - приводит к нижнему регистру
+      """
+      tags_str = self.cleaned_data.get('tags_input')
+      tags = [tag.strip().lower() for tag in tags_str.split(',') if tag.strip()]
+      return tags
