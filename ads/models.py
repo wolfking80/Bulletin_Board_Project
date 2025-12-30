@@ -104,6 +104,7 @@ class Advertisement(models.Model):
     blank=True,
     help_text="В формате +7XXXXXXXXXX"
 )
+  updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата последнего изменения")
   created_at = models.DateTimeField(auto_now_add=True)
   owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ads', verbose_name='Владелец')
   status = models.CharField(choices=STATUS_CHOICES, default='under_review', verbose_name="Статус")

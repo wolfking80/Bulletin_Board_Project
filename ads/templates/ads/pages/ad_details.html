@@ -78,6 +78,10 @@
             <strong>Дата публикации:</strong>
             <span class="ms-2">{{ad.created_at|date:"d.m.Y H:i"}}</span>
           </div>
+          <div class="mb-3">
+            <strong>Дата последнего изменения:</strong>
+            <span class="ms-2">{{ad.updated_at|date:"d.m.Y H:i"}}</span>
+          </div>
           <div>Автор объявления: <a href="{% url 'users:profile' username=ad.owner.username %}">{{ ad.owner }}</div>
         </div>
       </div>
