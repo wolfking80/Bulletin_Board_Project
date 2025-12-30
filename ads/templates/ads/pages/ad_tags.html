@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Объявления с тегом {{ tag.name }}{% endblock page_title %}
+
+{% block page_content %}
+  <a href="javascript:history.back()">&larr;Назад</a>
+  <h1>Объявления с тегом: #{{ tag.name }}</h1>
+  
+  {% if ads %}
+      {% include 'ads/includes/ad_container.html' %}
+  {% else %}
+    <p>С этим тегом объявлений нет.</p>
+  {% endif %}
+{% endblock page_content %}

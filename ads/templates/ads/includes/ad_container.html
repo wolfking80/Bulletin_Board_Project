@@ -30,6 +30,14 @@
               <span class="badge bg-info">{{ ad.subcategory.name }}</span>
             {% endif %}
 
+            <p>Теги: 
+              {% for tag in ad.tags.all %}
+                <a href="{{ tag.get_absolute_url }}">{{ tag }}</a>{% if not forloop.last %}, {% endif %}
+              {% empty %}
+              нет тегов
+              {% endfor %}
+            </p>
+
             <p class="card-text">{{ ad.text|truncatechars:150 }}</p>
 
             <div class="mb-2">

@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 
-from ads.models import Advertisement, Category
+from ads.models import Advertisement, Category, Tag
 from ads.forms import AdvertisementForm
 
 
@@ -20,6 +20,16 @@ def get_category_ads(request, category_slug):
     'ads': ads
   }
   return render(request, 'ads/pages/ads_category.html', context)
+
+
+def get_tag_ads(request, tag_slug):
+  tag = get_object_or_404(Tag, slug=tag_slug)
+  ads = Advertisement.objects.filter(tags=tag, status='published')
+
+  return render(request, 'ads/pages/ad_tags.html', {
+    'tag': tag,
+    'ads': ads
+  })
 
 
 def get_ad_details(request, ad_slug):

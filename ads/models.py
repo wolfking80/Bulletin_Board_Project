@@ -44,6 +44,26 @@ class SubCategory(models.Model):
     verbose_name_plural = "Подкатегории"
     
     
+class Tag(models.Model):
+  name = models.CharField(max_length=100, verbose_name='Название')
+  slug = models.SlugField(unique=True, editable=False, verbose_name='Тэг')
+
+  def save(self, *args, **kwargs):
+    self.slug = slugify(unidecode(self.name))
+    super().save(*args, **kwargs)
+
+  def __str__(self):
+    return f'#{self.name}'
+  
+  def get_absolute_url(self):
+    return reverse('ads:ads_tags', args=[self.slug])
+
+  class Meta:
+    verbose_name = 'Тег'
+    verbose_name_plural = "Теги"
+    db_table = "ad_tags"    
+    
+    
 class Advertisement(models.Model):
   STATUS_CHOICES = (
     ('published', 'Опубликовано'),
@@ -65,6 +85,7 @@ class Advertisement(models.Model):
     blank=True,                 # Необязательное в форме
     verbose_name="Тип сделки"
     )
+  tags = models.ManyToManyField(Tag, related_name='ads', blank=True, verbose_name='Теги')
   goods_image = models.ImageField(
     upload_to='advertisements/',
     verbose_name='Изображение товара',
