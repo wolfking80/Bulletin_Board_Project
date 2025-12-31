@@ -5,12 +5,12 @@ from . import views
 app_name = 'ads'
 
 urlpatterns = [
-    path('ads/', views.get_ads_list, name='ad_list'),
-    path('ads/category/<slug:category_slug>/', views.get_category_ads, name="ads_category"),
-    path('ads/tag/<slug:tag_slug>/', views.get_tag_ads, name="ads_tags"),
-    path('ads/add/', views.create_ad, name = 'ad_add'),
-    path('ads/<int:ad_id>/edit/', views.update_ad, name='edit_ad'),
-    path('ads/<int:ad_id>/delete/', views.delete_ad, name='delete_ad'),
-    path('ads/<slug:ad_slug>', views.get_ad_details, name = 'ad_details'), 
-    path('', views.main_page_view, name='main_page'),
+    path('', views.MainPageView.as_view(), name='main_page'),
+    path('ads/', views.AdsListView.as_view(), name='ad_list'),
+    path('ads/create/', views.AdCreateView.as_view(), name='create_ad'),
+    path('ads/category/<slug:category_slug>/', views.CategoryAdsListView.as_view(), name='category_ads'),
+    path('ads/tag/<slug:tag_slug>/', views.TagAdsListView.as_view(), name='tag_ads'),
+    path('ads/<slug:ad_slug>/', views.AdDetailView.as_view(), name='ad_details'),
+    path('ads/<int:pk>/update/', views.AdUpdateView.as_view(), name='update_ad'),
+    path('ads/<int:pk>/delete/', views.AdDeleteView.as_view(), name='delete_ad'),
 ]

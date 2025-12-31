@@ -19,6 +19,12 @@
               </a>
             </h5>
 
+            {% if request.user == ad.owner %}
+            <p class="card-text">
+                <small class="text-muted">Статус: {{ ad.get_status_display }}</small>
+            </p>
+            {% endif %}
+
             <p class="mb-0">
               <span class="text-muted me-2">Категория:</span>
               <a href="{{ ad.category.get_absolute_url }}" class="fw-medium">
@@ -74,7 +80,7 @@
   <h4 class="alert-heading">Объявлений пока нет!</h4>
   <p>Будьте первым, кто разместит объявление на нашей доске.</p>
   <hr>
-  <a href="{% url 'ads:ad_add' %}" class="btn btn-success">
+  <a href="{% url 'ads:create_ad' %}" class="btn btn-success">
     Создать первое объявление
   </a>
 </div>

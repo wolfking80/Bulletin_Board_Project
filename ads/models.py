@@ -20,7 +20,7 @@ class Category(models.Model):
     return self.name
   
   def get_absolute_url(self):
-    return reverse('ads:ads_category', kwargs={'category_slug': self.slug})
+    return reverse('ads:category_ads', kwargs={'category_slug': self.slug})
   
   class Meta:
     verbose_name = 'Категория'
@@ -56,7 +56,7 @@ class Tag(models.Model):
     return f'#{self.name}'
   
   def get_absolute_url(self):
-    return reverse('ads:ads_tags', args=[self.slug])
+    return reverse('ads:tag_ads', args=[self.slug])
 
   class Meta:
     verbose_name = 'Тег'

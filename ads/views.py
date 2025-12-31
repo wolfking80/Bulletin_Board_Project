@@ -1,124 +1,122 @@
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.urls import reverse_lazy
+from django.shortcuts import render, get_object_or_404
 
 from ads.models import Advertisement, Category, Tag
 from ads.forms import AdvertisementForm
 
 
-def get_ads_list(request):
-  ads = Advertisement.objects.filter(status="published")
-  
-  return render(request=request, template_name='ads/pages/ad_list.html', context={'ads': ads})
-
-
-def get_category_ads(request, category_slug):
-  category = get_object_or_404(Category, slug=category_slug)
-  ads = Advertisement.objects.filter(category=category, status='published')
-  
-  context = {
-    'category': category,
-    'ads': ads
-  }
-  return render(request, 'ads/pages/ads_category.html', context)
-
-
-def get_tag_ads(request, tag_slug):
-  tag = get_object_or_404(Tag, slug=tag_slug)
-  ads = Advertisement.objects.filter(tags=tag, status='published')
-
-  return render(request, 'ads/pages/ad_tags.html', {
-    'tag': tag,
-    'ads': ads
-  })
-
-
-def get_ad_details(request, ad_slug):
-  ad_for_view = get_object_or_404(Advertisement, slug=ad_slug)
-  
-  return render(request, 'ads/pages/ad_details.html', {'ad': ad_for_view})
-
-
-@login_required
-def create_ad(request):
-  title = "Создать объявление"
-  submit_button_text = "Опубликовать"
-  
-  if request.method == "POST":
-    form = AdvertisementForm(request.POST, request.FILES)
-    if form.is_valid():
-      ad = form.save(commit=False)
-      ad.owner = request.user
-      ad.save()
-      
-      tags = form.cleaned_data.get('tags_input')
-      for tag_name in tags:
-        tag, _ = Tag.objects.get_or_create(name=tag_name)
-        ad.tags.add(tag)
-        
-      return redirect('ads:ad_details', ad_slug=ad.slug)
-  else:
-      form = AdvertisementForm()
+class AdsListView(ListView):                # Создаем класс на основе ListView
+  model = Advertisement                    # Указываем модель для работы
+  context_object_name = 'ads'              # Имя переменной в шаблоне
+  template_name = 'ads/pages/ad_list.html' # Путь к шаблону
+  queryset = Advertisement.objects.filter(status="published")  # Фильтрация
     
-  return render(request, 'ads/pages/ad_form.html', {
-    'form': form, 
-    'title': title,
-    'submit_button_text': submit_button_text
-    })
-  
 
-@login_required 
-def update_ad(request, ad_id):
-  title = "Редактировать объявление"
-  submit_button_text = "Сохранить"
-  ad = get_object_or_404(Advertisement, id = ad_id)
-  
-  if (request.user != ad.owner):
-    return render(request, 'ads/pages/not_allowed.html')
-  
-  if request.method == "POST":
-    form = AdvertisementForm(request.POST, request.FILES, instance=ad)
+class CategoryAdsListView(ListView):        # Класс для списка по категории
+  template_name = 'ads/pages/ads_category.html'  # Шаблон для категории
+  context_object_name = 'ads'              # Имя переменной в шаблоне
     
-    if form.is_valid():
-      updated_ad = form.save()
-      
-      tags = form.cleaned_data.get('tags_input')
-      ad.tags.clear()
-      for tag_name in tags:
-        tag, _ = Tag.objects.get_or_create(name=tag_name)
-        ad.tags.add(tag)
-      
-      return redirect("ads:ad_details", ad_slug = updated_ad.slug)
-    else:
-      return render(request, 'ads/pages/ad_form.html', {
-        'form': form,
-        'title': title,
-        'submit_button_text': submit_button_text
-        })
+  def get_queryset(self):                 # Метод для получения данных
+    return Advertisement.objects.filter(  # Возвращаем фильтрованный queryset
+      category__slug=self.kwargs['category_slug'],  # Фильтр по slug категории
+      status='published'                # И по статусу
+    )
     
-  existing_tags = ", ".join(tag.name for tag in ad.tags.all())
-  form = AdvertisementForm(instance=ad, initial={'tags_input': existing_tags})
-  
-  return render(request, 'ads/pages/ad_form.html', {
-    'form': form,
-    'title': title,
-    'submit_button_text': submit_button_text
-    })
-  
-
-@login_required 
-def delete_ad(request, ad_id):
-  ad = get_object_or_404(Advertisement, id = ad_id)
-  
-  if (request.user != ad.owner):
-    return render(request, 'ads/pages/not_allowed.html')
-  
-  if request.method == "POST":
-    ad.delete()
+  def get_context_data(self, **kwargs):   # Добавляем данные в контекст
+    context = super().get_context_data(**kwargs)  # Получаем базовый контекст
+    context['category'] = get_object_or_404(  # Добавляем объект категории
+      Category, slug=self.kwargs['category_slug']  # Ищем категорию по slug
+    )
+    return context                      # Возвращаем обновленный контекст  
     
-    return redirect('ads:ad_list')
+
+class TagAdsListView(ListView):            # Класс для списка по тегу
+  template_name = 'ads/pages/ad_tags.html'  # Шаблон для тегов
+  context_object_name = 'ads'              # Имя переменной в шаблоне
+    
+  def get_queryset(self):                 # Метод получения данных
+    return Advertisement.objects.filter(  # Фильтруем объявления
+      tags__slug=self.kwargs['tag_slug'],  # По slug тега (ManyToMany)
+      status='published'                # И по статусу
+    )
+    
+  def get_context_data(self, **kwargs):   # Добавляем тег в контекст
+    context = super().get_context_data(**kwargs)  # Базовый контекст
+    context['tag'] = get_object_or_404(  # Добавляем объект тега
+      Tag, slug=self.kwargs['tag_slug']  # Ищем тег по slug
+    )
+    return context                      # Возвращаем контекст
   
-  return render(request, 'ads/pages/confirm_ad_delete.html', {'ad': ad})
-
-
-def main_page_view(request):
-  return render(request, template_name='ads/pages/main_page.html')   
+  
+class AdDetailView(DetailView):            # Класс для детального просмотра
+    model = Advertisement                   #  Работаем с моделью Advertisement
+    context_object_name = 'ad'              # Имя переменной в шаблоне
+    template_name = 'ads/pages/ad_details.html'  # Шаблон деталей
+    slug_field = 'slug'                    # Поле модели для поиска
+    slug_url_kwarg = 'ad_slug'             # Имя параметра из URL
+    
+    
+class AdCreateView(LoginRequiredMixin, CreateView):  # Требует авторизацию
+  model = Advertisement                   # Модель для создания
+  form_class = AdvertisementForm          # Кастомная форма
+  template_name = 'ads/pages/ad_form.html'  # Шаблон формы
+  
+  def get_context_data(self, **kwargs):     # Добавляем заголовок и текст кнопки для создания
+        context = super().get_context_data(**kwargs)
+        context['title'] = "Создать объявление"
+        context['submit_button_text'] = "Опубликовать"
+        return context
+    
+  def form_valid(self, form):             # Вызывается при валидной форме
+    ad = form.save(commit=False)        # Не сохраняем сразу в БД
+    ad.owner = self.request.user        # Устанавливаем владельца
+    ad.save()                           # Теперь сохраняем
+    for tag_name in form.cleaned_data.get('tags_input', []):  # Обработка тегов
+      tag, _ = Tag.objects.get_or_create(name=tag_name)  # Создаем/получаем тег
+      ad.tags.add(tag)                # Добавляем тег к объявлению
+    return super().form_valid(form)     # Вызываем родительский метод
+    
+  def get_success_url(self):              # Куда перенаправить после успеха
+    return reverse_lazy('ads:ad_details', kwargs={'ad_slug': self.object.slug})  # На детали
+  
+  
+class AdUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):  # Требует прав
+  model = Advertisement                   # Модель
+  form_class = AdvertisementForm          # Форма
+  template_name = 'ads/pages/ad_form.html'  # Шаблон
+  
+  def get_context_data(self, **kwargs):     # Добавляем заголовок и текст кнопки для редактирования
+        context = super().get_context_data(**kwargs)
+        context['title'] = "Редактировать объявление"
+        context['submit_button_text'] = "Сохранить"
+        return context
+    
+  def test_func(self):                    # Проверка прав доступа
+    return self.request.user == self.get_object().owner  # Только владелец
+    
+  def form_valid(self, form):             # При валидной форме
+    ad = form.save()                    # Сохраняем изменения
+    ad.tags.clear()                     # Удаляем старые теги
+    for tag_name in form.cleaned_data.get('tags_input', []):  # Обработка тегов
+      tag, _ = Tag.objects.get_or_create(name=tag_name)  # Создаем/получаем
+      ad.tags.add(tag)                # Добавляем теги
+    return super().form_valid(form)     # Стандартная логика
+    
+  def get_success_url(self):              # URL после успеха
+    return reverse_lazy('ads:ad_details', kwargs={'ad_slug': self.object.slug})  # На детали
+  
+  
+class AdDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):  # Для удаления
+  model = Advertisement                   # Модель
+  context_object_name = 'ads'              # Имя переменной в шаблоне
+  template_name = 'ads/pages/confirm_ad_delete.html'  # Шаблон подтверждения
+  success_url = reverse_lazy('ads:ad_list')  # Куда редиректить после удаления
+    
+  def test_func(self):                    # Проверка прав
+    return self.request.user == self.get_object().owner  # Только владелец
+  
+  
+class MainPageView(TemplateView):          # Просто отображает шаблон
+  template_name = 'ads/pages/main_page.html'  # Указываем шаблон

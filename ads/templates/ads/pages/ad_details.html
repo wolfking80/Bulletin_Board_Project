@@ -88,7 +88,7 @@
       {% if request.user == ad.owner %}
       <!-- Кнопки БЕЗ ИКОНОК -->
       <div class="mt-4 pt-3 border-top">
-        <a href="{% url 'ads:edit_ad' ad.id %}" class="btn btn-warning me-2">
+        <a href="{% url 'ads:update_ad' ad.id %}" class="btn btn-warning me-2">
           Редактировать
         </a>
         <a href="{% url 'ads:delete_ad' ad.id %}" class="btn btn-danger">
