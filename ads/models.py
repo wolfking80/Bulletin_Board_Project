@@ -11,6 +11,12 @@ User = get_user_model()
 class Category(models.Model):
   name = models.CharField(max_length=100, verbose_name='Название')
   slug = models.SlugField(unique=True, editable=False, verbose_name="Слаг")
+  image = models.ImageField(
+        upload_to='categories/',
+        blank=True,
+        null=True,
+        verbose_name='Изображение категории'
+    )
 
   def save(self, *args, **kwargs):
     self.slug = slugify(unidecode(self.name))
@@ -18,6 +24,10 @@ class Category(models.Model):
 
   def __str__(self):
     return self.name
+  
+  @property
+  def ad_count(self):
+    return self.ads.filter(status='published').count()  
   
   def get_absolute_url(self):
     return reverse('ads:category_ads', kwargs={'category_slug': self.slug})

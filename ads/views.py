@@ -120,3 +120,10 @@ class AdDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):  # Дл
   
 class MainPageView(TemplateView):          # Просто отображает шаблон
   template_name = 'ads/pages/main_page.html'  # Указываем шаблон
+  
+  def get_context_data(self, **kwargs):
+      context = super().get_context_data(**kwargs)
+      context["categories"] = Category.objects.all()
+      return context
+  
+    

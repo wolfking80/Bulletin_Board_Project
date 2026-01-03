@@ -1,7 +1,46 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+{% load static %}
 
-{% block page_title %}Главная страница{% endblock page_title %}
+{% block page_title %}Главная - Доска объявлений{% endblock page_title %}
 
 {% block page_content %}
-  <h1>Главная страница<h1>
+<div class="container mt-4">
+  <h1 class="mb-4">Категории объявлений</h1>
+  
+  {% if categories %}
+  <div class="row">
+    {% for category in categories %}
+    <div class="col-md-6 col-lg-4 mb-4">
+      <div class="card h-100">
+        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" 
+          style="height: 160px;">
+          <img src="{% static 'images/categories/' %}{{ category.slug }}.png" 
+          alt="{{ category.name }}"
+          style="max-height: 100px; max-width: 100%;">
+        </div>
+
+        <div class="card-body">
+          <h5 class="card-title">
+            <a href="{{ category.get_absolute_url }}" class="text-decoration-none">
+              {{ category.name }}
+            </a>
+          </h5>
+          
+          <p class="card-text">
+            <small class="text-muted">
+              {{ category.ad_count }} объявлений
+            </small>
+          </p>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="alert alert-info text-center py-5">
+    <h4 class="alert-heading">Категорий пока нет!</h4>
+    <p>Категории будут добавлены администратором.</p>
+  </div>
+  {% endif %}
+</div>
 {% endblock page_content %}
