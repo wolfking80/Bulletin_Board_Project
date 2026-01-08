@@ -113,7 +113,7 @@ class AdUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):  # Тр
   
 class AdDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):  # Для удаления
   model = Advertisement                   # Модель
-  context_object_name = 'ads'              # Имя переменной в шаблоне
+  context_object_name = 'ad'              # Имя переменной в шаблоне
   template_name = 'ads/pages/confirm_ad_delete.html'  # Шаблон подтверждения
   success_url = reverse_lazy('ads:ad_list')  # Куда редиректить после удаления
     
@@ -132,10 +132,8 @@ class MainPageView(TemplateView):          # Просто отображает �
   
 @login_required
 def toggle_favorite(request, ad_id):
-    """Добавить/удалить из избранного"""
-    from .models import Advertisement  # Локальный импорт для избежания циклической зависимости
+    # Добавить/удалить из избранного
     ad = get_object_or_404(Advertisement, id=ad_id)
-    
     # Проверяем, есть ли уже в избранном
     favorite = Favorite.objects.filter(user=request.user, ad=ad).first()
     
