@@ -131,3 +131,34 @@ class Advertisement(models.Model):
     super().save(*args, **kwargs)
     self.slug = f"{slugify(unidecode(self.title))}-{self.pk}"
     super().save(*args, **kwargs)
+    
+    
+class Favorite(models.Model):
+  user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='favorites')
+  ad = models.ForeignKey('Advertisement', on_delete=models.CASCADE, related_name='favorited_by')
+    
+  class Meta:
+    unique_together = ['user', 'ad']  # один пользователь - одно избранное на объявление
+    
+  def __str__(self):
+    return f"{self.user.username} ★ {self.ad.title}"
+  
+  
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+from .models import Favorite
+
+@login_required
+def toggle_favorite(request, ad_id):
+    # """Добавить/удалить из избранного"""
+    ad = get_object_or_404(Advertisement, id=ad_id)
+    
+    # Проверяем, есть ли уже в избранном
+    favorite = Favorite.objects.filter(user=request.user, ad=ad).first()
+    
+    if favorite:
+        favorite.delete()  # удаляем
+    else:
+        Favorite.objects.create(user=request.user, ad=ad)  # добавляем
+    
+    return redirect(request.META.get('HTTP_REFERER', 'ads:ad_list'))  

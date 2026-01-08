@@ -13,4 +13,6 @@ urlpatterns = [
     path('ads/<slug:ad_slug>/', views.AdDetailView.as_view(), name='ad_details'),
     path('ads/<int:pk>/update/', views.AdUpdateView.as_view(), name='update_ad'),
     path('ads/<int:pk>/delete/', views.AdDeleteView.as_view(), name='delete_ad'),
+    path('favorite/<int:ad_id>/', views.toggle_favorite, name='toggle_favorite'),
+    path('my-favorites/', views.MyFavoritesView.as_view(), name='my_favorites'),
 ]

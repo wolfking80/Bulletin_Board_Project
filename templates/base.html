@@ -33,6 +33,14 @@
                 href="{% url 'ads:ad_list' %}">Объявления
               </a>
             </li>
+            {% if user.is_authenticated %}
+            <li class="nav-item">
+              <a class="nav-link
+              {% if request.resolver_match.url_name == 'my_favorites' %}active{% endif %}"
+              href="{% url 'ads:my_favorites' %}">★ Мои избранные
+              </a>
+            </li>
+            {% endif %}
             <li class="nav-item">
               <a class="nav-link 
                 {% if request.resolver_match.url_name == 'ad_add' %}active{% endif %}"

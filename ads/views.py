@@ -1,20 +1,23 @@
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
 
-from ads.models import Advertisement, Category, Tag
+from ads.models import Advertisement, Category, Tag, Favorite
 from ads.forms import AdvertisementForm
+from .mixins import FavoriteMixin 
 
 
-class AdsListView(ListView):                # Создаем класс на основе ListView
+
+class AdsListView(FavoriteMixin, ListView):                # Создаем класс на основе ListView
   model = Advertisement                    # Указываем модель для работы
   context_object_name = 'ads'              # Имя переменной в шаблоне
   template_name = 'ads/pages/ad_list.html' # Путь к шаблону
   queryset = Advertisement.objects.filter(status="published")  # Фильтрация
     
 
-class CategoryAdsListView(ListView):        # Класс для списка по категории
+class CategoryAdsListView(FavoriteMixin, ListView):        # Класс для списка по категории
   template_name = 'ads/pages/ads_category.html'  # Шаблон для категории
   context_object_name = 'ads'              # Имя переменной в шаблоне
     
@@ -50,7 +53,7 @@ class TagAdsListView(ListView):            # Класс для списка по
     return context                      # Возвращаем контекст
   
   
-class AdDetailView(DetailView):            # Класс для детального просмотра
+class AdDetailView(FavoriteMixin, DetailView):            # Класс для детального просмотра
     model = Advertisement                   #  Работаем с моделью Advertisement
     context_object_name = 'ad'              # Имя переменной в шаблоне
     template_name = 'ads/pages/ad_details.html'  # Шаблон деталей
@@ -125,5 +128,44 @@ class MainPageView(TemplateView):          # Просто отображает �
       context = super().get_context_data(**kwargs)
       context["categories"] = Category.objects.all()
       return context
-  
     
+  
+@login_required
+def toggle_favorite(request, ad_id):
+    """Добавить/удалить из избранного"""
+    from .models import Advertisement  # Локальный импорт для избежания циклической зависимости
+    ad = get_object_or_404(Advertisement, id=ad_id)
+    
+    # Проверяем, есть ли уже в избранном
+    favorite = Favorite.objects.filter(user=request.user, ad=ad).first()
+    
+    if favorite:
+        favorite.delete()  # удаляем
+    else:
+        Favorite.objects.create(user=request.user, ad=ad)  # добавляем
+    
+    return redirect(request.META.get('HTTP_REFERER', 'ads:ad_list'))
+  
+  
+class MyFavoritesView(LoginRequiredMixin, FavoriteMixin, ListView):
+    """Страница с избранными объявлениями пользователя"""
+    template_name = 'ads/pages/ad_list.html'  # Используем тот же шаблон
+    context_object_name = 'ads'
+    
+    def get_queryset(self):
+        """Получаем только избранные объявления пользователя"""
+        # Получаем ID избранных объявлений
+        favorite_ids = self.request.user.favorites.values_list('ad_id', flat=True)
+        
+        # Возвращаем объявления, которые в избранном И опубликованы
+        return Advertisement.objects.filter(
+            id__in=favorite_ids,
+            status='published'
+        ).select_related('category', 'owner')  # Оптимизация запросов
+    
+    def get_context_data(self, **kwargs):
+        """Добавляем заголовок страницы"""
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Мои избранные объявления'
+        context['is_favorites_page'] = True  # Флаг для шаблона
+        return context      

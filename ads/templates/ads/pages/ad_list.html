@@ -1,13 +1,14 @@
 {% extends 'base.html' %}
 
-{% block page_title %}Все объявления{% endblock %}
+{% block page_title %}
+  {% if title %}{{ title }}{% else %}Все объявления{% endif %}
+{% endblock %}
 
 {% block page_content %}
 <div class="container mt-4">
-  <!-- Заголовок -->
-    <h1>Все объявления</h1>
-
-  {% include 'ads/includes/ad_container.html' %}
+    <h1>{% if title %}{{ title }}{% else %}Все объявления{% endif %}</h1>
+    
+    {% include 'ads/includes/ad_container.html' %}
     
 </div>
 {% endblock page_content %}
