@@ -17,14 +17,24 @@
 </head>
 
 <body>
-  <header>Это пока только заготовка шапки
-    <nav class="navbar navbar-expand-sm bg-primary" data-bs-theme="dark">
-      <div class="container-fluid">
-        <a class="navbar-brand" href="{% url 'ads:main_page' %}">Bulletin_Board</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-          aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
+  <header>
+    <nav class="navbar navbar-expand-sm navbar-dark" style="
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+    <div class="container-fluid">
+      <!-- Логотип с иконкой -->
+      <a class="navbar-brand fw-bold" href="{% url 'ads:main_page' %}">
+        <span class="d-inline-block align-middle">
+          {% bs_icon 'megaphone' extra_classes='me-2' %}
+          BulletinBoard
+        </span>
+      </a>
+      
+      <!-- Кнопка для мобильной навигации -->
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>      
         <div class="collapse navbar-collapse" id="navbarNav">
           <ul class="navbar-nav me-auto">
             <li class="nav-item">
