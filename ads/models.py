@@ -142,23 +142,3 @@ class Favorite(models.Model):
     
   def __str__(self):
     return f"{self.user.username} ★ {self.ad.title}"
-  
-  
-from django.shortcuts import get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
-from .models import Favorite
-
-@login_required
-def toggle_favorite(request, ad_id):
-    # """Добавить/удалить из избранного"""
-    ad = get_object_or_404(Advertisement, id=ad_id)
-    
-    # Проверяем, есть ли уже в избранном
-    favorite = Favorite.objects.filter(user=request.user, ad=ad).first()
-    
-    if favorite:
-        favorite.delete()  # удаляем
-    else:
-        Favorite.objects.create(user=request.user, ad=ad)  # добавляем
-    
-    return redirect(request.META.get('HTTP_REFERER', 'ads:ad_list'))  
