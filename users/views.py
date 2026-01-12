@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404
+from django.views.generic.list import MultipleObjectMixin
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import get_user_model
 
@@ -32,13 +32,18 @@ class CustomLogoutView(LogoutView):
   next_page = reverse_lazy('ads:ad_list')
   
 
-class ProfileView(DetailView):
+class ProfileView(DetailView, MultipleObjectMixin):
   model = User
   slug_url_kwarg = 'username'
   slug_field = 'username'
-  template_name = 'users/pages/profile.html'  
+  template_name = 'users/pages/profile.html'
+  paginate_by = 3  
   
   def get_context_data(self, **kwargs):
-    context = super().get_context_data(**kwargs)
-    context['ads'] = self.object.ads.order_by('-created_at')
+    ads = self.object.ads.order_by('-created_at')
+    # Заполняем queryset, чтобы django было что пагинировать
+    context = super().get_context_data(object_list=ads, **kwargs)
+    context['ads'] = context['object_list']
+    del context['object_list']
+    
     return context
