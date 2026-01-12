@@ -90,6 +90,7 @@ class AdUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):  # Тр
   form_class = AdvertisementForm          # Форма
   template_name = 'ads/pages/ad_form.html'  # Шаблон
   
+  
   def get_context_data(self, **kwargs):     # Добавляем заголовок и текст кнопки для редактирования
         context = super().get_context_data(**kwargs)
         context['title'] = "Редактировать объявление"
@@ -98,6 +99,9 @@ class AdUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):  # Тр
     
   def test_func(self):                    # Проверка прав доступа
     return self.request.user == self.get_object().owner  # Только владелец
+
+  def handle_no_permission(self):
+    return render(self.request, 'ads/pages/not_allowed.html', status=403)
     
   def form_valid(self, form):             # При валидной форме
     ad = form.save()                    # Сохраняем изменения
@@ -119,6 +123,9 @@ class AdDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):  # Дл
     
   def test_func(self):                    # Проверка прав
     return self.request.user == self.get_object().owner  # Только владелец
+  
+  def handle_no_permission(self):
+    return render(self.request, 'ads/pages/not_allowed.html', status=403)
   
   
 class MainPageView(TemplateView):          # Просто отображает шаблон
