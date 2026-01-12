@@ -1,10 +1,10 @@
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from django.contrib.auth import login, logout, get_user_model
+from django.contrib.auth import get_user_model
 
 from django.urls import reverse_lazy
 from django.views.generic import CreateView
-from django.contrib.auth.views import LoginView
+from django.contrib.auth.views import LoginView, LogoutView
 
 from config.settings import DEFAULT_LOGIN_REDIRECT_URL
 
@@ -28,11 +28,10 @@ class CustomLoginView(LoginView):
     return next_url
   
   
-def logout_view(request):
-  logout(request)
-  return redirect("ads:ad_list")
-
-
+class CustomLogoutView(LogoutView):
+  next_page = reverse_lazy('ads:ad_list')
+  
+  
 def profile_view(request, username):
   user = get_object_or_404(User, username=username)
   ads = user.ads.order_by('-created_at')
