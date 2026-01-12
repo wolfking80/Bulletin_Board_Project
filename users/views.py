@@ -2,26 +2,18 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import login, logout, get_user_model
 
-from ads.models import Advertisement
+from django.urls import reverse_lazy
+from django.views.generic import CreateView
 
 from config.settings import DEFAULT_LOGIN_REDIRECT_URL
 
 User = get_user_model()
 
 
-def register_view(request):
-  if request.method == 'POST':
-    form = UserCreationForm(request.POST)
-    
-    if form.is_valid():
-      form.save()
-      return redirect('users:login')
-    else:
-      return render(request, 'users/pages/register.html', {'form': form})
-    
-  form = UserCreationForm()
-  
-  return render(request, 'users/pages/register.html', {'form': form})
+class RegisterView(CreateView):
+  template_name = 'users/pages/register.html'
+  form_class = UserCreationForm
+  success_url = reverse_lazy('users:login')
 
 
 def login_view(request):
