@@ -68,7 +68,7 @@
           <div class="card-footer bg-white">
             <div class="d-flex justify-content-between align-items-center">
               <small class="text-muted">
-                {{ ad.created_at|date:"d.m.Y H:i" }}
+                <span class="date-field">{{ ad.created_at|date:"c" }}</span>
               </small>
               <a href="{% url 'ads:ad_details' ad_slug=ad.slug %}" class="btn btn-sm btn-outline-primary">
                 Подробнее
