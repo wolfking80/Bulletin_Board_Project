@@ -1,0 +1,81 @@
+{# Пагинация #}
+{% if is_paginated %}
+  <nav aria-label="Навигация по страницам">
+    <ul class="pagination justify-content-center">
+      {% if page_obj.has_previous %}
+        {# Первая #}
+        <li class="page-item">
+          <a class="page-link" href="?page=1">Первая</a>
+        </li>
+        {# Назад #}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Назад</a>
+        </li>
+      {% else %}
+        {# Первая #}
+        <li class="page-item disabled">
+          <span class="page-link">Первая</span>
+        </li>
+        {# Назад #}
+        <li class="page-item disabled">
+          <span class="page-link">Назад</span>
+        </li>
+      {% endif %}
+
+      {# Всегда отображаем первую страницу #}
+      <li class="page-item {% if page_obj.number == 1 %}active{% endif %}">
+        <a class="page-link" href="?page=1">1</a>
+      </li>
+
+      {# Многоточие перед серединой #}
+      {% if page_obj.number > 3 %}
+        <li class="page-item disabled"><span class="page-link">…</span></li>
+      {% endif %}
+  
+      {% for num in paginator.page_range %}
+        {# Пропускаем первую и последнюю страницы, так как они отображаются отдельно #}
+        {% if num != 1 and num != paginator.num_pages %}
+          {% if num == page_obj.number %}
+            <li class="page-item active">
+              <span class="page-link">{{ num }}</span>
+            </li>
+          {% elif num > page_obj.number|add:-2 and num < page_obj.number|add:2 %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+            </li>
+          {% endif %}
+        {% endif %}
+      {% endfor %}
+
+      {# Многоточие после серединки #}
+      {% if page_obj.number < paginator.num_pages|add:-1 %}
+        <li class="page-item disabled"><span class="page-link">…</span></li>
+      {% endif %}
+
+      {# Всегда отображаем последнюю страницу #}
+      <li class="page-item {% if page_obj.number == paginator.num_pages %}active{% endif %}">
+        <a class="page-link" href="?page={{ paginator.num_pages }}">{{ paginator.num_pages }}</a>
+      </li>
+  
+      {% if page_obj.has_next %}
+        {# Вперёд #}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.next_page_number }}">Вперёд</a>
+        </li>
+        {# Последняя #}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ paginator.num_pages }}">Последняя</a>
+        </li>
+      {% else %}
+        {# Вперёд #}
+        <li class="page-item disabled">
+          <span class="page-link">Вперёд</span>
+        </li>
+        {# Последняя #}
+        <li class="page-item disabled">
+          <span class="page-link">Последняя</span>
+        </li>
+      {% endif %}
+    </ul>
+  </nav>
+{% endif %}

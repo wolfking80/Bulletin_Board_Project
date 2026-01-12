@@ -14,7 +14,8 @@ class AdsListView(FavoriteMixin, ListView):                # Создаем кл
   model = Advertisement                    # Указываем модель для работы
   context_object_name = 'ads'              # Имя переменной в шаблоне
   template_name = 'ads/pages/ad_list.html' # Путь к шаблону
-  queryset = Advertisement.objects.filter(status="published")  # Фильтрация
+  queryset = Advertisement.objects.filter(status="published").order_by('created_at')  # Фильтрация
+  paginate_by = 3
     
 
 class CategoryAdsListView(FavoriteMixin, ListView):        # Класс для списка по категории
@@ -156,6 +157,7 @@ class MyFavoritesView(LoginRequiredMixin, FavoriteMixin, ListView):
     """Страница с избранными объявлениями пользователя"""
     template_name = 'ads/pages/ad_list.html'  # Используем тот же шаблон
     context_object_name = 'ads'
+    paginate_by = 3
     
     def get_queryset(self):
         """Получаем только избранные объявления пользователя"""
