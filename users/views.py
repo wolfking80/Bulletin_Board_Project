@@ -3,7 +3,7 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import get_user_model
 
 from django.urls import reverse_lazy
-from django.views.generic import CreateView
+from django.views.generic import CreateView, DetailView
 from django.contrib.auth.views import LoginView, LogoutView
 
 from config.settings import DEFAULT_LOGIN_REDIRECT_URL
@@ -31,14 +31,14 @@ class CustomLoginView(LoginView):
 class CustomLogoutView(LogoutView):
   next_page = reverse_lazy('ads:ad_list')
   
+
+class ProfileView(DetailView):
+  model = User
+  slug_url_kwarg = 'username'
+  slug_field = 'username'
+  template_name = 'users/pages/profile.html'  
   
-def profile_view(request, username):
-  user = get_object_or_404(User, username=username)
-  ads = user.ads.order_by('-created_at')
-
-  context = {
-    'user': user,
-    'ads': ads
-  }
-
-  return render(request, 'users/pages/profile.html', context)
+  def get_context_data(self, **kwargs):
+    context = super().get_context_data(**kwargs)
+    context['ads'] = self.object.ads.order_by('-created_at')
+    return context
