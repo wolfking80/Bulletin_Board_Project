@@ -57,6 +57,12 @@
                 href="{% url 'ads:create_ad' %}">Добавить объявление
               </a>
             </li>
+            <li class="nav-item">
+              <a class="nav-link 
+                {% if request.resolver_match.url_name == 'ad_search' %}active{% endif %}"
+                href="{% url 'ads:ad_search' %}">Найти объявление
+              </a>
+            </li>
           </ul>
           <ul class="navbar-nav ms-auto">
             {% if request.user.is_authenticated %}

@@ -4,7 +4,7 @@ from django.urls import reverse_lazy
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 
-from django.db.models import F
+from django.db.models import F, Q
 
 from ads.models import Advertisement, Category, Tag, Favorite
 from ads.forms import AdvertisementForm
@@ -18,6 +18,36 @@ class AdsListView(FavoriteMixin, ListView):                # Создаем кл
   template_name = 'ads/pages/ad_list.html' # Путь к шаблону
   queryset = Advertisement.objects.filter(status="published").order_by('created_at')  # Фильтрация
   paginate_by = 3
+  
+  
+class AdSearchView(ListView):
+  template_name = 'ads/pages/ad_search.html'
+  context_object_name = 'ads'
+  
+  def get_context_data(self, **kwargs):
+      context = super().get_context_data(**kwargs)
+      context["search_performed"] = any(self.request.GET.keys())
+      return context
+    
+  def get_queryset(self):
+    search_query = self.request.GET.get('search')
+    
+    if search_query:
+      queryset = Advertisement.objects.filter(status='published')
+      search_category = self.request.GET.get('search_category')
+      search_tag = self.request.GET.get('search_tag')
+      
+      query = Q(title__icontains=search_query) | Q(text__icontains=search_query)
+
+      if search_category:
+        query |= Q(category__name__icontains=search_query)
+        
+      if search_tag:
+        query |= Q(tags__name__icontains=search_query)
+        
+      return queryset.filter(query).order_by('-created_at')  
+          
+    return Advertisement.objects.none()
     
 
 class CategoryAdsListView(FavoriteMixin, ListView):        # Класс для списка по категории

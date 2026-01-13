@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Поиск объявлений{% endblock page_title %}
+
+{% block page_content %}
+  <h1>Найти объявление</h1>
+
+  <form>
+    <input type="text" name="search" placeholder="Введите запрос..." value="{{ request.GET.search }}">
+
+    <label>
+      <input type="checkbox" name="search_category" {% if request.GET.search_category %}checked{%endif%}>
+      Искать в категориях
+    </label>
+
+    <label>
+      <input type='checkbox' name='search_tag' {% if request.GET.search_tag %}checked{% endif %}>
+      Искать в тэгах
+    </label>
+
+    <button type="submit">Найти</button>
+    <button type="reset">Очистить</button>
+  </form>
+  
+  {% if search_performed %}
+    {% if ads %}
+      {% for ad in ads %}
+        {% include 'ads/includes/ad_container.html' %}
+      {%endfor%}
+    {% else %}
+    <p>По Вашему запросу ничего не найдено</p>
+    {% endif %}
+  {% else %}
+    <p>Введите запрос для поиска объявлений</p>
+  {% endif %}  
+
+{% endblock page_content %}
