@@ -65,12 +65,17 @@ class AdDetailView(FavoriteMixin, DetailView):            # Класс для д
     
     def get_object(self, queryset=None):
       ad = super().get_object(queryset)
+      
+      user = self.request.user
 
       session_key = f'ad_{ad.id}_viewed' # "ad_32_viewed"
-      if not self.request.session.get(session_key, False) and ad.owner != self.request.user:
+      if not self.request.session.get(session_key, False) and ad.owner != user:
         Advertisement.objects.filter(id=ad.id).update(views=F("views") + 1)
         ad.views = ad.views + 1
         self.request.session[session_key] = True
+        
+        if user.is_authenticated and user != ad.owner and not ad.viewed_users.filter(id=user.id).exists():
+          ad.viewed_users.add(user)
 
       return ad
     
