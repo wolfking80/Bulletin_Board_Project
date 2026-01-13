@@ -1,4 +1,6 @@
 {% extends 'base.html' %}
+{% load bootstrap_icons %}
+
 
 {% block page_content %}
 <div class="container mt-4">
@@ -83,6 +85,7 @@
             <span class="ms-2 date-field">{{ad.updated_at|date:"c"}}</span>
           </div>
           <div>Автор объявления: <a href="{% url 'users:profile' username=ad.owner.username %}">{{ ad.owner }}</div>
+          <div>{% bs_icon 'eye' %}Количество просмотров: {{ ad.views }}</div>  
         </div>
       </div>
       {% if request.user == ad.owner %}

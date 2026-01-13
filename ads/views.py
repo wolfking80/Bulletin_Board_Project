@@ -4,6 +4,8 @@ from django.urls import reverse_lazy
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 
+from django.db.models import F
+
 from ads.models import Advertisement, Category, Tag, Favorite
 from ads.forms import AdvertisementForm
 from .mixins import FavoriteMixin 
@@ -60,6 +62,17 @@ class AdDetailView(FavoriteMixin, DetailView):            # Класс для д
     template_name = 'ads/pages/ad_details.html'  # Шаблон деталей
     slug_field = 'slug'                    # Поле модели для поиска
     slug_url_kwarg = 'ad_slug'             # Имя параметра из URL
+    
+    def get_object(self, queryset=None):
+      ad = super().get_object(queryset)
+
+      session_key = f'ad_{ad.id}_viewed' # "ad_32_viewed"
+      if not self.request.session.get(session_key, False) and ad.owner != self.request.user:
+        Advertisement.objects.filter(id=ad.id).update(views=F("views") + 1)
+        ad.views = ad.views + 1
+        self.request.session[session_key] = True
+
+      return ad
     
     
 class AdCreateView(LoginRequiredMixin, CreateView):  # Требует авторизацию

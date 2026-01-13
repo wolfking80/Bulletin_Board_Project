@@ -118,6 +118,7 @@ class Advertisement(models.Model):
   created_at = models.DateTimeField(auto_now_add=True)
   owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ads', verbose_name='Владелец')
   status = models.CharField(choices=STATUS_CHOICES, default='under_review', verbose_name="Статус")
+  views = models.PositiveIntegerField(default=0, verbose_name="Просмотры")
   
   class Meta:
     verbose_name = 'объявление'
