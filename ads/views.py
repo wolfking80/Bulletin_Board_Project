@@ -74,8 +74,8 @@ class AdDetailView(FavoriteMixin, DetailView):            # Класс для д
         ad.views = ad.views + 1
         self.request.session[session_key] = True
         
-        if user.is_authenticated and user != ad.owner and not ad.viewed_users.filter(id=user.id).exists():
-          ad.viewed_users.add(user)
+      if user.is_authenticated and user != ad.owner and not ad.viewed_users.filter(id=user.id).exists():
+        ad.viewed_users.add(user)
 
       return ad
     
