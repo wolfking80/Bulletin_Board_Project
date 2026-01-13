@@ -5,11 +5,11 @@
       {% if page_obj.has_previous %}
         {# Первая #}
         <li class="page-item">
-          <a class="page-link" href="?page=1">Первая</a>
+          <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Первая</a>
         </li>
         {# Назад #}
         <li class="page-item">
-          <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Назад</a>
+          <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Назад</a>
         </li>
       {% else %}
         {# Первая #}
@@ -24,7 +24,7 @@
 
       {# Всегда отображаем первую страницу #}
       <li class="page-item {% if page_obj.number == 1 %}active{% endif %}">
-        <a class="page-link" href="?page=1">1</a>
+        <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">1</a>
       </li>
 
       {# Многоточие перед серединой #}
@@ -41,7 +41,7 @@
             </li>
           {% elif num > page_obj.number|add:-2 and num < page_obj.number|add:2 %}
             <li class="page-item">
-              <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+              <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
             </li>
           {% endif %}
         {% endif %}
@@ -54,17 +54,17 @@
 
       {# Всегда отображаем последнюю страницу #}
       <li class="page-item {% if page_obj.number == paginator.num_pages %}active{% endif %}">
-        <a class="page-link" href="?page={{ paginator.num_pages }}">{{ paginator.num_pages }}</a>
+        <a class="page-link" href="?page={{ paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ paginator.num_pages }}</a>
       </li>
   
       {% if page_obj.has_next %}
         {# Вперёд #}
         <li class="page-item">
-          <a class="page-link" href="?page={{ page_obj.next_page_number }}">Вперёд</a>
+          <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Вперёд</a>
         </li>
         {# Последняя #}
         <li class="page-item">
-          <a class="page-link" href="?page={{ paginator.num_pages }}">Последняя</a>
+          <a class="page-link" href="?page={{ paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Последняя</a>
         </li>
       {% else %}
         {# Вперёд #}

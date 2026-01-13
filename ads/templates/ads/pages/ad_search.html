@@ -31,6 +31,9 @@
           {% endif %}
         {%endfor%}
       </div>
+
+    {% include 'ads/includes/pagination.html' %}
+
     {% else %}
     <p>По Вашему запросу ничего не найдено</p>
     {% endif %}

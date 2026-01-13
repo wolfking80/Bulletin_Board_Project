@@ -23,6 +23,7 @@ class AdsListView(FavoriteMixin, ListView):                # Создаем кл
 class AdSearchView(ListView):
   template_name = 'ads/pages/ad_search.html'
   context_object_name = 'ads'
+  paginate_by = 3
   
   def get_context_data(self, **kwargs):
       context = super().get_context_data(**kwargs)
