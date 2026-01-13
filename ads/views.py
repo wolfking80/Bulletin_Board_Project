@@ -53,6 +53,7 @@ class AdSearchView(ListView):
 class CategoryAdsListView(FavoriteMixin, ListView):        # Класс для списка по категории
   template_name = 'ads/pages/ads_category.html'  # Шаблон для категории
   context_object_name = 'ads'              # Имя переменной в шаблоне
+  paginate_by = 3
     
   def get_queryset(self):                 # Метод для получения данных
     return Advertisement.objects.filter(  # Возвращаем фильтрованный queryset
@@ -71,6 +72,7 @@ class CategoryAdsListView(FavoriteMixin, ListView):        # Класс для �
 class TagAdsListView(ListView):            # Класс для списка по тегу
   template_name = 'ads/pages/ad_tags.html'  # Шаблон для тегов
   context_object_name = 'ads'              # Имя переменной в шаблоне
+  paginate_by = 3
     
   def get_queryset(self):                 # Метод получения данных
     return Advertisement.objects.filter(  # Фильтруем объявления

@@ -24,9 +24,13 @@
   
   {% if search_performed %}
     {% if ads %}
-      {% for ad in ads %}
-        {% include 'ads/includes/ad_container.html' %}
-      {%endfor%}
+      <div class="row">
+        {% for ad in ads %}
+          {% if request.user == ad.owner or ad.status == 'published' %}
+            {% include 'ads/includes/ad_card.html' %}
+          {% endif %}
+        {%endfor%}
+      </div>
     {% else %}
     <p>По Вашему запросу ничего не найдено</p>
     {% endif %}

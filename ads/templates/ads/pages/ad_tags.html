@@ -7,7 +7,7 @@
   <h1>Объявления с тегом: #{{ tag.name }}</h1>
   
   {% if ads %}
-      {% include 'ads/includes/ad_container.html' %}
+      {% include 'ads/includes/ad_list_container.html' %}
   {% else %}
     <p>С этим тегом объявлений нет.</p>
   {% endif %}

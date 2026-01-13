@@ -1,9 +1,4 @@
-{% if ads %}
-<!-- Список в виде карточек -->
-<div class="row">
-  {% for ad in ads %}
-    {% if request.user == ad.owner or ad.status == 'published' %}
-      <div class="col-md-6 col-lg-4 mb-4">
+<div class="col-md-6 col-lg-4 mb-4">
         <div class="card h-100">
           <!-- Изображение -->
           {% if ad.goods_image %}
@@ -81,32 +76,3 @@
           </div>
         </div>
       </div>
-    {% endif %}
-  {% endfor %}
-</div>
-
-{% else %}
-{% if is_favorites_page %}
-  <!-- Сообщение ТОЛЬКО для страницы ИЗБРАННОГО -->
-  <div class="alert alert-info text-center py-5">
-    <h4 class="alert-heading">У вас пока нет избранных объявлений</h4>
-    <p>Нажимайте на звездочку ★ на карточках объявлений, чтобы добавить их сюда.</p>
-    <hr>
-    <a href="{% url 'ads:ad_list' %}" class="btn btn-primary">
-      Посмотреть все объявления
-    </a>
-  </div>
-
-  {% else %}
-  <!-- Сообщение для ВСЕХ остальных страниц -->
-  <div class="alert alert-info text-center py-5">
-    <h4 class="alert-heading">Объявлений пока нет!</h4>
-    <hr>
-    <a href="{% url 'ads:create_ad' %}" class="btn btn-success">
-      Создать первое объявление
-    </a>
-  </div>
-  {% endif %}
-{% endif %}
-
-{% include 'ads/includes/pagination.html' %}
