@@ -1,4 +1,4 @@
-<div class="col-md-6 col-lg-4 mb-4">
+<div class="col-md-6 col-lg-4 mb-4 ad-card-container">
         <div class="card h-100">
           <!-- Изображение -->
           {% if ad.goods_image %}
@@ -19,10 +19,11 @@
             {% endif %}
 
             {% if user.is_authenticated %}
-              <a href="{% url 'ads:toggle_favorite' ad.id %}" 
-              class="btn btn-sm {% if ad.id in favorite_ids %}btn-warning{% else %}btn-outline-warning{% endif %}">
-              ★
-              </a>
+              <button type="button" 
+                class="btn btn-sm fav-btn {% if ad.id in favorite_ids %}btn-warning{% else %}btn-outline-warning{% endif %}"
+                data-url="{% url 'ads:toggle_favorite' ad.id %}"
+                data-is-favorites-page="{{ is_favorites_page|default:'false' }}">★
+              </button>
             {% endif %}
 
             {% if request.user == ad.owner %}

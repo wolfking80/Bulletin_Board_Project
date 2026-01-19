@@ -195,6 +195,7 @@ class MainPageView(TemplateView):          # Просто отображает �
     
   
 @login_required
+@require_POST
 def toggle_favorite(request, ad_id):
     # Добавить/удалить из избранного
     ad = get_object_or_404(Advertisement, id=ad_id)
@@ -203,10 +204,12 @@ def toggle_favorite(request, ad_id):
     
     if favorite:
         favorite.delete()  # удаляем
+        is_favorite = False
     else:
         Favorite.objects.create(user=request.user, ad=ad)  # добавляем
+        is_favorite = True
     
-    return redirect(request.META.get('HTTP_REFERER', 'ads:ad_list'))
+    return JsonResponse({'is_favorite': is_favorite})
   
   
 class MyFavoritesView(LoginRequiredMixin, FavoriteMixin, ListView):
