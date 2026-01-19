@@ -3,13 +3,18 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
+from django.http import JsonResponse
+from django.contrib.auth import get_user_model
 
 from django.db.models import F, Q
 
-from ads.models import Advertisement, Category, Tag, Favorite
+from ads.models import Advertisement, Category, Tag, Favorite, SellerRating
 from ads.forms import AdvertisementForm
 from .mixins import FavoriteMixin 
 
+
+User = get_user_model()
 
 
 class AdsListView(FavoriteMixin, ListView):                # Создаем класс на основе ListView
@@ -226,4 +231,42 @@ class MyFavoritesView(LoginRequiredMixin, FavoriteMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['title'] = 'Мои избранные объявления'
         context['is_favorites_page'] = True  # Флаг для шаблона
-        return context      
+        return context
+      
+      
+@login_required
+@require_POST
+def rate_seller(request, seller_id, rating_type):
+  seller = get_object_or_404(User, id=seller_id)
+  if request.user == seller:
+    return JsonResponse({'error': 'Self-rating not allowed'}, status=400)
+
+  is_positive = (rating_type == 'plus')
+  rating = SellerRating.objects.filter(voter=request.user, seller=seller).first()
+    
+  user_choice = 'none' # Статус для JS
+    
+  if rating:
+    if rating.is_positive == is_positive:
+      rating.delete()
+    else:
+      rating.is_positive = is_positive
+      rating.save()
+      user_choice = rating_type # 'plus' или 'minus'
+  else:
+    SellerRating.objects.create(voter=request.user, seller=seller, is_positive=is_positive)
+    user_choice = rating_type
+    
+  pos = seller.received_ratings.filter(is_positive=True).count()
+  neg = seller.received_ratings.filter(is_positive=False).count()
+  total = pos + neg
+    
+  # Считаем процент (защита от деления на ноль)
+  trust_percent = round((pos / total) * 100) if total > 0 else 0
+
+  return JsonResponse({
+    'pos': pos,
+    'neg': neg,
+    'trust_percent': trust_percent,
+    'user_choice': user_choice # Отправляем статус клика
+  })            

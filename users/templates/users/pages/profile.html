@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %} 
 
 {% block page_title %}Профиль{% endblock page_title %}
 
@@ -10,7 +11,35 @@
     <h1>Мои объявления</h1>
   {% else %}
     <h1>Объявления пользователя {{ user }}</h1>
-  {% endif %} 
+  {% endif %}
+  
+  <div class="rating-box mb-4">
+    <h6>Рейтинг пользователя {{ user }}: <span id="trust-percent">{{ trust_percent }}</span>%</h6>
+    
+    <div class="progress mb-2" style="height: 12px; width: 250px; background-color: #e9ecef;">
+    <!-- Зеленая часть (Позитив) -->
+      <div id="pos-bar" class="progress-bar bg-success" role="progressbar" 
+        style="width: {{ trust_percent }}%" aria-valuenow="{{ trust_percent }}" aria-valuemin="0" aria-valuemax="100"></div>
+        
+    <!-- Красная часть (Негатив)  вычисляем остаток: 100 - trust_percent   -->
+      <div id="neg-bar" class="progress-bar bg-danger" role="progressbar" 
+        style="width: {{ neg_percent }}%"> 
+      </div>
+    </div>
+    <button class="btn rating-btn {% if user_choice == 'plus' %}btn-success{% else %}btn-outline-success{% endif %} btn-sm" 
+      data-url="{% url 'ads:rate_seller' object.id 'plus' %}"
+      {% if request.user == object %}disabled{% endif %}>👍 <span id="pos-count">{{ pos_rating }}</span>
+    </button>
+
+    <button class="btn rating-btn {% if user_choice == 'minus' %}btn-danger{% else %}btn-outline-danger{% endif %} btn-sm" 
+      data-url="{% url 'ads:rate_seller' object.id 'minus' %}"
+      {% if request.user == object %}disabled{% endif %}>👎 <span id="neg-count">{{ neg_rating }}</span>
+    </button>
+</div>
+
+{% block scripts %}
+<script type="module" src="{% static 'js/rating.js' %}"></script>
+{% endblock scripts %}
 
   {% include 'ads/includes/ad_list_container.html' %}
 

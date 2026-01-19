@@ -43,6 +43,23 @@ class ProfileView(DetailView, MultipleObjectMixin):
     ads = self.object.ads.order_by('-created_at')
     # Заполняем queryset, чтобы django было что пагинировать
     context = super().get_context_data(object_list=ads, **kwargs)
+    pos = self.object.received_ratings.filter(is_positive=True).count()
+    neg = self.object.received_ratings.filter(is_positive=False).count()
+    total = pos + neg
+    
+    context['pos_rating'] = pos
+    context['neg_rating'] = neg
+    
+    if total > 0:
+      context['trust_percent'] = round((pos / total) * 100)
+      context['neg_percent'] = 100 - context['trust_percent']
+    else:
+      context['trust_percent'] = 0
+      context['neg_percent'] = 0
+    if self.request.user.is_authenticated:
+      user_rating = self.object.received_ratings.filter(voter=self.request.user).first()
+      context['user_choice'] = 'plus' if user_rating and user_rating.is_positive else \
+                                'minus' if user_rating else 'none'
     context['ads'] = context['object_list']
     del context['object_list']
     

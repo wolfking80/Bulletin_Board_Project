@@ -144,3 +144,12 @@ class Favorite(models.Model):
     
   def __str__(self):
     return f"{self.user.username} ★ {self.ad.title}"
+  
+  
+class SellerRating(models.Model):
+    voter = models.ForeignKey(User, on_delete=models.CASCADE, related_name='given_ratings')
+    seller = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_ratings')
+    is_positive = models.BooleanField() # True - за "рекомендую", False - за "не рекомендую"
+
+    class Meta:
+        unique_together = ['voter', 'seller'] # Один юзер — один голос за одного продавца  
