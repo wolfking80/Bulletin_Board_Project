@@ -84,7 +84,7 @@
             <strong>Дата последнего изменения:</strong>
             <span class="ms-2 date-field">{{ad.updated_at|date:"c"}}</span>
           </div>
-          <div>Автор объявления: <a href="{% url 'users:profile' username=ad.owner.username %}">{{ ad.owner }}</div>
+          <div>Автор объявления: <a href="{% url 'users:profile' username=ad.owner.username %}">{{ ad.owner }}</a></div>
           <div>{% bs_icon 'eye' %}Количество просмотров: {{ ad.views }}</div>  
         </div>
       </div>
@@ -102,4 +102,17 @@
     </div>
   </div>
 </div>
+
+{% if related_ads %}
+<div class="container mt-5">
+    <hr>
+    <h3 class="mb-4">Похожие предложения в категории "{{ ad.category.name }}"</h3>
+    <div class="row">
+{% comment %} with ad=item внутри тега {% include %} используется для явной передачи переменной во вложенный шаблон под конкретным именем {% endcomment %}
+      {% for item in related_ads %}
+        {% include 'ads/includes/ad_card.html' with ad=item %}
+      {% endfor %}
+    </div>
+</div>
+{% endif %}
 {% endblock %}

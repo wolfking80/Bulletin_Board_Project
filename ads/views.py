@@ -118,6 +118,21 @@ class AdDetailView(FavoriteMixin, DetailView):            # Класс для д
 
       return ad                     # возвращаем полностью обработанное объявление в шаблон
     
+    def get_context_data(self, **kwargs):
+      context = super().get_context_data(**kwargs)
+    # Получаем 3 похожих объявления
+      related_ads = Advertisement.objects.filter(  # фильтруем по категории
+        category=self.object.category,             # та же категория, что и у просматриваемого
+        status='published'                         # только опубликованные
+      ).exclude(id=self.object.id).order_by('?')[:3]  # исключаем просматриваемое объявление из списка и выдаем 3 случайных
+    
+      context['related_ads'] = related_ads    # добавляем в контекст похожие объявления        
+    
+      if self.request.user.is_authenticated:
+        context['favorite_ids'] = self.request.user.favorites.values_list('ad_id', flat=True) # для корректного отображения отметки "избранных" объявлений
+        
+      return context
+    
     
 class AdCreateView(LoginRequiredMixin, CreateView):  # Требует авторизацию
   model = Advertisement                   # Модель для создания
