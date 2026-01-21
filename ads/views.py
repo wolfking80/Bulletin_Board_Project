@@ -22,38 +22,39 @@ class AdsListView(FavoriteMixin, ListView):                # Создаем кл
   context_object_name = 'ads'              # Имя переменной в шаблоне
   template_name = 'ads/pages/ad_list.html' # Путь к шаблону
   queryset = Advertisement.objects.filter(status="published").order_by('created_at')  # Фильтрация
-  paginate_by = 3
+  paginate_by = 3                    # Пагинация - максимум 3 объявления на странице
   
   
 class AdSearchView(ListView):
-  template_name = 'ads/pages/ad_search.html'
-  context_object_name = 'ads'
-  paginate_by = 3
+  template_name = 'ads/pages/ad_search.html'   # Путь к шаблону
+  context_object_name = 'ads'                  # Имя переменной в шаблоне
+  paginate_by = 3                              # Пагинация - максимум 3 объявления на странице
   
-  def get_context_data(self, **kwargs):
-      context = super().get_context_data(**kwargs)
-      context["search_performed"] = any(self.request.GET.keys())
-      return context
+  def get_context_data(self, **kwargs):         # переопределяем метод, который готовит данные (контекст) для отправки в HTML
+      context = super().get_context_data(**kwargs)   # метод родителя, чтобы не потерять стандартные данные
+      context["search_performed"] = any(self.request.GET.keys())   # создаем флаг: если в URL есть хоть один GET-параметр (ключ), значит поиск был запущен
+      return context                              # возвращаем готовый пакет данных
     
-  def get_queryset(self):
-    search_query = self.request.GET.get('search')
+  def get_queryset(self):                        # основной метод, определяющий, какие именно записи из БД нужно достать
+    search_query = self.request.GET.get('search')   # вытаскиваем из адреса значение параметра search (то, что пользователь ввел в строку поиска)
     
-    if search_query:
-      queryset = Advertisement.objects.filter(status='published')
-      search_category = self.request.GET.get('search_category')
-      search_tag = self.request.GET.get('search_tag')
+    if search_query:                                               # если строка поиска не пустая, начинаем фильтрацию
+      queryset = Advertisement.objects.filter(status='published')  # берем только объявления со статусом "Опубликовано"
+      search_category = self.request.GET.get('search_category')   # проверяем, стоит ли галочка «искать в категориях»
+      search_tag = self.request.GET.get('search_tag')             # проверяем, стоит ли галочка «искать в тэгах»
       
+      # создаем Q-объект для поиска подстроки (icontains — без учета регистра) в заголовке ИЛИ в тексте объявления
       query = Q(title__icontains=search_query) | Q(text__icontains=search_query)
 
-      if search_category:
-        query |= Q(category__name__icontains=search_query)
+      if search_category:                                    # если галочка категорий активна..
+        query |= Q(category__name__icontains=search_query)   # добавляем еще одно ИЛИ: искать совпадение в названии категории
         
-      if search_tag:
-        query |= Q(tags__name__icontains=search_query)
+      if search_tag:                                         # если галочка тэгов активна..
+        query |= Q(tags__name__icontains=search_query)       # добавляем еще одно ИЛИ: искать совпадение в названии тэгов
         
-      return queryset.filter(query).order_by('-created_at')  
+      return queryset.filter(query).order_by('-created_at')  # применяем все собранные условия к базе и сортируем: сначала новые
           
-    return Advertisement.objects.none()
+    return Advertisement.objects.none()   # если search_query был пустой (первый заход на страницу), возвращаем пустой результат вместо списка объявлений
     
 
 class CategoryAdsListView(FavoriteMixin, ListView):        # Класс для списка по категории
@@ -102,20 +103,20 @@ class AdDetailView(FavoriteMixin, DetailView):            # Класс для д
     slug_url_kwarg = 'ad_slug'             # Имя параметра из URL
     
     def get_object(self, queryset=None):
-      ad = super().get_object(queryset)
+      ad = super().get_object(queryset)      # получаем само объявление из базы
       
-      user = self.request.user
+      user = self.request.user              # запоминаем, кто сейчас открыл страницу (авторизованный юзер или гость)
 
-      session_key = f'ad_{ad.id}_viewed' # "ad_32_viewed"
-      if not self.request.session.get(session_key, False) and ad.owner != user:
-        Advertisement.objects.filter(id=ad.id).update(views=F("views") + 1)
-        ad.views = ad.views + 1
-        self.request.session[session_key] = True
+      session_key = f'ad_{ad.id}_viewed' # создаем уникальный ключ для текущего браузера (например, "ad_32_viewed")
+      if not self.request.session.get(session_key, False) and ad.owner != user:  # если в сессии нет этого ключа (человек зашел впервые) И этот человек не является владельцем
+        Advertisement.objects.filter(id=ad.id).update(views=F("views") + 1)  # запрос в БД: « + 1 к просмотрам». F-выражение нужно, чтобы избежать проблем, если два человека нажмут кнопку одновременно
+        ad.views = ad.views + 1      # обновляем цифру в текущей переменной, чтобы на странице сразу отобразилось актуальное число
+        self.request.session[session_key] = True   # записываем в сессию (куки браузера) флаг: «этот пользователь это объявление уже видел»
         
-      if user.is_authenticated and user != ad.owner and not ad.viewed_users.filter(id=user.id).exists():
-        ad.viewed_users.add(user)
+      if user.is_authenticated and user != ad.owner and not ad.viewed_users.filter(id=user.id).exists(): # проверка: юзер вошел в аккаунт И он не автор И его еще нет в списке «кто смотрел» в БД
+        ad.viewed_users.add(user)   # добавляем связь между пользователем и объявлением в специальную таблицу
 
-      return ad
+      return ad                     # возвращаем полностью обработанное объявление в шаблон
     
     
 class AdCreateView(LoginRequiredMixin, CreateView):  # Требует авторизацию
@@ -238,38 +239,38 @@ class MyFavoritesView(LoginRequiredMixin, FavoriteMixin, ListView):
       
       
 @login_required
-@require_POST
-def rate_seller(request, seller_id, rating_type):
-  seller = get_object_or_404(User, id=seller_id)
-  if request.user == seller:
+@require_POST         # разрешает только POST-запросы. Это защита: нельзя изменить рейтинг, просто перейдя по ссылке.
+def rate_seller(request, seller_id, rating_type):  # принимаем запрос, ID продавца и тип клика (plus или minus)
+  seller = get_object_or_404(User, id=seller_id)   # ищем продавца в базе. Если такого ID нет, выдаст ошибку 404
+  if request.user == seller:                       # проверка на «самолайк». Если ID текущего юзера совпадает с ID продавца, возвращаем ошибку 400
     return JsonResponse({'error': 'Self-rating not allowed'}, status=400)
 
-  is_positive = (rating_type == 'plus')
-  rating = SellerRating.objects.filter(voter=request.user, seller=seller).first()
+  is_positive = (rating_type == 'plus')      # превращаем строку из URL в булево значение (True, если нажали плюс)
+  rating = SellerRating.objects.filter(voter=request.user, seller=seller).first()  # ищем в базе, голосовал ли этот юзер за этого продавца ранее
     
-  user_choice = 'none' # Статус для JS
+  user_choice = 'none' # статус для JS, какую кнопку закрасить в итоге
     
-  if rating:
-    if rating.is_positive == is_positive:
+  if rating:            # если голос уже существует
+    if rating.is_positive == is_positive:  # если нажали ту же кнопку, что и раньше, то удаляем голос
       rating.delete()
     else:
-      rating.is_positive = is_positive
+      rating.is_positive = is_positive     # если нажали противоположную кнопку, то меняем значение в базеs
       rating.save()
-      user_choice = rating_type # 'plus' или 'minus'
-  else:
+      user_choice = rating_type # ставим статус plus или minu
+  else:                         # если голоса еще не было, просто создаем новую запись SellerRating и ставим статус
     SellerRating.objects.create(voter=request.user, seller=seller, is_positive=is_positive)
     user_choice = rating_type
     
-  pos = seller.received_ratings.filter(is_positive=True).count()
-  neg = seller.received_ratings.filter(is_positive=False).count()
-  total = pos + neg
+  pos = seller.received_ratings.filter(is_positive=True).count()   # считаем общее количество «пальцев вверх» у продавца
+  neg = seller.received_ratings.filter(is_positive=False).count()  # считаем количество «пальцев вниз»
+  total = pos + neg                                                # общее число проголосовавших
     
   # Считаем процент (защита от деления на ноль)
   trust_percent = round((pos / total) * 100) if total > 0 else 0
 
-  return JsonResponse({
+  return JsonResponse({         # упаковываем все новые цифры и статус user_choice в JSON-пакет и отправляем обратно в JS
     'pos': pos,
     'neg': neg,
     'trust_percent': trust_percent,
-    'user_choice': user_choice # Отправляем статус клика
+    'user_choice': user_choice
   })            

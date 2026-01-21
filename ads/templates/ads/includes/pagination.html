@@ -3,19 +3,11 @@
   <nav aria-label="Навигация по страницам">
     <ul class="pagination justify-content-center">
       {% if page_obj.has_previous %}
-        {# Первая #}
-        <li class="page-item">
-          <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Первая</a>
-        </li>
         {# Назад #}
         <li class="page-item">
           <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Назад</a>
         </li>
       {% else %}
-        {# Первая #}
-        <li class="page-item disabled">
-          <span class="page-link">Первая</span>
-        </li>
         {# Назад #}
         <li class="page-item disabled">
           <span class="page-link">Назад</span>
@@ -39,7 +31,7 @@
             <li class="page-item active">
               <span class="page-link">{{ num }}</span>
             </li>
-          {% elif num > page_obj.number|add:-2 and num < page_obj.number|add:2 %}
+          {% elif num > page_obj.number|add:-2 and num < page_obj.number|add:2%}
             <li class="page-item">
               <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
             </li>
@@ -62,18 +54,10 @@
         <li class="page-item">
           <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Вперёд</a>
         </li>
-        {# Последняя #}
-        <li class="page-item">
-          <a class="page-link" href="?page={{ paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Последняя</a>
-        </li>
       {% else %}
         {# Вперёд #}
         <li class="page-item disabled">
           <span class="page-link">Вперёд</span>
-        </li>
-        {# Последняя #}
-        <li class="page-item disabled">
-          <span class="page-link">Последняя</span>
         </li>
       {% endif %}
     </ul>
