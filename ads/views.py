@@ -1,13 +1,14 @@
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
 from django.contrib.auth import get_user_model
 
-from django.db.models import F, Q
+from django.db.models import F, Q, Avg, FloatField
+from django.db.models.functions import Cast
 
 from ads.models import Advertisement, Category, Tag, Favorite, SellerRating
 from ads.forms import AdvertisementForm
@@ -35,28 +36,49 @@ class AdSearchView(ListView):
       context["search_performed"] = any(self.request.GET.keys())   # создаем флаг: если в URL есть хоть один GET-параметр (ключ), значит поиск был запущен
       return context                              # возвращаем готовый пакет данных
     
-  def get_queryset(self):                        # основной метод, определяющий, какие именно записи из БД нужно достать
-    search_query = self.request.GET.get('search')   # вытаскиваем из адреса значение параметра search (то, что пользователь ввел в строку поиска)
-    
-    if search_query:                                               # если строка поиска не пустая, начинаем фильтрацию
-      queryset = Advertisement.objects.filter(status='published')  # берем только объявления со статусом "Опубликовано"
-      search_category = self.request.GET.get('search_category')   # проверяем, стоит ли галочка «искать в категориях»
-      search_tag = self.request.GET.get('search_tag')             # проверяем, стоит ли галочка «искать в тэгах»
-      
-      # создаем Q-объект для поиска подстроки (icontains — без учета регистра) в заголовке ИЛИ в тексте объявления
+  
+  def get_queryset(self):                      # основной метод, определяющий, какие именно записи из БД нужно достать
+  # Аннотируем каждое объявление рейтингом продавца (0-100%)
+    queryset = Advertisement.objects.annotate(
+    seller_rating=
+      Avg(Cast('owner__received_ratings__is_positive', FloatField())) * 100).filter(status='published')
+
+  # Получаем данные из URL
+    search_query = self.request.GET.get('search')    # вытаскиваем из адреса значение параметра search (то, что пользователь ввел в строку поиска)
+    search_category = self.request.GET.get('search_category')   # проверяем, стоит ли галочка «искать в категориях»
+    search_tag = self.request.GET.get('search_tag')             # проверяем, стоит ли галочка «искать в тэгах»
+    min_price = self.request.GET.get('min_price')               # проверяем, указана ли мин. цена
+    max_price = self.request.GET.get('max_price')               # проверяем, указана ли макс. цена
+    min_rating = self.request.GET.get('min_rating')             # проверяем, указан ли мин. рейтинг продавца
+
+  # Фильтруем по тексту
+    if search_query:            # создаем Q-объект для поиска подстроки (icontains — без учета регистра) в заголовке ИЛИ в тексте объявления
       query = Q(title__icontains=search_query) | Q(text__icontains=search_query)
+      if search_category:                                       # если галочка категорий активна..
+        query |= Q(category__name__icontains=search_query)      # добавляем еще одно ИЛИ: искать совпадение в названии категории
+      if search_tag:                                            # если галочка тэга активна..
+        query |= Q(tags__name__icontains=search_query)          # добавляем еще одно ИЛИ: искать совпадение в названии тэга
+      queryset = queryset.filter(query)
 
-      if search_category:                                    # если галочка категорий активна..
-        query |= Q(category__name__icontains=search_query)   # добавляем еще одно ИЛИ: искать совпадение в названии категории
-        
-      if search_tag:                                         # если галочка тэгов активна..
-        query |= Q(tags__name__icontains=search_query)       # добавляем еще одно ИЛИ: искать совпадение в названии тэгов
-        
-      return queryset.filter(query).order_by('-created_at')  # применяем все собранные условия к базе и сортируем: сначала новые
-          
-    return Advertisement.objects.none()   # если search_query был пустой (первый заход на страницу), возвращаем пустой результат вместо списка объявлений
-    
+  # Фильтруем по цене, НЕ удаляя объявления без указания цены
+    if min_price:
+      queryset = queryset.filter(Q(price__gte=min_price) | Q(price__isnull=True))  # цена больше или равна значению ИЛИ цена не указана
+    if max_price:
+      queryset = queryset.filter(Q(price__lte=max_price) | Q(price__isnull=True))  # цена меньше или равна значению ИЛИ цена не указана
 
+  # Фильтруем по рейтингу
+    if min_rating:
+      queryset = queryset.filter(Q(seller_rating__gte=min_rating) | Q(seller_rating__isnull=True))
+
+  # Если ничего не введено — возвращаем пустой список
+    if not any([search_query, min_price, max_price, min_rating]):
+      return Advertisement.objects.none()
+
+  # Сортировка: сначала те, где есть цена, внутри них — самые новые. 
+  # Объявления "цена не указана" будут в самом низу.
+  # Объявления продавцов без рейтинга (нулевым) ТОЖЕ будут видны
+    return queryset.order_by(F('price').asc(nulls_last=True), F('seller_rating').desc(nulls_last=True), '-created_at').distinct()
+  
 class CategoryAdsListView(FavoriteMixin, ListView):        # Класс для списка по категории
   template_name = 'ads/pages/ads_category.html'  # Шаблон для категории
   context_object_name = 'ads'              # Имя переменной в шаблоне

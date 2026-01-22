@@ -5,7 +5,7 @@
 {% block page_content %}
   <h1>Найти объявление</h1>
 
-  <form>
+  <form method="GET">
     <input type="text" name="search" placeholder="Введите запрос..." value="{{ request.GET.search }}">
 
     <label>
@@ -18,8 +18,15 @@
       Искать в тэгах
     </label>
 
+    <div style="margin-top: 10px; padding: 10px; border: 1px solid #eee;">
+      <input type="number" name="min_price" value="{{ request.GET.min_price }}" placeholder="Цена от">
+      <input type="number" name="max_price" value="{{ request.GET.max_price }}" placeholder="до">
+        
+      <input type="number" name="min_rating" value="{{ request.GET.min_rating }}" placeholder="Рейтинг от %" min="0" max="100" style="width: 13.5em;">
+    </div>
+
     <button type="submit">Найти</button>
-    <button type="reset">Очистить</button>
+    <a href="{% url 'ads:ad_search' %}" class="btn">Очистить</a>
   </form>
   
   {% if search_performed %}
