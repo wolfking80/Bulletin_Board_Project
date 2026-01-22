@@ -4,11 +4,8 @@
 
 {% block page_content %}
 <div class="container mt-4">
-  <!-- Кнопка "Назад" БЕЗ ИКОНКИ -->
   <div class="mb-4">
-    <a href="{% url 'ads:ad_list' %}" class="btn btn-outline-secondary">
-      ← Назад
-    </a>
+    <a href="javascript:history.back()" class="btn btn-outline-secondary shadow-sm">← Назад</a>
   </div>
 
   <!-- Карточка с объявлением -->

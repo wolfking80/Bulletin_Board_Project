@@ -4,7 +4,9 @@
 
 {% block page_content %}
 <div class="container mt-4">
-  <a href="javascript:history.back()">&larr;Назад</a>
+  <div class="mb-4">
+    <a href="javascript:history.back()" class="btn btn-outline-secondary shadow-sm">← Назад</a>
+  </div>
   <h1>Объявления в категории: {{ category.name }}</h1>
   
   {% if ads %}

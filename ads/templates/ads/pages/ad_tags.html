@@ -3,7 +3,9 @@
 {% block page_title %}Объявления с тегом {{ tag.name }}{% endblock page_title %}
 
 {% block page_content %}
-  <a href="javascript:history.back()">&larr;Назад</a>
+  <div class="mb-4">
+    <a href="javascript:history.back()" class="btn btn-outline-secondary shadow-sm">← Назад</a>
+  </div>
   <h1>Объявления с тегом: #{{ tag.name }}</h1>
   
   {% if ads %}
