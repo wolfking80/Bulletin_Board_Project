@@ -1,5 +1,5 @@
 from django.views.generic.list import MultipleObjectMixin
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import get_user_model
 
 from django.urls import reverse_lazy
@@ -7,6 +7,7 @@ from django.views.generic import CreateView, DetailView
 from django.contrib.auth.views import LoginView, LogoutView
 
 from config.settings import DEFAULT_LOGIN_REDIRECT_URL
+from users.forms import CustomAuthenticationForm
 
 User = get_user_model()
 
@@ -19,7 +20,7 @@ class RegisterView(CreateView):
 
 class CustomLoginView(LoginView):
   template_name = 'users/pages/login.html'
-  authentication_form = AuthenticationForm
+  authentication_form = CustomAuthenticationForm
   
   def get_success_url(self):
     next_url = self.request.GET.get('next', DEFAULT_LOGIN_REDIRECT_URL)
