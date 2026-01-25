@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
 from django.contrib.auth import get_user_model
+from django.contrib import messages
 
 from django.db.models import F, Q, Avg, FloatField
 from django.db.models.functions import Cast
@@ -174,6 +175,7 @@ class AdCreateView(LoginRequiredMixin, CreateView):  # Требует автор
     for tag_name in form.cleaned_data.get('tags_input', []):  # Обработка тегов
       tag, _ = Tag.objects.get_or_create(name=tag_name)  # Создаем/получаем тег
       ad.tags.add(tag)                # Добавляем тег к объявлению
+    messages.success(self.request, 'Объявление успешно создано!')  
     return super().form_valid(form)     # Вызываем родительский метод
     
   def get_success_url(self):              # Куда перенаправить после успеха
