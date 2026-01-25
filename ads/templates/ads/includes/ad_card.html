@@ -18,7 +18,7 @@
               <div class="badge bg-primary">Просмотрено</div>
             {% endif %}
 
-            {% if user.is_authenticated %}
+            {% if user.is_authenticated  and request.user != ad.owner%}
               <button type="button" 
                 class="btn btn-sm fav-btn {% if ad.id in favorite_ids %}btn-warning{% else %}btn-outline-warning{% endif %}"
                 data-url="{% url 'ads:toggle_favorite' ad.id %}"
