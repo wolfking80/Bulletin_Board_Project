@@ -1,11 +1,24 @@
 {% if ads %}
+<!-- Добавляем ID и настройки для JS (BatchLoader) -->
+<div id="adsContainer" 
+  data-initial-offset="{{ ads|length }}" 
+  data-has-more="{{ has_more_ads|yesno:'True,False' }}" 
+  data-batch-size="{{ ads_per_batch|default:6 }}"
+  data-load-more-url="{% url 'ads:load_more_ads' %}"
+  data-is-favorites="{{ is_favorites_page|default:'False' }}">
 <!-- Список в виде карточек -->
-<div class="row">
+  <div class="row">
   {% for ad in ads %}
     {% if request.user == ad.owner or ad.status == 'published' %}
       {% include 'ads/includes/ad_card.html' %}
     {% endif %}
   {% endfor %}
+  </div>
+</div>
+
+<!-- Добавляем спиннер, который будет появляться при скролле -->
+<div id="loadingSpinner" class="text-center d-none my-4">
+    <div class="spinner-border text-warning" role="status"></div>
 </div>
 
 {% else %}
@@ -31,5 +44,3 @@
   </div>
   {% endif %}
 {% endif %}
-
-{% include 'ads/includes/pagination.html' %}

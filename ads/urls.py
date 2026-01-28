@@ -7,6 +7,7 @@ app_name = 'ads'
 urlpatterns = [
     path('', views.MainPageView.as_view(), name='main_page'),
     path('ads/', views.AdsListView.as_view(), name='ad_list'),
+    path("ads/load-more/", views.load_more_ads_view, name="load_more_ads"),
     path('ads/search/', views.AdSearchView.as_view(), name='ad_search'),
     path('ads/create/', views.AdCreateView.as_view(), name='create_ad'),
     path('ads/category/<slug:category_slug>/', views.CategoryAdsListView.as_view(), name='category_ads'),

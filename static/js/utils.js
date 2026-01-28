@@ -14,6 +14,19 @@ function getCookie(cookieKey) {            // функция ищет конкр
   return cookieValue;                            // возвращаем найденный токен (или null, если ничего не нашли)
 }
 
+
+export async function getAction(url) {
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    console.error("Request failed", response.status);
+    return null;
+  }
+
+  return await response.json();
+}
+
+
 export async function postAction(url) {    // универсальный «отправитель» запросов на сервер, использует современный Fetch API
   const response = await fetch(url, {      // запускаем сетевой запрос по указанному адресу. await заставляет код подождать, пока сервер пришлет ответ
     method: "POST",                        // все действия по изменению данных должны идти через POST для безопасности

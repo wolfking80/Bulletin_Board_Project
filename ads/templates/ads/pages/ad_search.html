@@ -1,4 +1,5 @@
 {% extends 'layouts/base.html' %}
+{% load static %}
 
 {% block page_title %}Поиск объявлений{% endblock page_title %}
 
@@ -31,6 +32,12 @@
   
   {% if search_performed %}
     {% if ads %}
+    <div id="adsContainer" 
+      data-initial-offset="{{ ads|length }}" 
+      data-has-more="{{ has_more_ads|yesno:'True,False' }}" 
+      data-batch-size="{{ ads_per_batch|default:6 }}"
+      data-load-more-url="{% url 'ads:load_more_ads' %}"
+      data-is-favorites="{{ is_favorites_page|default:'False' }}">
       <div class="row">
         {% for ad in ads %}
           {% if request.user == ad.owner or ad.status == 'published' %}
@@ -38,14 +45,20 @@
           {% endif %}
         {%endfor%}
       </div>
+    </div>  
 
-    {% include 'ads/includes/pagination.html' %}
+    <div id="loadingSpinner" class="text-center d-none my-3">
+      <div class="spinner-border text-primary" role="status"></div>
+    </div>
 
     {% else %}
     <p>По Вашему запросу ничего не найдено</p>
     {% endif %}
   {% else %}
     <p>Введите запрос для поиска объявлений</p>
-  {% endif %}  
+  {% endif %}
+  
+<script type="module" src="{% static 'js/favorites.js' %}"></script>
+<script type="module" src="{% static 'js/ad_list.js' %}"></script>
 
 {% endblock page_content %}

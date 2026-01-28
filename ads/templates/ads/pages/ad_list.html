@@ -1,5 +1,7 @@
 {% extends 'layouts/base.html' %}
 
+{% load static %}
+
 {% block page_title %}
   {% if title %}{{ title }}{% else %}Все объявления{% endif %}
 {% endblock %}
@@ -11,4 +13,7 @@
     {% include 'ads/includes/ad_list_container.html' %}
     
 </div>
+
+<script type="module" src="{% static 'js/favorites.js' %}"></script>
+<script type="module" src="{% static 'js/ad_list.js' %}"></script>
 {% endblock page_content %}
