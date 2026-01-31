@@ -233,6 +233,7 @@ class AdUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):  # Тр
   model = Advertisement                   # Модель
   form_class = AdvertisementForm          # Форма
   template_name = 'ads/pages/ad_form.html'  # Шаблон
+  slug_url_kwarg = 'ad_slug'
   
   
   def get_context_data(self, **kwargs):     # Добавляем заголовок и текст кнопки для редактирования
@@ -264,6 +265,7 @@ class AdDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):  # Дл
   context_object_name = 'ad'              # Имя переменной в шаблоне
   template_name = 'ads/pages/confirm_ad_delete.html'  # Шаблон подтверждения
   success_url = reverse_lazy('ads:ad_list')  # Куда редиректить после удаления
+  slug_url_kwarg = 'ad_slug'
     
   def test_func(self):                    # Проверка прав
     return self.request.user == self.get_object().owner  # Только владелец
