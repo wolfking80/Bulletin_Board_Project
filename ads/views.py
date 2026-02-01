@@ -39,10 +39,6 @@ def get_ads_queryset(request):
   min_price = request.GET.get('min_price')
   max_price = request.GET.get('max_price')
   min_rating = request.GET.get('min_rating')
-  
-  # Фильтрация по параметрам
-  if min_rating:
-    qs = qs.filter(Q(seller_rating__gte=min_rating) | Q(seller_rating__isnull=True))
 
 # Расширенный поиск по тексту
   if search:

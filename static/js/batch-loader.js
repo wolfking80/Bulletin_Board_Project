@@ -1,4 +1,5 @@
 import { getAction } from "./utils.js";
+import { formatDatesInHTML } from "./format_to_local_date.js";
 
 class BatchLoader {
   constructor(containerId) {
@@ -35,14 +36,16 @@ class BatchLoader {
     const data = await getAction(url);
 
     if (data && data.html) {
+      // ФОРМАТИРУЕМ ДАТЫ ПЕРЕД ВСТАВКОЙ
+      const formattedHtml = formatDatesInHTML(data.html);
       // ищем .row внутри контейнера
       const row = this.container.querySelector('.row');
       
       if (row) {
         // Вставляем карточки ВНУТРЬ ряда, чтобы Bootstrap их выровнял
-        row.insertAdjacentHTML("beforeend", data.html);
+        row.insertAdjacentHTML("beforeend", formattedHtml);
       } else {
-        this.container.insertAdjacentHTML("beforeend", data.html);
+        this.container.insertAdjacentHTML("beforeend",formattedHtml);
       }
 
       this.offset += this.batchSize;
