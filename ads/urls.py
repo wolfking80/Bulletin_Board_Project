@@ -18,4 +18,5 @@ urlpatterns = [
     path('favorite/<int:ad_id>/', views.toggle_favorite, name='toggle_favorite'),
     path('my-favorites/', views.MyFavoritesView.as_view(), name='my_favorites'),
     path('rate-seller/<int:seller_id>/<str:rating_type>/', views.rate_seller, name='rate_seller'),
+    path("<int:ad_id>/question/add/", views.add_question_view, name="add_question"),
 ]

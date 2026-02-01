@@ -152,4 +152,21 @@ class SellerRating(models.Model):
     is_positive = models.BooleanField() # True - за "рекомендую", False - за "не рекомендую"
 
     class Meta:
-        unique_together = ['voter', 'seller'] # Один юзер — один голос за одного продавца  
+        unique_together = ['voter', 'seller'] # Один юзер — один голос за одного продавца
+        
+        
+class AdQuestion(models.Model):
+  # Связь с объявлением: одно объявление — много вопросов
+  ad = models.ForeignKey(Advertisement, on_delete=models.CASCADE, related_name='questions')
+  # Связь с автором вопроса: один юзер — много вопросов
+  author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ad_questions')
+  text = models.TextField(verbose_name="Текст вопроса")
+  created_at = models.DateTimeField(auto_now_add=True)
+
+  class Meta:
+    ordering = ['-created_at'] # Сначала новые вопросы
+    verbose_name = 'Вопрос по товару'
+    verbose_name_plural = 'Вопросы по товарам'
+
+  def __str__(self):
+    return f"Вопрос от {self.author.username} по {self.ad.title}"          

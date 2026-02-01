@@ -12,7 +12,7 @@ from django.contrib import messages
 from django.db.models import F, Q, Avg, FloatField
 from django.db.models.functions import Cast
 
-from ads.models import Advertisement, Category, Tag, Favorite, SellerRating
+from ads.models import Advertisement, Category, Tag, Favorite, SellerRating, AdQuestion
 from ads.forms import AdvertisementForm
 from .mixins import FavoriteMixin 
 
@@ -387,4 +387,28 @@ def load_more_ads_view(request):
   return JsonResponse({
     'html': html,
     'has_more': (offset + len(ads)) < total_count and len(ads) == limit
-  })            
+  })
+  
+  
+@login_required
+@require_POST
+def add_question_view(request, ad_id):
+  text = request.POST.get('text', '').strip()
+  if not text:
+    return JsonResponse({'success': False, 'error': 'Текст вопроса не может быть пустым'})
+    
+  ad = get_object_or_404(Advertisement, id=ad_id)
+  question = AdQuestion.objects.create(ad=ad, author=request.user, text=text)
+    
+    # Рендерим кусочек HTML для вставки
+  question_html = render_to_string(
+    "ads/includes/question_container.html", 
+    {"question": question}, 
+    request=request
+  )
+
+  return JsonResponse({
+    'success': True,
+    'question_html': question_html,
+    'questions_count': ad.questions.count()
+})            

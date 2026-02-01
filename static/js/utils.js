@@ -27,13 +27,25 @@ export async function getAction(url) {
 }
 
 
-export async function postAction(url) {    // универсальный «отправитель» запросов на сервер, использует современный Fetch API
-  const response = await fetch(url, {      // запускаем сетевой запрос по указанному адресу. await заставляет код подождать, пока сервер пришлет ответ
-    method: "POST",                        // все действия по изменению данных должны идти через POST для безопасности
-    headers: {                             // берем из кук защитный токен и кладем его в заголовок запроса. Без этого Django заблокирует запрос из соображений безопасности
+export async function postAction(url, formData = null) {
+  const config = {
+    method: "POST",
+    headers: {
       'X-CSRFToken': getCookie('csrftoken')
     }
-  });
-  if (!response.ok) return null;           // если сервер ответил ошибкой (например, 404 или 500), функция возвращает null
-  return await response.json();            // если всё хорошо, мы превращаем ответ сервера (JSON-строку) в JS-объект
+  };
+
+  // Добавляем body только если передан formData
+  if (formData) {
+    config.body = formData;
+  }
+
+  const response = await fetch(url, config);
+
+  if (!response.ok) {
+    console.error("Request failed", response.status)
+    return null;
+  }
+
+  return await response.json();
 }

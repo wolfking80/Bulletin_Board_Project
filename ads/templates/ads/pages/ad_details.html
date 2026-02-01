@@ -1,5 +1,6 @@
 {% extends 'layouts/base.html' %}
 {% load bootstrap_icons %}
+{% load static %}
 
 
 {% block page_content %}
@@ -100,6 +101,31 @@
   </div>
 </div>
 
+<div class="mt-4 border-top pt-4">
+    <h4 id="questionsTitle">Вопросы по товару ({{ ad.questions.count }})</h4>
+    
+    {% if request.user.is_authenticated %}
+      <form id="questionForm" method="POST" data-add-question-url="{% url 'ads:add_question' ad.id %}">
+        {% csrf_token %} 
+        <div id="questionErrors" class="alert alert-danger d-none"></div>
+        <div class="mb-3">
+          <textarea name="text" class="form-control" rows="3" placeholder="Задайте вопрос продавцу..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Отправить вопрос</button>
+      </form>
+    {% else %}
+      <p class="text-muted small">Чтобы задать вопрос, <a href="{% url 'users:login' %}">войдите</a>.</p>
+    {% endif %}
+
+    <div id="questionsList" class="mt-3">
+      {% for question in ad.questions.all %}
+        {% include 'ads/includes/question_container.html' %}
+      {% empty %}
+        <p id="emptyMessage" class="text-muted">Вопросов пока нет. Будьте первым!</p>
+      {% endfor %}
+    </div>
+</div>
+
 {% if related_ads %}
 <div class="container mt-5">
     <hr>
@@ -112,4 +138,9 @@
     </div>
 </div>
 {% endif %}
+
+{% block extra_js %}
+  <script type="module" src="{% static 'js/ad_questions.js' %}"></script>
+{% endblock %}
+
 {% endblock %}
