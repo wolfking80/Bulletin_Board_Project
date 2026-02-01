@@ -16,9 +16,9 @@
   <script src="{% static 'js/core.js' %}" type="module" defer></script>
 </head>
 
-<body>
+<body class="d-flex flex-column min-vh-100">
   <header>
-    <nav class="navbar navbar-expand-sm navbar-dark" style="
+    <nav class="navbar navbar-expand-sm navbar-dark rounded-bottom" style="
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
     <div class="container-fluid">
@@ -103,8 +103,15 @@
       </div>
     </nav>
   </header>
-  <main>{% block page_content %}{% endblock page_content %}</main>
-  <footer>&copy; Все права защищены законодательством РФ 2025</footer>
+  <main class="flex-grow-1">{% block page_content %}{% endblock page_content %}</main>
+  <footer class="footer mt-5 py-3 text-white rounded-top" style="
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.1);">
+  <div class="container d-flex justify-content-between align-items-center">
+    <span class="small opacity-75">© 2026 <strong>BulletinBoard</strong></span>
+    <span class="small opacity-50">Все права защищены</span>
+  </div>
+</footer>
 
   <button id="scrollToTopBtn" class="scroll-to-top disabled">
       {% bs_icon 'arrow-up' size="25px" %}
