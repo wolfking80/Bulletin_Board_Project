@@ -19,8 +19,12 @@ function initFavorites() {
     btn.classList.toggle('btn-warning', data.is_favorite);
     btn.classList.toggle('btn-outline-warning', !data.is_favorite);
 
+    // берем флаг из родительского контейнера #adsContainer
+    const adsContainer = document.getElementById('adsContainer');
+    const isFavPage = adsContainer && adsContainer.dataset.isFavorites === 'True';
+
   // Логика удаления карточки именно на странице избранного
-  if (btn.dataset.isFavoritesPage === 'True' && !data.is_favorite) {
+  if (isFavPage && !data.is_favorite) {
     const card = btn.closest('.ad-card-container');
   if (card) {
     card.remove();
