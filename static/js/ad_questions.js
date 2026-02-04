@@ -1,6 +1,8 @@
 import { postAction } from './utils.js';
 import { formatDate } from './format_to_local_date.js';
+import BatchLoader from './batch-loader.js'; 
 
+const questionsBatchLoader = new BatchLoader('questionsList');
 const questionForm = document.getElementById('questionForm');
 if (questionForm) {
   questionForm.addEventListener('submit', async function (e) {
@@ -25,6 +27,9 @@ if (questionForm) {
         formatDate(list.firstElementChild.querySelector('.date-field'));
 
         document.getElementById('questionsTitle').textContent = `Вопросы по товару (${data.questions_count})`;
+        if (questionsBatchLoader) {
+            questionsBatchLoader.offset += 1;
+        }
       } else {
         errorEl.textContent = data.error;
         errorEl.classList.remove('d-none');

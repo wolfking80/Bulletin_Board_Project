@@ -167,6 +167,7 @@ class AdDetailView(FavoriteMixin, DetailView):            # Класс для д
     template_name = 'ads/pages/ad_details.html'  # Шаблон деталей
     slug_field = 'slug'                    # Поле модели для поиска
     slug_url_kwarg = 'ad_slug'             # Имя параметра из URL
+    questions_per_batch = 2
     
     def get_object(self, queryset=None):
       ad = super().get_object(queryset)      # получаем само объявление из базы
@@ -186,13 +187,25 @@ class AdDetailView(FavoriteMixin, DetailView):            # Класс для д
     
     def get_context_data(self, **kwargs):
       context = super().get_context_data(**kwargs)
+      ad = self.get_object() # текущее объявление
+      
     # Получаем 3 похожих объявления
       related_ads = Advertisement.objects.filter(  # фильтруем по категории
         category=self.object.category,             # та же категория, что и у просматриваемого
         status='published'                         # только опубликованные
       ).exclude(id=self.object.id).order_by('?')[:3]  # исключаем просматриваемое объявление из списка и выдаем 3 случайных
     
-      context['related_ads'] = related_ads    # добавляем в контекст похожие объявления        
+      context['related_ads'] = related_ads    # добавляем в контекст похожие объявления
+      
+      # Получаем все вопросы к этому объявлению
+      questions_query = ad.questions.all().order_by('-created_at')
+    
+      # Передаем в шаблон только первую порцию
+      context["questions"] = questions_query[:self.questions_per_batch]
+      # Проверяем, нужно ли показывать кнопку "Загрузить еще"
+      context["has_more_questions"] = questions_query.count() > self.questions_per_batch
+      # Передаем размер порции, чтобы JS знал шаг смещения (offset)
+      context["questions_per_batch"] = self.questions_per_batch        
     
       if self.request.user.is_authenticated:
         context['favorite_ids'] = self.request.user.favorites.values_list('ad_id', flat=True) # для корректного отображения отметки "избранных" объявлений
@@ -411,4 +424,28 @@ def add_question_view(request, ad_id):
     'success': True,
     'question_html': question_html,
     'questions_count': ad.questions.count()
-})            
+}) 
+  
+  
+def load_more_questions_view(request, ad_id):
+  offset = int(request.GET.get("offset", 0))
+  limit = 2
+  import time
+  time.sleep(1)
+
+  ad = get_object_or_404(Advertisement, id=ad_id)
+  questions_query = ad.questions.all().order_by('-created_at')
+    
+  questions = questions_query[offset : offset + limit]
+
+  html = ''.join([
+    render_to_string("ads/includes/question_container.html", {"question": q}, request=request)
+    for q in questions
+  ])
+    
+  has_more = offset + limit < questions_query.count()
+
+  return JsonResponse({
+    'html': html,
+    'has_more': has_more
+  })           

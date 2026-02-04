@@ -5,7 +5,8 @@
   data-has-more="{{ has_more_ads|yesno:'True,False' }}" 
   data-batch-size="{{ ads_per_batch|default:6 }}"
   data-load-more-url="{% url 'ads:load_more_ads' %}"
-  data-is-favorites="{{ is_favorites_page|default:'False' }}">
+  data-is-favorites="{{ is_favorites_page|default:'False' }}"
+  data-trigger-type="scroll">
 <!-- Список в виде карточек -->
   <div class="row">
   {% for ad in ads %}
