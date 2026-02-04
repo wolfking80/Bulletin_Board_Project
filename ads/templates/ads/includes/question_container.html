@@ -1,11 +1,54 @@
-<div class="card mb-3 border-0 shadow-sm">
+<div class="question-container card mb-3 border-0 shadow-sm" id="question-{{ question.id }}">
   <div class="card-body">
     <div class="d-flex justify-content-between align-items-start">
       <h6 class="card-title mb-1 text-primary">
-          {{ question.author.username }}
+        {{ question.author.username }}
       </h6>
       <small class="text-muted date-field">{{ question.created_at|date:"c" }}</small>
     </div>
+
+    {# Блок цитаты: показываем, на что именно этот ответ (если это ответ) #}
+    {% if question.parent %}
+    <div class="mb-2 p-2 bg-light border-start border-primary border-4 rounded-end">
+      <small class="text-muted">
+        <i class="bi bi-reply-fill"></i> Ответ для {{ question.parent.author.username }}:
+      </small>
+      <div class="small text-truncate opacity-75">"{{ question.parent.text }}"</div>
+    </div>
+    {% endif %}
+
     <p class="card-text mt-2">{{ question.text }}</p>
+
+    {# Кнопка "Ответить" #}
+    {% if request.user.is_authenticated %}
+    <div class="mt-2">
+      <button class="btn btn-sm btn-link text-decoration-none p-0 reply-btn" data-question-id="{{ question.id }}">
+        <i class="bi bi-chat-left-text"></i> Ответить
+      </button>
+    </div>
+    {% endif %}
+
+    {# Форма ответа (скрыта по умолчанию) #}
+    <div class="mt-3 d-none reply-form-container" id="replyForm{{ question.id }}">
+      <form class="reply-form" data-add-question-url="{% url 'ads:add_question' question.ad_id %}"
+        data-parent-id="{{ question.id }}">
+        <div class="mb-2">
+          <textarea class="form-control form-control-sm" rows="2"
+            placeholder="Ваш ответ пользователю {{ question.author.username }}..."></textarea>
+        </div>
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary btn-sm">Отправить</button>
+          <button type="button" class="btn btn-light btn-sm cancel-reply-btn">Отмена</button>
+        </div>
+      </form>
+    </div>
+
+    {# РЕКУРСИЯ: Блок для вложенных ответов #}
+    <div class="mt-3 ms-4 border-start ps-3 replies">
+      {% for reply in question.replies.all %}
+      {# Шаблон вызывает сам себя, передавая ответ как основной вопрос #}
+      {% include 'ads/includes/question_container.html' with question=reply %}
+      {% endfor %}
+    </div>
   </div>
 </div>

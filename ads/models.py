@@ -160,6 +160,8 @@ class AdQuestion(models.Model):
   ad = models.ForeignKey(Advertisement, on_delete=models.CASCADE, related_name='questions')
   # Связь с автором вопроса: один юзер — много вопросов
   author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ad_questions')
+  # Ссылка на саму себя для ответов
+  parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name="replies")
   text = models.TextField(verbose_name="Текст вопроса")
   created_at = models.DateTimeField(auto_now_add=True)
 
@@ -169,4 +171,6 @@ class AdQuestion(models.Model):
     verbose_name_plural = 'Вопросы по товарам'
 
   def __str__(self):
-    return f"Вопрос от {self.author.username} по {self.ad.title}"          
+    if self.parent:
+      return f'Ответ от {self.author} для {self.parent.author}'
+    return f'Вопрос от {self.author} к "{self.ad.title}"'          

@@ -198,7 +198,7 @@ class AdDetailView(FavoriteMixin, DetailView):            # Класс для д
       context['related_ads'] = related_ads    # добавляем в контекст похожие объявления
       
       # Получаем все вопросы к этому объявлению
-      questions_query = ad.questions.all().order_by('-created_at')
+      questions_query = ad.questions.filter(parent__isnull=True).order_by('-created_at')
     
       # Передаем в шаблон только первую порцию
       context["questions"] = questions_query[:self.questions_per_batch]
@@ -407,19 +407,22 @@ def load_more_ads_view(request):
 @require_POST
 def add_question_view(request, ad_id):
   text = request.POST.get('text', '').strip()
+  parent_id = request.POST.get('parent_id') # ID родителя
   if not text:
     return JsonResponse({'success': False, 'error': 'Текст вопроса не может быть пустым'})
     
   ad = get_object_or_404(Advertisement, id=ad_id)
-  question = AdQuestion.objects.create(ad=ad, author=request.user, text=text)
+  # данные для создания  
+  question_data = {'ad': ad, 'author': request.user, 'text': text}
+  # если пришел parent_id, находим родительский вопрос и привязываем его
+  if parent_id:
+    question_data['parent'] = get_object_or_404(AdQuestion, id=parent_id)
+  # создаем запись (либо вопрос, либо ответ)      
+  question = AdQuestion.objects.create(**question_data)
+  # Рендерим кусочек HTML для вставки  
+  question_html = render_to_string("ads/includes/question_container.html", 
+                            {"question": question}, request=request)
     
-    # Рендерим кусочек HTML для вставки
-  question_html = render_to_string(
-    "ads/includes/question_container.html", 
-    {"question": question}, 
-    request=request
-  )
-
   return JsonResponse({
     'success': True,
     'question_html': question_html,
@@ -434,7 +437,7 @@ def load_more_questions_view(request, ad_id):
   time.sleep(1)
 
   ad = get_object_or_404(Advertisement, id=ad_id)
-  questions_query = ad.questions.all().order_by('-created_at')
+  questions_query = ad.questions.filter(parent__isnull=True).order_by('-created_at')
     
   questions = questions_query[offset : offset + limit]
 
