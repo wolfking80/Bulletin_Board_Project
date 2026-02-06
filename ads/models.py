@@ -10,24 +10,41 @@ User = get_user_model()
 
 class Category(models.Model):
   name = models.CharField(max_length=100, verbose_name='Название')
-  slug = models.SlugField(unique=True, editable=False, verbose_name="Слаг")
+  slug = models.SlugField(editable=False, verbose_name="Слаг")
   image = models.ImageField(
         upload_to='categories/',
         blank=True,
         null=True,
         verbose_name='Изображение категории'
     )
+  parent = models.ForeignKey(
+        'self', 
+        on_delete=models.CASCADE, 
+        null=True, 
+        blank=True, 
+        related_name='children', 
+        verbose_name="Родительская категория"
+    )
 
   def save(self, *args, **kwargs):
-    self.slug = slugify(unidecode(self.name))
+    base_slug = slugify(unidecode(self.name))
+    if self.parent:
+        self.slug = f"{self.parent.slug}-{base_slug}"
+    else:
+        self.slug = base_slug
     super().save(*args, **kwargs)
 
   def __str__(self):
+    if self.parent:
+      return f"{self.parent} > {self.name}"
     return self.name
   
   @property
   def ad_count(self):
-    return self.ads.filter(status='published').count()  
+    count = self.ads.filter(status='published').count()
+    for child in self.children.all():
+      count += child.ad_count
+    return count   
   
   def get_absolute_url(self):
     return reverse('ads:category_ads', kwargs={'category_slug': self.slug})
@@ -36,22 +53,6 @@ class Category(models.Model):
     verbose_name = 'Категория'
     verbose_name_plural = "Категории"
     db_table = "ads_categories"
-    
-    
-class SubCategory(models.Model):
-  name = models.CharField(max_length=100, verbose_name='Название')
-  category = models.ForeignKey(Category,
-    on_delete=models.CASCADE,
-    related_name='subcategories',
-    verbose_name="Категория"
-    )
-    
-  def __str__(self):
-    return f"{self.name} ({self.category.name})"
-    
-  class Meta:
-    verbose_name = 'Подкатегория'
-    verbose_name_plural = "Подкатегории"
     
     
 class Tag(models.Model):
@@ -88,13 +89,6 @@ class Advertisement(models.Model):
     on_delete=models.CASCADE,
     verbose_name="Категория"
   )
-  subcategory = models.ForeignKey(
-    SubCategory,
-    on_delete=models.SET_NULL,  # Если удалить подкатегорию - у объявлений будет NULL
-    null=True,                  # Может быть пустым
-    blank=True,                 # Необязательное в форме
-    verbose_name="Тип сделки"
-    )
   tags = models.ManyToManyField(Tag, related_name='ads', blank=True, verbose_name='Теги')
   goods_image = models.ImageField(
     upload_to='advertisements/',

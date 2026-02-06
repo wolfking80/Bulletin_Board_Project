@@ -32,16 +32,22 @@
             </p>
             {% endif %}
 
-            <p class="mb-0">
+            <p class="mb-0 small">
               <span class="text-muted me-2">Категория:</span>
-              <a href="{{ ad.category.get_absolute_url }}" class="fw-medium">
-                {{ ad.category.name }}
+  
+              {% if ad.category.parent %}
+              {# Ссылка на родителя #}
+                <a href="{{ ad.category.parent.get_absolute_url }}" class="text-dark text-decoration-none opacity-75">
+                {{ ad.category.parent.name }}
+                </a>
+                <span class="mx-1 text-muted">/</span>
+              {% endif %}
+
+              {# Ссылка на саму категорию объявления #}
+              <a href="{{ ad.category.get_absolute_url }}" class="fw-medium text-decoration-none">
+              {{ ad.category.name }}
               </a>
             </p>
-
-            {% if ad.subcategory %}
-              <span class="badge bg-info">{{ ad.subcategory.name }}</span>
-            {% endif %}
 
             <p>Теги: 
               {% for tag in ad.tags.all %}

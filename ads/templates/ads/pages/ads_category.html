@@ -7,7 +7,7 @@
   <div class="mb-4">
     <a href="javascript:history.back()" class="btn btn-outline-secondary shadow-sm">← Назад</a>
   </div>
-  <h1>Объявления в категории: {{ category.name }}</h1>
+  <h1>Объявления в категории: {{ category.parent.name }} > {{ category.name }}</h1>
   
   {% if ads %}
     {% comment %} {% for ad in ads %} {% endcomment %}

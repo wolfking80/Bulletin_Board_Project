@@ -116,17 +116,16 @@ class CategoryAdsListView(FavoriteMixin, ListView):
   ads_per_batch = 6
     
   def get_queryset(self):
-    #  Получаем ID всех объявлений в этой категории
-    category_ads_ids = Advertisement.objects.filter(
-        category__slug=self.kwargs['category_slug']
-    ).values_list('id', flat=True)
+    #  Находим выбранную категорию по слагу
+    self.category = get_object_or_404(Category, slug=self.kwargs['category_slug'])
 
     # Вызываем универсальную функцию (она найдет всё по сайту)
     qs = get_ads_queryset(self.request)
 
-    # ФИЛЬТРУЕМ результат функции: оставляем только те ID, 
-    # которые принадлежат нашей категории
-    return qs.filter(id__in=category_ads_ids).order_by('-created_at', '-id')
+    # Ищем саму категорию ИЛИ тех, у кого этот объект является родителем (children)
+    return qs.filter(
+      Q(category=self.category) | Q(category__parent=self.category)
+    ).order_by('-created_at', '-id')
     
   def get_context_data(self, **kwargs):
     context = super().get_context_data(**kwargs)
@@ -288,7 +287,7 @@ class MainPageView(TemplateView):          # Просто отображает �
   
   def get_context_data(self, **kwargs):
       context = super().get_context_data(**kwargs)
-      context["categories"] = Category.objects.all()
+      context["categories"] = Category.objects.filter(parent__isnull=True)
       return context
     
   
