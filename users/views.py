@@ -1,5 +1,4 @@
 from django.views.generic.list import MultipleObjectMixin
-from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import get_user_model
 
 from django.urls import reverse_lazy
@@ -7,7 +6,7 @@ from django.views.generic import CreateView, DetailView
 from django.contrib.auth.views import LoginView, LogoutView
 
 from config.settings import DEFAULT_LOGIN_REDIRECT_URL
-from users.forms import CustomAuthenticationForm
+from users.forms import CustomAuthenticationForm, CustomUserCreationForm
 from django.contrib import messages
 
 User = get_user_model()
@@ -15,7 +14,7 @@ User = get_user_model()
 
 class RegisterView(CreateView):
   template_name = 'users/pages/register.html'
-  form_class = UserCreationForm
+  form_class = CustomUserCreationForm
   success_url = reverse_lazy('users:login')
 
 
