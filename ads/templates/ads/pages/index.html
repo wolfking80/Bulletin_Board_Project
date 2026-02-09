@@ -12,11 +12,13 @@
     {% for category in categories %}
     <div class="col-md-6 col-lg-4 mb-4">
       <div class="card h-100">
-        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" 
-          style="height: 160px;">
-          <img src="{% static 'images/categories/' %}{{ category.slug }}.png" 
-          alt="{{ category.name }}"
-          style="max-height: 100px; max-width: 100%;">
+        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 160px;">
+          {% if category.image %}
+            <img src="{{ category.image.url }}" alt="{{ category.name }}" style="max-height: 100px; max-width: 100%;">
+          {% else %}
+    {# Заглушка, если картинка не загружена #}
+            <img src="{% static 'images/default.png' %}" style="max-height: 100px; opacity: 0.5;">
+          {% endif %}
         </div>
 
         <div class="card-body">
