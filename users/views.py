@@ -42,6 +42,7 @@ class ProfileView(DetailView, MultipleObjectMixin):
   slug_url_kwarg = 'username'
   slug_field = 'username'
   template_name = 'users/pages/profile.html'
+  context_object_name = 'user'
   paginate_by = 3  
   
   def get_context_data(self, **kwargs):
