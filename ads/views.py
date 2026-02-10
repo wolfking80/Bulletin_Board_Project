@@ -132,6 +132,12 @@ class AdSearchView(ListView):
 
   def get_context_data(self, **kwargs):
     context = super().get_context_data(**kwargs)
+    if self.request.user.is_authenticated:
+      # Достаем все ID объявлений, которые лайкнул текущий юзер
+      # Используем related_name='favorites' из модели Favorite
+      context['favorite_ids'] = list(
+        self.request.user.favorites.values_list('ad_id', flat=True)
+      )
     # Флаг: был ли запрос вообще
     context["search_performed"] = any(self.request.GET.values())
     if hasattr(self, 'full_search_qs'):
