@@ -1,9 +1,9 @@
-{% extends "layouts/base.html" %}
+{% extends "users/layouts/profile_base.html" %}
 {% load static %} 
 
 {% block page_title %}Профиль{% endblock page_title %}
 
-{% block page_content %}
+{% block profile_page_content %}
 
 <div class="container mt-4">
 
@@ -44,4 +44,4 @@
   {% include 'ads/includes/ad_list_container.html' %}
 
 </div>
-{% endblock page_content %}
+{% endblock profile_page_content %}

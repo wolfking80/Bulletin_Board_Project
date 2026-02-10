@@ -14,6 +14,7 @@
   {% bootstrap_javascript %}
   <link rel="stylesheet" href="{% static 'css/core.css' %}">
   <script src="{% static 'js/core.js' %}" type="module" defer></script>
+  {% block styles %}{% endblock styles %}
 </head>
 
 <body class="d-flex flex-column min-vh-100">
@@ -127,6 +128,7 @@
         {% endfor %}
       </div>
     {% endif %}
+    {% block scripts %}{% endblock scripts %}
 </body>
 
 </html>
