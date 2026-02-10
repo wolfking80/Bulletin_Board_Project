@@ -41,7 +41,7 @@ class ProfileView(DetailView, MultipleObjectMixin):
   model = User
   slug_url_kwarg = 'username'
   slug_field = 'username'
-  template_name = 'users/pages/profile.html'
+  template_name = 'users/pages/index.html'
   context_object_name = 'user'
   paginate_by = 3  
   
