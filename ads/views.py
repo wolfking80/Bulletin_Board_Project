@@ -20,6 +20,14 @@ from .mixins import FavoriteMixin
 User = get_user_model()
 
 
+def get_sub_tree_ids(category):
+  # Собирает ID категории и всех её вложенных уровней (дети, внуки и т.д.)
+  ids = {category.id}
+  for child in category.children.all():
+    ids.update(get_sub_tree_ids(child))
+  return ids
+  
+  
 # Вспомогательная универсальная функция
 def get_ads_queryset(request):
   qs = Advertisement.objects.annotate(
@@ -39,14 +47,36 @@ def get_ads_queryset(request):
   min_price = request.GET.get('min_price')
   max_price = request.GET.get('max_price')
   min_rating = request.GET.get('min_rating')
+  
+  category_id = request.GET.get('category')
+  if category_id:
+    # Находим саму категорию в базе (без ошибок если ID нет)
+    selected_cat = Category.objects.filter(id=category_id).first()
+    if selected_cat:
+      # Собираем ID всей ветки (рекурсия) и фильтруем объявления
+        qs = qs.filter(category_id__in=get_sub_tree_ids(selected_cat))
 
-# Расширенный поиск по тексту
   if search:
-    query = Q(title__icontains=search) | Q(text__icontains=search)
+    # Сначала ОБЯЗАТЕЛЬНО создаем пустой сет, чтобы код не падал
+    all_cat_ids = set() 
+    
+    # Собираем ID только если стоит галочка
     if search_category:
-      query |= Q(category__name__icontains=search)
+      matched_cats = Category.objects.filter(name__icontains=search)
+      for cat in matched_cats:
+        all_cat_ids.update(get_sub_tree_ids(cat))
+    
+    # Базовый запрос
+    query = Q(title__icontains=search) | Q(text__icontains=search)
+    
+    # Добавляем ID в запрос, только если они были найдены
+    if all_cat_ids:
+      query |= Q(category_id__in=all_cat_ids)
+        
+    # Тэги (поиск по тексту в тэгах)
     if search_tag:
       query |= Q(tags__name__icontains=search)
+        
     qs = qs.filter(query)
 
 # Фильтры цен и рейтинга
@@ -87,7 +117,7 @@ class AdSearchView(ListView):
     qs = get_ads_queryset(self.request)
 
   # Если юзер ничего не ввел, возвращаем пустой QuerySet
-    params = ['search', 'min_price', 'max_price', 'min_rating']
+    params = ['search', 'min_price', 'max_price', 'min_rating', 'category']
     if not any(self.request.GET.get(p) for p in params):
       return Advertisement.objects.none()
 
@@ -118,14 +148,15 @@ class CategoryAdsListView(FavoriteMixin, ListView):
   def get_queryset(self):
     #  Находим выбранную категорию по слагу
     self.category = get_object_or_404(Category, slug=self.kwargs['category_slug'])
-
+    
+    # Собираем ID самой категории и ВСЕХ её потомков на любую глубину
+    family_ids = get_sub_tree_ids(self.category)
+    
     # Вызываем универсальную функцию (она найдет всё по сайту)
     qs = get_ads_queryset(self.request)
 
     # Ищем саму категорию ИЛИ тех, у кого этот объект является родителем (children)
-    return qs.filter(
-      Q(category=self.category) | Q(category__parent=self.category)
-    ).order_by('-created_at', '-id')
+    return qs.filter(category_id__in=family_ids).order_by('-created_at', '-id')
     
   def get_context_data(self, **kwargs):
     context = super().get_context_data(**kwargs)

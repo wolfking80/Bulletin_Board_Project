@@ -1,0 +1,11 @@
+{# Сначала пытаемся уйти ВВЕРХ к родителю #}
+{% if category.parent %}
+    {% include 'ads/includes/category_chain.html' with category=category.parent is_final=false %}
+    <span class="mx-1 text-muted">/</span>
+{% endif %}
+
+{# Потом рисуем ТЕКУЩУЮ категорию #}
+<a href="{{ category.get_absolute_url }}" 
+  class="text-decoration-none {% if is_final %}fw-bold text-primary{% else %}text-dark opacity-75{% endif %}">
+  {{ category.name }}
+</a>
