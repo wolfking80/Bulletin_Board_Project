@@ -1,5 +1,9 @@
+import BatchLoader from './batch-loader.js';
 import { postAction } from './utils.js';
 import { formatDate } from './format_to_local_date.js';
+
+
+window.questionsBatchLoader = new BatchLoader('questionsList');
 
 class QuestionManager {
   constructor() {
@@ -7,12 +11,6 @@ class QuestionManager {
   }
 
   init() {
-    // Основная форма вопроса (которая под объявлением)
-    const questionForm = document.getElementById('questionForm');
-    if (questionForm) {
-      questionForm.addEventListener('submit', (e) => this.handleMainSubmit(e));
-    }
-
     // Делегирование кликов (Ответить / Отмена)
     document.addEventListener('click', (e) => {
       const replyBtn = e.target.closest('.reply-btn');
@@ -22,12 +20,20 @@ class QuestionManager {
       if (cancelBtn) this.handleCancelReplyClick(cancelBtn);
     });
 
-    // Делегирование отправки форм-ответов
+    // ЕДИНЫЙ обработчик для всех ОТПРАВОК (submit)
     document.addEventListener('submit', (e) => {
-      const replyForm = e.target.closest('.reply-form');
-      if (replyForm) {
+      const form = e.target;
+    
+    // Если это ГЛАВНАЯ форма вопроса
+      if (form.id === 'questionForm') {
         e.preventDefault();
-        this.handleReplyFormSubmit(replyForm);
+        this.handleMainSubmit(e); 
+      }
+    
+    // Если это форма ОТВЕТА
+      else if (form.classList.contains('reply-form')) {
+        e.preventDefault();
+        this.handleReplyFormSubmit(form);
       }
     });
   }
@@ -35,7 +41,7 @@ class QuestionManager {
   // Логика главного вопроса
   async handleMainSubmit(event) {
     event.preventDefault();
-    const form = event.target;
+    const form = event.target.closest('#questionForm');
     const formData = new FormData(form);
     const url = form.dataset.addQuestionUrl;
     const errorEl = document.getElementById('questionErrors');
