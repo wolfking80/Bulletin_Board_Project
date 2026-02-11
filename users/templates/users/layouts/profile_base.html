@@ -32,35 +32,33 @@
           </a>
         </li>
         {% if user == request.user %}
-        <li>
-          <a href="{% url 'ads:my_favorites' %}"
-            class="{% if request.resolver_match.url_name == 'my_favorites' %}active{% endif %}">
-            <i class="bi bi-bookmark me-2"></i>Избранное
-          </a>
-        </li>
-        {% endif %}
-        <li>
+          <li>
+            <a href="{% url 'ads:my_favorites' %}"
+              class="{% if request.resolver_match.url_name == 'my_favorites' %}active{% endif %}">
+              <i class="bi bi-bookmark me-2"></i>Избранное
+            </a>
+          </li>
+          <li>
           <a
             href="{% url 'users:password_change' %}"
             class="{% if request.resolver_match.url_name == 'password_change' %}active{% endif %}"
           >
             <i class="bi bi-shield-lock me-2"></i>Сменить пароль
           </a>
-        </li>
-        <li>
-          <a href="#" class="coming-soon">
-            <i class="bi bi-gear me-2"></i>Настройки
-          </a>
-        </li>
-        {% if user == request.user %}
-        <li>
-          <form method="POST" action="{% url 'users:logout' %}" class="nav-link-form">
-            {% csrf_token %}
-            <button type="submit" class="nav-link-button">
-              <i class="bi bi-box-arrow-right me-2"></i>Выйти
-            </button>
-          </form>
-        </li>
+          </li>
+          <li>
+            <a href="#" class="coming-soon">
+              <i class="bi bi-gear me-2"></i>Настройки
+            </a>
+          </li>
+          <li>
+            <form method="POST" action="{% url 'users:logout' %}" class="nav-link-form">
+              {% csrf_token %}
+              <button type="submit" class="nav-link-button">
+                <i class="bi bi-box-arrow-right me-2"></i>Выйти
+              </button>
+            </form>
+          </li>
         {% endif %}
       </ul>
     </nav>
