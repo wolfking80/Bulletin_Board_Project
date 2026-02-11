@@ -24,7 +24,7 @@
     <p class="mb-0 small"><span class="text-muted me-2">Категория:</span>
       {% if ad.category.parent %}
       {# Ссылка на родителя #}
-        <a href="{{ ad.category.parent.get_absolute_url }}" class="text-dark text-decoration-none opacity-75">
+        <a href="{{ ad.category.parent.get_absolute_url }}" class="text-decoration-none opacity-75">
           {{ ad.category.parent.name }}
         </a>
         <span class="mx-1 text-muted">/</span>

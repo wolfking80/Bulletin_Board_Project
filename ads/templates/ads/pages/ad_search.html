@@ -26,8 +26,8 @@
       <input type="number" name="min_rating" value="{{ request.GET.min_rating }}" placeholder="Рейтинг от %" min="0" max="100" style="width: 13.5em;">
     </div>
 
-    <button type="submit">Найти</button>
-    <a href="{% url 'ads:ad_search' %}" class="btn">Очистить</a>
+    <button type="submit" class="btn btn-primary">Найти</button>
+    <a href="{% url 'ads:ad_search' %}" class="btn btn-outline-secondary">Очистить</a>
   </form>
   
   {% if search_performed %}

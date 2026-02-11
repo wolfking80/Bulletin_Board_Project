@@ -9,7 +9,7 @@
 
     {# Блок цитаты: показываем, на что именно этот ответ (если это ответ) #}
     {% if question.parent %}
-    <div class="mb-2 p-2 bg-light border-start border-primary border-4 rounded-end">
+    <div class="mb-2 p-2 border-start border-primary border-4 rounded-end">
       <small class="text-muted">
         <i class="bi bi-reply-fill"></i> Ответ для {{ question.parent.author.username }}:
       </small>
@@ -38,7 +38,7 @@
         </div>
         <div class="d-flex gap-2">
           <button type="submit" class="btn btn-primary btn-sm">Отправить</button>
-          <button type="button" class="btn btn-light btn-sm cancel-reply-btn">Отмена</button>
+          <button type="button" class="btn btn-sm cancel-reply-btn">Отмена</button>
         </div>
       </form>
     </div>

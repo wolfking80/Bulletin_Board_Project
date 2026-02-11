@@ -6,6 +6,6 @@
 
 {# Потом рисуем ТЕКУЩУЮ категорию #}
 <a href="{{ category.get_absolute_url }}" 
-  class="text-decoration-none {% if is_final %}fw-bold text-primary{% else %}text-dark opacity-75{% endif %}">
+  class="text-decoration-none {% if is_final %}fw-bold text-primary{% else %} opacity-75{% endif %}">
   {{ category.name }}
 </a>
