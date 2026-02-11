@@ -8,6 +8,8 @@ from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView
 from config.settings import DEFAULT_LOGIN_REDIRECT_URL
 from users.forms import CustomAuthenticationForm, CustomUserCreationForm
 from django.contrib import messages
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
 
 User = get_user_model()
 
@@ -49,6 +51,22 @@ class CustomPasswordChangeView(PasswordChangeView):
 class PasswordChangeDoneView(TemplateView):
   template_name = 'users/pages/password_change_done.html'
   
+
+@require_POST
+def toggle_theme(request):
+  if request.user.is_authenticated:
+    # Для авторизованных — меняем в базе
+    new_theme = 'light' if request.user.selected_theme == 'dark' else 'dark'
+    request.user.selected_theme = new_theme
+    request.user.save(update_fields=["selected_theme"])
+  else:
+    # Для неавторизованных — меняем в сессии
+    current_theme = request.session.get('theme', 'dark')
+    new_theme = 'light' if current_theme == 'dark' else 'dark'
+    request.session['theme'] = new_theme
+  
+  return JsonResponse({'new_theme': new_theme})
+
 
 class ProfileView(DetailView, MultipleObjectMixin):
   model = User

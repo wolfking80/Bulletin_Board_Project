@@ -12,12 +12,14 @@
   <link rel="icon" href="{% static 'images/favicon.ico' %}">
   {% bootstrap_css %}
   {% bootstrap_javascript %}
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="{% static 'css/core.css' %}">
   <script src="{% static 'js/core.js' %}" type="module" defer></script>
   {% block styles %}{% endblock styles %}
 </head>
 
-<body class="d-flex flex-column min-vh-100">
+<body class="d-flex flex-column min-vh-100" data-bs-theme="{{ current_theme }}" 
+  data-theme-toggle-url="{% url 'users:toggle_theme' %}">
   <header>
     <nav class="navbar navbar-expand-sm navbar-dark rounded-bottom" style="
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -63,6 +65,11 @@
                 {% if request.resolver_match.url_name == 'ad_search' %}active{% endif %}"
                 href="{% url 'ads:ad_search' %}">Найти объявление
               </a>
+            </li>
+            <li>
+              <button id="themeToggleBtn" class="btn border-0 text-white">
+                <i class="bi bi-{% if current_theme == 'dark' %}moon-stars-fill{% else %}sun-fill{% endif %}"></i>
+              </button>
             </li>
           </ul>
           <ul class="navbar-nav ms-auto">
