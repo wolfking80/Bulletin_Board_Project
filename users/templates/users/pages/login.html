@@ -10,6 +10,13 @@
     <div class='w-50 mx-auto'>
       <h1 class="text-center">Вход в аккаунт</h1>
       {% bootstrap_form form %}
+
+      <div class="mb-3">
+        <a href="{% url 'users:password_reset' %}" class="text-decoration-none">
+          <i class="bi bi-key me-1"></i>Забыли пароль?
+        </a>
+      </div>
+      
       <button type="submit" class="btn btn-primary w-100">Войти</button>
     </div>
   </form>
