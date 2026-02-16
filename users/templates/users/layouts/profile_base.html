@@ -39,24 +39,9 @@
             </a>
           </li>
           <li>
-          <a
-            href="{% url 'users:password_change' %}"
-            class="{% if request.resolver_match.url_name == 'password_change' %}active{% endif %}"
-          >
-            <i class="bi bi-shield-lock me-2"></i>Сменить пароль
-          </a>
-          </li>
-          <li>
-            <a
-              href="{% url 'users:profile_password_reset' %}"
-              class="{% if request.resolver_match.url_name == 'profile_password_reset' %}active{% endif %}"
-            >
-              <i class="bi bi-arrow-clockwise me-2"></i>Сбросить пароль
-            </a>
-          </li>
-          <li>
-            <a href="#" class="coming-soon">
-              <i class="bi bi-gear me-2"></i>Настройки
+            <a href="{% url 'users:settings' %}"
+              class="{% if request.resolver_match.url_name == 'settings' %}active{% endif %}"> 
+              <i class="bi bi-gear me-2"></i>Настройки 
             </a>
           </li>
           <li>

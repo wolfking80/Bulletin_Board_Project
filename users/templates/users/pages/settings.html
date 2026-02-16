@@ -1,0 +1,71 @@
+{% extends "users/layouts/profile_base.html" %}
+{% load static %}
+
+{% block page_title %}Настройки{% endblock page_title %}
+
+{% block styles %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static "users/css/pages/settings.css" %}">
+{% endblock styles %}
+
+{% block profile_page_content %}
+<div class="row">
+  <div class="col-12">
+    <div class="card mb-4">
+      <div class="card-header">
+        <h2 class="card-title text-center mb-0">
+          <i class="bi bi-gear me-2"></i>Настройки аккаунта
+        </h2>
+      </div>
+      <div class="card-body">
+        <p class="text-muted text-center">
+          Управление настройками вашего аккаунта
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Карточки настроек -->
+<div class="row">
+  <!-- Смена пароля -->
+  <div class="col-md-6 mb-4">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="d-flex align-items-center mb-3">
+          <div class="icon-wrapper bg-primary text-white rounded-circle me-3">
+            <i class="bi bi-shield-lock"></i>
+          </div>
+          <h5 class="card-title mb-0">Смена пароля</h5>
+        </div>
+        <p class="card-text text-muted mb-3">
+          Измените свой текущий пароль на новый (потребуется ввести текущий пароль)
+        </p>
+        <a href="{% url 'users:password_change' %}" class="btn btn-outline-primary">
+          <i class="bi bi-arrow-right me-2"></i>Сменить пароль
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Сброс пароля -->
+  <div class="col-md-6 mb-4">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="d-flex align-items-center mb-3">
+          <div class="icon-wrapper bg-warning text-white rounded-circle me-3">
+            <i class="bi bi-arrow-clockwise"></i>
+          </div>
+          <h5 class="card-title mb-0">Сброс пароля</h5>
+        </div>
+        <p class="card-text text-muted mb-3">
+          Сбросьте текущий пароль если забыли его и установите новый (через Email)
+        </p>
+        <a href="{% url 'users:profile_password_reset' %}" class="btn btn-outline-warning">
+          <i class="bi bi-envelope me-2"></i>Сбросить пароль
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock profile_page_content %}

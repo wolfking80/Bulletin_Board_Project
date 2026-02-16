@@ -84,6 +84,11 @@ def toggle_theme(request):
   return JsonResponse({'new_theme': new_theme})
 
 
+class SettingsView(TemplateView):
+  """Страница настроек профиля"""
+  template_name = 'users/pages/settings.html'
+
+
 class ProfileView(DetailView, MultipleObjectMixin):
   model = User
   slug_url_kwarg = 'username'

@@ -49,5 +49,6 @@ urlpatterns = [
         template_name="users/pages/password_reset_profile_instructions_sent.html"
     ), name='profile_password_reset_instructions_sent'),
     path("toggle-theme/", views.toggle_theme, name="toggle_theme"),
+    path('settings/', views.SettingsView.as_view(), name='settings'),
     path("<str:username>/", views.ProfileView.as_view(), name='profile'),
 ]
