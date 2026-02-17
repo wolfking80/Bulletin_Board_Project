@@ -1,4 +1,5 @@
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -12,13 +13,17 @@ class CustomAuthenticationForm(AuthenticationForm):
     self.fields['username'].widget.attrs.update({
       'placeholder': "Введите email или имя пользователя"
     })
-    self.error_messages.update({
-      'invalid_login': (
+    self.error_messages.update({'invalid_login': (
         "Пожалуйста, введите корректные email/имя пользователя и пароль. "
         "Обратите внимание, что оба поля могут быть чувствительны к регистру."
-      ),
-      'inactive': ("Аккаунт не активирован! Проверьте, пожалуйста, почту для активации аккаунта.")
+      )
     })
+    
+  def confirm_login_allowed(self, user):
+    if not user.is_active:
+      raise ValidationError("Аккаунт заблокирован администратором.", code='banned')
+    if not user.email_confirmed:
+      raise ValidationError("Почта не подтверждена! Проверьте свой почтовый ящик.", code='not_activated')
     
     
 class CustomUserCreationForm(UserCreationForm):

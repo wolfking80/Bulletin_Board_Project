@@ -28,7 +28,7 @@ class RegisterView(CreateView):
   def form_valid(self, form):
     # Сохраняем пользователя как неактивного
     user = form.save(commit=False)
-    user.is_active = False
+    user.email_confirmed = False
     user.save()
       
     # Отправляем письмо активации
@@ -77,7 +77,7 @@ def activate_account_view(request, uidb64, token):
     user = None
     
   if user and default_token_generator.check_token(user, token):
-    user.is_active = True
+    user.email_confirmed = True
     user.save()
     messages.success(request, 'Аккаунт успешно активирован! Теперь Вы можете войти.')
     return redirect('users:login')  

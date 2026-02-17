@@ -11,6 +11,7 @@ class CustomUser(AbstractUser):
   email = models.EmailField(unique=True, null=True, blank=True)
   avatar = models.ImageField(upload_to="user_avatars/", null=True, blank=True)
   selected_theme = models.CharField(choices=THEME_CHOICES, default="dark")
+  email_confirmed = models.BooleanField(default=False)
 
   class Meta:
     verbose_name = 'Пользователь'
