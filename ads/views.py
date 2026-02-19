@@ -1,5 +1,5 @@
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -14,7 +14,7 @@ from django.db.models.functions import Cast
 
 from ads.models import Advertisement, Category, Tag, Favorite, SellerRating, AdQuestion
 from ads.forms import AdvertisementForm
-from .mixins import FavoriteMixin 
+from .mixins import FavoriteMixin, OwnerRequiredMixin 
 
 
 User = get_user_model()
@@ -274,7 +274,7 @@ class AdCreateView(LoginRequiredMixin, CreateView):  # Требует автор
     return reverse_lazy('ads:ad_details', kwargs={'ad_slug': self.object.slug})  # На детали
   
   
-class AdUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):  # Требует прав
+class AdUpdateView(LoginRequiredMixin, OwnerRequiredMixin, UpdateView):  # Требует прав
   model = Advertisement                   # Модель
   form_class = AdvertisementForm          # Форма
   template_name = 'ads/pages/ad_form.html'  # Шаблон
@@ -286,12 +286,6 @@ class AdUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):  # Тр
         context['title'] = "Редактировать объявление"
         context['submit_button_text'] = "Сохранить"
         return context
-    
-  def test_func(self):                    # Проверка прав доступа
-    return self.request.user == self.get_object().owner  # Только владелец
-
-  def handle_no_permission(self):
-    return render(self.request, 'ads/pages/not_allowed.html', status=403)
     
   def form_valid(self, form):             # При валидной форме
     ad = form.save()                    # Сохраняем изменения
@@ -305,18 +299,12 @@ class AdUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):  # Тр
     return reverse_lazy('ads:ad_details', kwargs={'ad_slug': self.object.slug})  # На детали
   
   
-class AdDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):  # Для удаления
+class AdDeleteView(LoginRequiredMixin, OwnerRequiredMixin, DeleteView):  # Для удаления
   model = Advertisement                   # Модель
   context_object_name = 'ad'              # Имя переменной в шаблоне
   template_name = 'ads/pages/confirm_ad_delete.html'  # Шаблон подтверждения
   success_url = reverse_lazy('ads:ad_list')  # Куда редиректить после удаления
   slug_url_kwarg = 'ad_slug'
-    
-  def test_func(self):                    # Проверка прав
-    return self.request.user == self.get_object().owner  # Только владелец
-  
-  def handle_no_permission(self):
-    return render(self.request, 'ads/pages/not_allowed.html', status=403)
   
   
 class MainPageView(TemplateView):          # Просто отображает шаблон

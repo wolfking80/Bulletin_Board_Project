@@ -1,3 +1,7 @@
+from django.contrib.auth.mixins import UserPassesTestMixin
+from django.shortcuts import render
+
+
 class FavoriteMixin:
   def get_context_data(self, **kwargs):
     context = super().get_context_data(**kwargs)  # просим родителя собрать его стандартные данные, чтобы ничего не потерять
@@ -10,3 +14,11 @@ class FavoriteMixin:
     else:
       context['favorite_ids'] = []                # если пользователь аноним, мы отдаем пустой список
     return context
+  
+  
+class OwnerRequiredMixin(UserPassesTestMixin):
+  def test_func(self):
+    return self.request.user == self.get_object().owner
+
+  def handle_no_permission(self):
+    return render(self.request, 'ads/pages/not_allowed.html', status=403)
