@@ -249,54 +249,46 @@ class AdDetailView(FavoriteMixin, DetailView):            # Класс для д
       return context
     
     
-class AdCreateView(LoginRequiredMixin, CreateView):  # Требует авторизацию
-  model = Advertisement                   # Модель для создания
-  form_class = AdvertisementForm          # Кастомная форма
-  template_name = 'ads/pages/ad_form.html'  # Шаблон формы
-  
-  def get_context_data(self, **kwargs):     # Добавляем заголовок и текст кнопки для создания
-        context = super().get_context_data(**kwargs)
-        context['title'] = "Создать объявление"
-        context['submit_button_text'] = "Опубликовать"
-        return context
+# --- БАЗОВЫЙ КЛАСС ДЛЯ СОЗДАНИЯ И РЕДАКТИРОВАНИЯ ---
+class BaseAdEditView(LoginRequiredMixin):
+    model = Advertisement
+    form_class = AdvertisementForm
+    template_name = 'ads/pages/ad_form.html'
+    slug_url_kwarg = 'ad_slug'
+
+    def form_valid(self, form):
+        # Если это создание нового — ставим владельца
+        if not form.instance.pk:
+            form.instance.owner = self.request.user
+        
+        response = super().form_valid(form)
+        
+        # Универсальная логика тегов (удаляет старые, добавляет новые)
+        tags_names = form.cleaned_data.get('tags_input', [])
+        tags_objs = [Tag.objects.get_or_create(name=n)[0] for n in tags_names]
+        self.object.tags.set(tags_objs)
+        
+        messages.success(self.request, self.get_success_message())
+        return response
+
+    def get_success_url(self):
+        return reverse_lazy('ads:ad_details', kwargs={'ad_slug': self.object.slug})
+      
+
+class AdCreateView(BaseAdEditView, CreateView):
+  def get_context_data(self, **kwargs):
+    return {**super().get_context_data(**kwargs), 'title': "Создать объявление", 'submit_button_text': "Опубликовать"}
     
-  def form_valid(self, form):             # Вызывается при валидной форме
-    ad = form.save(commit=False)        # Не сохраняем сразу в БД
-    ad.owner = self.request.user        # Устанавливаем владельца
-    ad.save()                           # Теперь сохраняем
-    for tag_name in form.cleaned_data.get('tags_input', []):  # Обработка тегов
-      tag, _ = Tag.objects.get_or_create(name=tag_name)  # Создаем/получаем тег
-      ad.tags.add(tag)                # Добавляем тег к объявлению
-    messages.success(self.request, 'Объявление успешно создано!')  
-    return super().form_valid(form)     # Вызываем родительский метод
-    
-  def get_success_url(self):              # Куда перенаправить после успеха
-    return reverse_lazy('ads:ad_details', kwargs={'ad_slug': self.object.slug})  # На детали
-  
-  
-class AdUpdateView(LoginRequiredMixin, OwnerRequiredMixin, UpdateView):  # Требует прав
-  model = Advertisement                   # Модель
-  form_class = AdvertisementForm          # Форма
-  template_name = 'ads/pages/ad_form.html'  # Шаблон
-  slug_url_kwarg = 'ad_slug'
-  
-  
-  def get_context_data(self, **kwargs):     # Добавляем заголовок и текст кнопки для редактирования
-        context = super().get_context_data(**kwargs)
-        context['title'] = "Редактировать объявление"
-        context['submit_button_text'] = "Сохранить"
-        return context
-    
-  def form_valid(self, form):             # При валидной форме
-    ad = form.save()                    # Сохраняем изменения
-    ad.tags.clear()                     # Удаляем старые теги
-    for tag_name in form.cleaned_data.get('tags_input', []):  # Обработка тегов
-      tag, _ = Tag.objects.get_or_create(name=tag_name)  # Создаем/получаем
-      ad.tags.add(tag)                # Добавляем теги
-    return super().form_valid(form)     # Стандартная логика
-    
-  def get_success_url(self):              # URL после успеха
-    return reverse_lazy('ads:ad_details', kwargs={'ad_slug': self.object.slug})  # На детали
+  def get_success_message(self):
+    return "Объявление успешно создано!"
+
+
+class AdUpdateView(OwnerRequiredMixin, BaseAdEditView, UpdateView):
+  def get_context_data(self, **kwargs):
+    return {**super().get_context_data(**kwargs), 'title': "Редактировать", 'submit_button_text': "Сохранить"}
+
+  def get_success_message(self):
+    return "Изменения сохранены!"
   
   
 class AdDeleteView(LoginRequiredMixin, OwnerRequiredMixin, DeleteView):  # Для удаления
