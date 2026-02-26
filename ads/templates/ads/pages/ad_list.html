@@ -2,6 +2,11 @@
 
 {% load static %}
 
+{% block styles %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'css/ad_card.css' %}">
+{% endblock styles %}
+
 {% block page_title %}
   {% if title %}{{ title }}{% else %}Все объявления{% endif %}
 {% endblock %}

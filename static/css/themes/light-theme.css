@@ -1,3 +1,8 @@
 body[data-bs-theme="light"] {
   --avatar-accent-color: #5887ec;
+  --urgent-bg: linear-gradient(45deg, #d93025, #ff4d00); /* Красный */
+  --top-bg: linear-gradient(45deg, #007bff, #00c6ff);    /* Синий */
+  --vip-bg: linear-gradient(45deg, #ffd700, #ff8c00);    /* Золотой */
+  --badge-text: #ffffff;
+  --vip-text: #000000; /* На золотом лучше черный */
 }

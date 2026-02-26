@@ -129,6 +129,36 @@ class Advertisement(models.Model):
     super().save(*args, **kwargs)
     
     
+class AdPromotion(models.Model):
+  # Связь с основным объявлением
+  ad = models.OneToOneField(
+    Advertisement, 
+    on_delete=models.CASCADE, 
+    related_name='promotion',
+    verbose_name="Объявление"
+  )
+    
+  # Визуальные фишки
+  is_vip = models.BooleanField(default=False, verbose_name="VIP статус (значок)")
+  is_urgent = models.BooleanField(default=False, verbose_name="Срочно (огонек)")
+  is_colored = models.BooleanField(default=False, verbose_name="Выделение цветом (рамка)")
+  is_top = models.BooleanField(default=False, verbose_name="Поднято в топ")
+
+  # для проверки оплаты
+  # (True становится только после успешного ответа от платежки)
+  vip_paid = models.BooleanField(default=False, verbose_name="VIP оплачен")
+  top_paid = models.BooleanField(default=False, verbose_name="Топ оплачен")
+  urgent_paid = models.BooleanField(default=False, verbose_name="Топ оплачен")
+  colored_paid = models.BooleanField(default=False, verbose_name="Рамка оплачена")
+
+  class Meta:
+    verbose_name = 'Продвижение объявления'
+    verbose_name_plural = 'Продвижение объявлений'
+
+  def __str__(self):
+    return f"Промо для: {self.ad.title}"
+    
+    
 class Favorite(models.Model):
   user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='favorites')
   ad = models.ForeignKey('Advertisement', on_delete=models.CASCADE, related_name='favorited_by')

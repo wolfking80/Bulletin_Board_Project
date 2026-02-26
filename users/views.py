@@ -7,6 +7,7 @@ from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView,
 from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
@@ -188,3 +189,13 @@ class ProfileView(DetailView, MultipleObjectMixin):
     del context['object_list']
     
     return context
+
+
+@login_required
+@require_POST
+def toggle_notifications(request):
+  user = request.user
+  # Переключаем флаг
+  user.notifications_enabled = not user.notifications_enabled
+  user.save()
+  return JsonResponse({'notifications_enabled': user.notifications_enabled})

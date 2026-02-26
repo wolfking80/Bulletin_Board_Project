@@ -1,73 +1,90 @@
 <div class="col-md-6 col-lg-4 mb-4 ad-card-container">
-        <div class="card h-100">
-          <!-- Изображение -->
-          {% if ad.goods_image %}
-          <img src="{{ ad.goods_image.url }}" class="card-img-top" alt="{{ ad.title }}"
-            style="height: 200px; object-fit: cover;">
-          {% endif %}
+  <!-- Карточка с динамическим классом для рамки -->
+  <div id="ad-{{ ad.id }}" class="card h-100 {% if ad.promotion.is_colored %}promo-border{% endif %}">
 
-          <!-- Тело карточки -->
-          <div class="card-body">
-            <h5 class="card-title">
-              <a href="{% url 'ads:ad_details' ad_slug=ad.slug %}" class="text-decoration-none">
-                {{ ad.title }}
-              </a>
-            </h5>
+    <!-- Слой с бейджами ВИП и СРОЧНО -->
+    <div class="ad-badges" style="position: absolute; top: 10px; right: 10px; z-index: 10; display: flex; flex-direction: column; align-items: flex-end; gap: 5px;">
+      {% if ad.promotion.is_top %}
+        <span class="badge-top" title="Поднято в ТОП">🔝 ТОП</span>
+      {% endif %}
+  
+      {% if ad.promotion.is_vip %}
+        <span class="badge-vip" title="VIP Объявление">⭐ VIP</span>
+      {% endif %}
+  
+      {% if ad.promotion.is_urgent %}
+        <span class="badge-urgent" title="Срочно!">🔥 СРОЧНО!</span>
+      {% endif %}
+    </div>
 
-            {% if request.user in ad.viewed_users.all %}
-              <div class="badge bg-primary">Просмотрено</div>
-            {% endif %}
+    <!-- Изображение -->
+    {% if ad.goods_image %}
+      <img src="{{ ad.goods_image.url }}" class="card-img-top" alt="{{ ad.title }}"
+        style="height: 200px; object-fit: cover;">
+    {% endif %}
 
-            {% if user.is_authenticated  and request.user != ad.owner%}
-              <button type="button" 
-                class="btn btn-sm fav-btn {% if ad.id in favorite_ids %}btn-warning{% else %}btn-outline-warning{% endif %}"
-                data-url="{% url 'ads:toggle_favorite' ad.id %}"
-                data-is-favorites-page="{{ is_favorites_page|default:'false' }}">★
-              </button>
-            {% endif %}
+    <!-- Тело карточки -->
+    <div class="card-body d-flex flex-column">
+      <h5 class="card-title">
+        <a href="{% url 'ads:ad_details' ad_slug=ad.slug %}" class="text-decoration-none">
+          {{ ad.title }}
+        </a>
+      </h5>
 
-            {% if request.user == ad.owner %}
-            <p class="card-text">
-                <small class="text-muted">Статус: {{ ad.get_status_display }}</small>
-            </p>
-            {% endif %}
+      <!-- Бейджи состояния (просмотрено, избранное) -->
+      <div class="mb-2">
+        {% if request.user in ad.viewed_users.all %}
+          <span class="badge bg-primary">Просмотрено</span>
+        {% endif %}
 
-            <p class="mb-0 small">
-              <span class="text-muted me-2">Категория:</span>
-              {% include 'ads/includes/category_chain.html' with category=ad.category is_final=True %}
-            </p>
-
-            <p>Теги: 
-              {% for tag in ad.tags.all %}
-                <a href="{{ tag.get_absolute_url }}">{{ tag }}</a>{% if not forloop.last %}, {% endif %}
-              {% empty %}
-              нет тегов
-              {% endfor %}
-            </p>
-
-            <p class="card-text">{{ ad.text|truncatechars:150 }}</p>
-
-            <div class="mb-2">
-              {% if ad.price is not None %}
-              <span class="badge bg-success fs-6">
-                {{ ad.price }} ₽
-              </span>
-              {% else %}
-              <span class="badge bg-secondary">Цена не указана</span>
-              {% endif %}
-            </div>
-          </div>
-
-          <!-- Футер карточки -->
-          <div class="card-footer">
-            <div class="d-flex justify-content-between align-items-center">
-              <small class="text-muted">
-                <span class="date-field">{{ ad.created_at|date:"c" }}</span>
-              </small>
-              <a href="{% url 'ads:ad_details' ad_slug=ad.slug %}" class="btn btn-sm btn-outline-primary">
-                Подробнее
-              </a>
-            </div>
-          </div>
-        </div>
+        {% if user.is_authenticated and request.user != ad.owner %}
+          <button type="button"
+            class="btn btn-sm fav-btn {% if ad.id in favorite_ids %}btn-warning{% else %}btn-outline-warning{% endif %}"
+            data-url="{% url 'ads:toggle_favorite' ad.id %}"
+            data-is-favorites-page="{{ is_favorites_page|default:'false' }}">★
+          </button>
+        {% endif %}
       </div>
+
+      {% if request.user == ad.owner %}
+        <p class="card-text mb-2">
+          <small class="text-muted">Статус: {{ ad.get_status_display }}</small>
+        </p>
+      {% endif %}
+
+      <!-- Категории -->
+      <p class="mb-1 small text-muted">
+        Категория: {% include 'ads/includes/category_chain.html' with category=ad.category is_final=True %}
+      </p>
+
+      <!-- Теги -->
+      <div class="mb-2 small">
+        Теги:
+        {% for tag in ad.tags.all %}
+          <a href="{{ tag.get_absolute_url }}" class="text-decoration-none">{{ tag }}</a>{% if not forloop.last %}, {% endif %}
+        {% empty %}
+          <span class="text-muted">нет тегов</span>
+        {% endfor %}
+      </div>
+
+      <p class="card-text small text-secondary">{{ ad.text|truncatechars:100 }}</p>
+
+      <!-- Цена -->
+      <div class="mt-auto">
+        {% if ad.price is not None %}
+          <span class="badge bg-success fs-6">{{ ad.price }} ₽</span>
+        {% else %}
+          <span class="badge bg-secondary">Цена не указана</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Футер карточки -->
+    <div class="card-footer bg-transparent border-top-0">
+      <div class="d-flex justify-content-between align-items-center">
+        <small class="text-muted date-field">{{ ad.created_at|date:"c" }}</small>
+        <a href="{% url 'ads:ad_details' ad_slug=ad.slug %}" class="btn btn-sm btn-outline-primary">Подробнее</a>
+      </div>
+    </div>
+  </div>
+</div>

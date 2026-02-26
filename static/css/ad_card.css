@@ -1,0 +1,43 @@
+/* Рамка для выделенных объявлений */
+.promo-border {
+    border: 3px solid #00ff0d !important;
+    box-shadow: 0 0 20px rgba(255, 69, 0, 0.3);
+}
+
+/* Бейдж ТОП */
+.badge-top {
+    background: var(--top-bg) !important;
+    color: var(--badge-text) !important;
+    padding: 2px 10px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+/* Бэйдж VIP */
+.badge-vip {
+    background: var(--vip-bg) !important;
+    color: var(--vip-text) !important;
+    padding: 2px 10px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+/* Бэйдж Огонек (СРОЧНО) */
+.badge-urgent {
+    background: var(--urgent-bg) !important;
+    color: var(--badge-text) !important;
+    padding: 2px 10px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    animation: flicker 1s infinite alternate;
+}
+
+@keyframes flicker {
+    0% { transform: scale(1); opacity: 0.8; }
+    100% { transform: scale(1.2); opacity: 1; }
+}

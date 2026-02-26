@@ -68,4 +68,37 @@
     </div>
   </div>
 </div>
+
+<!-- Уведомления -->
+<div class="col-md-6 mb-4">
+  <div class="card h-100">
+    <div class="card-body">
+      <div class="d-flex align-items-center mb-3">
+        <div class="icon-wrapper {% if user.notifications_enabled %}bg-success{% else %}bg-secondary{% endif %} text-white rounded-circle me-3" id="notif-icon-bg">
+          <i class="bi {% if user.notifications_enabled %}bi-bell-fill{% else %}bi-bell-slash{% endif %}" id="notif-icon"></i>
+        </div>
+        <h5 class="card-title mb-0">Email-уведомления</h5>
+      </div>
+      <p class="card-text text-muted mb-3" id="notif-text">
+        {% if user.notifications_enabled %}
+          Вы получаете уведомления о статусе ваших объявлений (VIP, Топ, Модерация).
+        {% else %}
+          Уведомления отключены. Вы не узнаете об изменении статуса ваших объявлений.
+        {% endif %}
+      </p>
+      <button onclick="handleToggleNotif(this)" 
+              data-url="{% url 'users:toggle_notifications' %}" 
+              class="btn {% if user.notifications_enabled %}btn-outline-danger{% else %}btn-outline-success{% endif %}" 
+              id="notif-btn">
+        <i class="bi bi-power me-2"></i>
+        <span id="btn-text">{% if user.notifications_enabled %}Отключить{% else %}Включить{% endif %}</span>
+      </button>
+    </div>
+  </div>
+</div>
 {% endblock profile_page_content %}
+
+{% block scripts %}
+  {{ block.super }}
+  <script type="module" src="{% static 'js/notifications.js' %}"></script>
+{% endblock scripts %}

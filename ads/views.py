@@ -30,7 +30,7 @@ def get_sub_tree_ids(category):
   
 # Вспомогательная универсальная функция
 def get_ads_queryset(request):
-  qs = Advertisement.objects.annotate(
+  qs = Advertisement.objects.select_related('promotion').annotate(
         seller_rating=Avg(Cast('owner__received_ratings__is_positive', FloatField())) * 100
     ).filter(status='published')
 
@@ -87,7 +87,7 @@ def get_ads_queryset(request):
   if min_rating:
     qs = qs.filter(Q(seller_rating__gte=min_rating) | Q(seller_rating__isnull=True))
 
-  return qs.order_by('-created_at', '-id').distinct()
+  return qs.order_by('-promotion__is_top', '-promotion__is_vip', '-promotion__is_urgent','-created_at').distinct()
 
 
 class AdsListView(FavoriteMixin, ListView):                # Создаем класс на основе ListView
