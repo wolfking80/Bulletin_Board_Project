@@ -1,34 +1,16 @@
-<!DOCTYPE html>
-<html>
+{% extends "users/emails/base_email.html" %}
 
-<body style="margin: 0; padding: 0; font-family: sans-serif; background-color: #f8f9fa;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="padding: 20px;">
-    <tr>
-      <td align="center">
-        <table width="600" style="background: #ffffff; border: 1px solid #dee2e6; border-radius: 10px;">
-          <tr>
-            <td
-              style="background: #ffc107; padding: 20px; text-align: center; color: #212529; border-radius: 10px 10px 0 0;">
-              <h2 style="margin: 0;">Продвижение активировано! 🚀</h2>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding: 30px; color: #333;">
-              <p>Привет, <b>{{ user.username }}</b>!</p>
-              <p>К вашему объявлению <b>«{{ ad.title }}»</b> применены новые услуги:</p>
-              <ul style="background: #fff9db; padding: 15px 35px; border-radius: 5px; border: 1px solid #ffe066;">
-                {% if ad.promotion.is_vip %}<li>⭐ <b>VIP-статус:</b> выделение в списке и приоритет</li>{% endif %}
-                {% if ad.promotion.is_urgent %}<li>🔥 <b>Срочно:</b> яркий значок огонька</li>{% endif %}
-                {% if ad.promotion.is_colored %}<li>🎨 <b>Цвет:</b> яркая рамка вокруг карточки</li>{% endif %}
-                {% if ad.promotion.is_top %}<li>🔝 <b>ТОП:</b> поднятие в верхнюю часть списка</li>{% endif %}
-              </ul>
-              <p>Это поможет привлечь больше покупателей!</p>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
+{% block header_bg %}#ffc107{% endblock %}
+{% block header_title %}Продвижение активировано! 🚀{% endblock %}
 
+{% block content %}
+<p>К вашему объявлению <b>«{{ ad.title }}»</b> применены новые услуги:</p>
+<ul style="background: #fff9db; padding: 15px 35px; border-radius: 5px; border: 1px solid #ffe066; list-style: none;">
+  {% if ad.promotion.is_vip %}<li>⭐ <b>VIP-статус:</b> приоритет в списке</li>{% endif %}
+  {% if ad.promotion.is_urgent %}<li>🔥 <b>Срочно:</b> значок огонька</li>{% endif %}
+  {% if ad.promotion.is_colored %}<li>🎨 <b>Цвет:</b> яркая рамка</li>{% endif %}
+  {% if ad.promotion.is_top %}<li>🔝 <b>ТОП:</b> поднятие в верх</li>{% endif %}
+</ul>
+<p>Это поможет привлечь больше покупателей!</p>
+{% endblock %}
 </html>

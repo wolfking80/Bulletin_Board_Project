@@ -17,6 +17,7 @@ from django.contrib.sites.shortcuts import get_current_site
 
 from config.settings import DEFAULT_LOGIN_REDIRECT_URL, DEFAULT_FROM_EMAIL
 from users.forms import CustomAuthenticationForm, CustomUserCreationForm
+from users.utils import send_custom_email
 
 
 User = get_user_model()
@@ -46,27 +47,16 @@ class RegisterView(CreateView):
   def send_activation_email(self, user):
     token = default_token_generator.make_token(user)
     uidb64 = urlsafe_base64_encode(force_bytes(user.id))
-    
     activation_url = self.request.build_absolute_uri(
-      reverse_lazy('users:activate_account', kwargs={'uidb64': uidb64, 'token': token})
+        reverse_lazy('users:activate_account', kwargs={'uidb64': uidb64, 'token': token})
     )
     
-    site_name = get_current_site(self.request).name
-    
-    subject = f'Активация аккаунта - {site_name}'
-    
-    message = (
-      f'Добро пожаловать на {site_name}!\n\n'
-      f'Для активации Вашего аккаунта перейдите по ссылке:\n'
-      f'{activation_url}\n\n'
-      f'Ссылка действительна в течении 24 часов.'
-    )
-    
-    send_mail(
-      subject,
-      message,
-      DEFAULT_FROM_EMAIL,
-      [user.email]
+    send_custom_email(
+        subject='Активация аккаунта',
+        template_name='users/emails/activation.html',
+        context={'user': user, 'activation_url': activation_url},
+        to_email=user.email,
+        request=self.request
     )
     
 

@@ -1,30 +1,34 @@
 from django.db import transaction
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
-from django.core.mail import EmailMultiAlternatives
-from django.template.loader import render_to_string
-from django.contrib.auth import get_user_model
-from .models import Advertisement, AdPromotion
+from ads.models import Advertisement, AdPromotion
+from users.utils import send_custom_email
 
 
-# ФУНКЦИЯ (запускается ТОЛЬКО после того, как БД всё сохранила)
 def send_ad_email(ad_id, subject, template_name):
-    User = get_user_model()
-    # Делаем ПАУЗУ и берем данные из базы, когда транзакция уже закрыта
+    from ads.models import Advertisement
     try:
-        from .models import Advertisement
         ad = Advertisement.objects.select_related('owner').get(pk=ad_id)
         user = ad.owner
         
-        # Теперь база 100% отдает True, если включить галочку в другой вкладке
         if user.notifications_enabled and user.email:
-            context = {'ad': ad, 'user': user, 'protocol': 'http', 'domain': '127.0.0.1:8000'}
-            html_body = render_to_string(template_name, context)
-            msg = EmailMultiAlternatives(subject=subject, body=f"Обновление: {ad.title}", to=[user.email])
-            msg.attach_alternative(html_body, "text/html")
-            msg.send(fail_silently=True)
+            context = {'ad': ad, 'user': user}
+            send_custom_email(
+                subject=subject,
+                template_name=template_name,
+                context=context,
+                to_email=user.email
+            )
     except Exception as e:
-        print(f"Ошибка отправки почты: {e}") 
+        print(f"Ошибка в сигнале: {e}")
+        
+        
+# АВТОМАТИЧЕСКОЕ СОЗДАНИЕ ЗАПИСИ ПРОДВИЖЕНИЯ
+@receiver(post_save, sender=Advertisement)
+def create_promotion_for_new_ad(sender, instance, created, **kwargs):
+    if created:
+        # Создаем пустую запись в таблице промо, чтобы JOIN в SQL не ломался
+        AdPromotion.objects.get_or_create(ad=instance) 
 
 # СИГНАЛ МОДЕРАЦИИ
 @receiver(pre_save, sender=Advertisement)

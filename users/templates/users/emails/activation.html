@@ -1,0 +1,15 @@
+{% extends "users/emails/base_email.html" %}
+
+{% block header_bg %}#6f42c1{% endblock %}
+{% block header_title %}Добро пожаловать! 👋{% endblock %}
+
+{% block content %}
+<p>Спасибо за регистрацию на нашем сервисе. Для активации аккаунта нажмите на кнопку ниже:</p>
+<div style="text-align: center; margin-top: 30px;">
+  <a href="{{ activation_url }}" 
+    style="background: #28a745; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
+    Активировать аккаунт
+  </a>
+</div>
+<p style="font-size: 13px; color: #666; margin-top: 20px;">Ссылка действительна в течение 24 часов.</p>
+{% endblock %}
