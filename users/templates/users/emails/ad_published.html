@@ -1,5 +1,7 @@
 {% extends "users/emails/base_email.html" %}
 
+{% block preview %}Ваше объявление «{{ ad.title }}» успешно прошло модерацию и теперь доступно всем пользователям.{% endblock %}
+
 {% block header_bg %}#28a745{% endblock %}
 {% block header_title %}Объявление опубликовано! ✅{% endblock %}
 
