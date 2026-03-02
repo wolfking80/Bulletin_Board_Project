@@ -146,18 +146,33 @@ class SettingsView(TemplateView):
   template_name = 'users/pages/settings.html'
 
 
-class ProfileView(DetailView, MultipleObjectMixin):
+class ProfileView(DetailView):
   model = User
   slug_url_kwarg = 'username'
   slug_field = 'username'
   template_name = 'users/pages/index.html'
-  context_object_name = 'user'
-  paginate_by = 3  
+  context_object_name = 'user' 
   
   def get_context_data(self, **kwargs):
-    ads = self.object.ads.order_by('-created_at')
-    # Заполняем queryset, чтобы django было что пагинировать
-    context = super().get_context_data(object_list=ads, **kwargs)
+    context = super().get_context_data(**kwargs)
+    # Проверяем, мой профиль или чужой
+    is_owner = self.request.user == self.object
+    # Формируем запрос
+    ads_qs = self.object.ads.all()
+    if not is_owner:
+      # В чужом профиле — только опубликованные
+      ads_qs = ads_qs.filter(status='published')
+    
+    ads_qs = ads_qs.order_by('-created_at')
+
+    # Настройки для BatchLoader
+    context['ads'] = ads_qs[:3]
+    context['has_more_ads'] = ads_qs.count() > 3
+    context['ads_per_batch'] = 3
+    context['owner_id'] = self.object.id
+    # Флаг для JS, чтобы он знал, можно ли подтягивать неопубликованные
+    context['show_all'] = is_owner
+    
     pos = self.object.received_ratings.filter(is_positive=True).count()
     neg = self.object.received_ratings.filter(is_positive=False).count()
     total = pos + neg
@@ -175,8 +190,6 @@ class ProfileView(DetailView, MultipleObjectMixin):
       user_rating = self.object.received_ratings.filter(voter=self.request.user).first()
       context['user_choice'] = 'plus' if user_rating and user_rating.is_positive else \
                                 'minus' if user_rating else 'none'
-    context['ads'] = context['object_list']
-    del context['object_list']
     
     return context
 

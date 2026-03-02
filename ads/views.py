@@ -32,7 +32,17 @@ def get_sub_tree_ids(category):
 def get_ads_queryset(request):
   qs = Advertisement.objects.select_related('promotion').annotate(
         seller_rating=Avg(Cast('owner__received_ratings__is_positive', FloatField())) * 100
-    ).filter(status='published')
+    )
+
+  owner_id = request.GET.get('owner_id')
+  show_all = request.GET.get('show_all') == 'True'
+
+  if owner_id:
+    qs = qs.filter(owner_id=owner_id)
+    if not show_all:
+      qs = qs.filter(status='published')
+  else:
+    qs = qs.filter(status='published')
 
 # Проверка на "Избранное"
   is_fav_page = request.GET.get('is_fav') == '1' or 'my-favorites' in request.path

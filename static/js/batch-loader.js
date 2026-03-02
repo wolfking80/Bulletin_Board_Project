@@ -39,8 +39,10 @@ class BatchLoader {
 
     try {
       const params = window.location.search.replace('?', '&');
+      const ownerId = this.container.dataset.ownerId ? `&owner_id=${this.container.dataset.ownerId}` : '';
+      const showAll = this.container.dataset.showAll === 'True' ? `&show_all=1` : '';
       const isFav = this.container.dataset.isFavorites === 'True' ? '&is_fav=1' : '';
-      const url = `${this.loadMoreUrl}?offset=${this.offset}${params}${isFav}`;
+      const url = `${this.loadMoreUrl}?offset=${this.offset}${params}${isFav}${ownerId}${showAll}`;
 
       const data = await getAction(url);
 
