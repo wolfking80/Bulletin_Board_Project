@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.db.models import Count
 
 from ads.models import Advertisement, Category, Tag, AdPromotion
 
@@ -26,8 +27,18 @@ class AdPromotionInline(admin.StackedInline):
     # Регистрируем объявление с этим инлайном
 @admin.register(Advertisement)
 class AdvertisementAdmin(admin.ModelAdmin):
-    list_display = ('title', 'owner', 'status', 'created_at')
+    list_display = ('title', 'owner', 'status', 'created_at', 'get_fav_count')
     list_filter = ('status', 'category')
     search_fields = ('title', 'text')
     # Добавляем инлайн в карточку объявления
     inlines = [AdPromotionInline]
+    
+    # Оптимизация запроса, чтобы админка не «висла» от большого количества Count-запросов
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        return queryset.annotate(fav_count_attr=Count('favorited_by'))
+
+    # Метод для вывода значения добавлений в Избранное
+    @admin.display(description='★ Избранное', ordering='fav_count_attr')
+    def get_fav_count(self, obj):
+        return obj.fav_count_attr
