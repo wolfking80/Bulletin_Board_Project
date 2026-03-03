@@ -1,8 +1,7 @@
-from django.views.generic.list import MultipleObjectMixin
 from django.contrib.auth import get_user_model
 
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, DetailView, TemplateView
+from django.views.generic import CreateView, DetailView, TemplateView, ListView
 from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView, PasswordResetView
 from django.contrib import messages
 from django.http import JsonResponse
@@ -12,8 +11,9 @@ from django.shortcuts import redirect
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.utils.encoding import force_bytes, force_str
-from django.core.mail import send_mail
-from django.contrib.sites.shortcuts import get_current_site
+from django.contrib.auth.mixins import LoginRequiredMixin
+
+from users.models import Notification
 
 from config.settings import DEFAULT_LOGIN_REDIRECT_URL, DEFAULT_FROM_EMAIL
 from users.forms import CustomAuthenticationForm, CustomUserCreationForm
@@ -192,6 +192,21 @@ class ProfileView(DetailView):
                                 'minus' if user_rating else 'none'
     
     return context
+  
+  
+class NotificationListView(LoginRequiredMixin, ListView):
+  model = Notification
+  template_name = 'users/pages/notifications.html'
+  context_object_name = 'notifications'
+
+  def get_queryset(self):
+    # Показываем последние 20 уведомлений пользователя
+    return self.request.user.notifications.all()[:20]
+
+  def post(self, request, *args, **kwargs):
+    # При нажатии "Прочитать всё" — сбрасываем счетчик
+    self.request.user.notifications.filter(is_read=False).update(is_read=True)
+    return redirect('users:notifications')
 
 
 @login_required

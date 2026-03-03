@@ -1,7 +1,8 @@
 from django.db import transaction
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
-from ads.models import Advertisement, AdPromotion
+from ads.models import Advertisement, AdPromotion, Favorite
+from users.models import Notification
 from users.utils import send_custom_email
 
 
@@ -50,3 +51,13 @@ def notify_promotion(sender, instance, created, **kwargs):
     if any([instance.is_vip, instance.is_urgent, instance.is_colored, instance.is_top]):
         # Ждем фиксации транзакции в базе
         transaction.on_commit(lambda: send_ad_email(instance.ad_id, "Услуги продвижения активированы! 🚀", "users/emails/ad_promo_updated.html"))
+        
+
+# СИГНАЛ ОПОВЕЩЕНИЯ ПОЛЬЗОВАТЕЛЯ
+@receiver(post_save, sender=Favorite)
+def create_favorite_notification(sender, instance, created, **kwargs):
+    if created and instance.user != instance.ad.owner:
+        Notification.objects.create(
+            user=instance.ad.owner,
+            ad=instance.ad,
+            message=f"Пользователь {instance.user.username} добавил ваше объявление «{instance.ad.title}» в избранное ★")

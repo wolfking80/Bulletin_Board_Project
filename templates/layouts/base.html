@@ -75,6 +75,16 @@
           <ul class="navbar-nav ms-auto">
             {% if request.user.is_authenticated %}
             <li class="nav-item">
+            <a href="{% url 'users:notifications' %}" class="btn btn-outline-light position-relative">
+              <i class="bi bi-bell"></i>
+                {% if unread_notifications_count > 0 %}
+                  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                  {{ unread_notifications_count }}
+                  </span>
+                {% endif %}
+              </a>
+              </li>
+            <li class="nav-item">
               <a class="nav-link d-flex align-items-center 
                 {% if request.resolver_match.url_name == 'profile' and request.resolver_match.kwargs.username == request.user.username %}active{% endif %}"
                 href="{% url 'users:profile' request.user.username %}">

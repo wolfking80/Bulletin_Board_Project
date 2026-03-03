@@ -52,5 +52,6 @@ urlpatterns = [
     ), name='profile_password_reset_instructions_sent'),
     path("toggle-theme/", views.toggle_theme, name="toggle_theme"),
     path('settings/', views.SettingsView.as_view(), name='settings'),
+    path('notifications/', views.NotificationListView.as_view(), name='notifications'),
     path("<str:username>/", views.ProfileView.as_view(), name='profile'),
 ]
