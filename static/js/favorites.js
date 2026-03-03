@@ -19,6 +19,11 @@ function initFavorites() {
     btn.classList.toggle('btn-warning', data.is_favorite);
     btn.classList.toggle('btn-outline-warning', !data.is_favorite);
 
+    const countSpan = btn.querySelector('.fav-count');
+    if (countSpan && data.fav_count !== undefined) {
+        countSpan.textContent = data.fav_count;
+    }
+
     // берем флаг из родительского контейнера #adsContainer
     const adsContainer = document.getElementById('adsContainer');
     const isFavPage = adsContainer && adsContainer.dataset.isFavorites === 'True';

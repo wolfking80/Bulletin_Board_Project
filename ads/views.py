@@ -9,7 +9,7 @@ from django.http import JsonResponse
 from django.contrib.auth import get_user_model
 from django.contrib import messages
 
-from django.db.models import F, Q, Avg, FloatField
+from django.db.models import F, Q, Avg, FloatField, Count
 from django.db.models.functions import Cast
 
 from ads.models import Advertisement, Category, Tag, Favorite, SellerRating, AdQuestion
@@ -31,6 +31,7 @@ def get_sub_tree_ids(category):
 # Вспомогательная универсальная функция
 def get_ads_queryset(request):
   qs = Advertisement.objects.select_related('promotion').annotate(
+        fav_count=Count('favorited_by', distinct=True),
         seller_rating=Avg(Cast('owner__received_ratings__is_positive', FloatField())) * 100
     )
 
@@ -333,7 +334,10 @@ def toggle_favorite(request, ad_id):
         Favorite.objects.create(user=request.user, ad=ad)  # добавляем
         is_favorite = True
     
-    return JsonResponse({'is_favorite': is_favorite})
+    return JsonResponse({
+      'is_favorite': is_favorite,
+      'fav_count': ad.favorited_by.count()
+      })
   
   
 class MyFavoritesView(LoginRequiredMixin, FavoriteMixin, ListView):

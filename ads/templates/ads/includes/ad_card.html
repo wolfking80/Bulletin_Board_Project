@@ -42,6 +42,7 @@
             class="btn btn-sm fav-btn {% if ad.id in favorite_ids %}btn-warning{% else %}btn-outline-warning{% endif %}"
             data-url="{% url 'ads:toggle_favorite' ad.id %}"
             data-is-favorites-page="{{ is_favorites_page|default:'false' }}">★
+            (<span class="fav-count">{{ ad.fav_count|default:0 }}</span>)
           </button>
         {% endif %}
       </div>
