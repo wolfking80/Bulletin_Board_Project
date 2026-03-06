@@ -4,31 +4,47 @@
 {% block page_title %}Уведомления{% endblock page_title %}
 
 {% block page_content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2 class="h4 mb-0">Уведомления</h2>
+  {% if notifications %}
+  {# Форма для работы метода post во вьюшке #}
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-sm btn-light border shadow-sm">
+      <i class="bi bi-check2-all text-warning"></i> Прочитать всё
+    </button>
+  </form>
+  {% endif %}
+</div>
+
 <div class="list-group shadow-sm">
   {% for n in notifications %}
-    <div class="list-group-item list-group-item-action position-relative 
-      {% if not n.is_read %}border-start border-4 border-warning{% endif %}" 
-      style="background-color: var(--bs-tertiary-bg); color: var(--bs-body-color);">
-      
-      <div class="d-flex justify-content-between align-items-start">
-        <div class="me-3">
-          <p class="mb-1 fw-medium">{{ n.message }}</p>
-          {% if n.ad %}
-            <a href="{% url 'ads:ad_details' n.ad.slug %}" class="stretched-link small text-primary text-decoration-none">
-              Перейти к объявлению <i class="bi bi-arrow-right"></i>
-            </a>
-          {% endif %}
-        </div>
-        <small class="text-muted text-nowrap" style="font-size: 0.75rem;">
-          {{ n.created_at|timesince }}
-        </small>
+  {# Убираем position-relative отсюда, чтобы stretched-link не перекрывала всё #}
+  <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-start 
+      {% if not n.is_read %}border-start border-4 border-warning{% endif %}"
+    style="background-color: var(--bs-tertiary-bg); color: var(--bs-body-color);">
+
+    <div class="me-3">
+      <p class="mb-1 fw-medium">{{ n.message }}</p>
+      {% if n.ad %}
+      {# Оборачиваем ссылку в контейнер с position-relative, чтобы ссылка кликалась только здесь #}
+      <div class="position-relative">
+        <a href="{% url 'ads:ad_details' n.ad.slug %}" class="stretched-link small text-primary text-decoration-none">
+          Перейти к объявлению <i class="bi bi-arrow-right"></i>
+        </a>
       </div>
+      {% endif %}
     </div>
+
+    <small class="text-muted text-nowrap" style="font-size: 0.75rem;">
+      {{ n.created_at|timesince }}
+    </small>
+  </div>
   {% empty %}
-    <div class="text-center py-5 opacity-50">
-      <i class="bi bi-bell-slash display-4"></i>
-      <p class="mt-2">У вас пока нет уведомлений</p>
-    </div>
+  <div class="text-center py-5 opacity-50">
+    <i class="bi bi-bell-slash display-4"></i>
+    <p class="mt-2">У вас пока нет уведомлений</p>
+  </div>
   {% endfor %}
 </div>
 {% endblock page_content %}

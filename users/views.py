@@ -12,6 +12,8 @@ from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.utils.encoding import force_bytes, force_str
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.utils import timezone
+from datetime import timedelta
 
 from users.models import Notification
 
@@ -200,6 +202,10 @@ class NotificationListView(LoginRequiredMixin, ListView):
   context_object_name = 'notifications'
 
   def get_queryset(self):
+    # Удаляем всё, что старше 30 дней
+    self.request.user.notifications.filter(
+      created_at__lt=timezone.now() - timedelta(days=30)
+    ).delete()
     # Показываем последние 20 уведомлений пользователя
     return self.request.user.notifications.all()[:20]
 
