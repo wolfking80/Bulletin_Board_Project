@@ -12,6 +12,13 @@ def send_ad_email(ad_id, subject, template_name):
         ad = Advertisement.objects.select_related('owner').get(pk=ad_id)
         user = ad.owner
         
+        # Создаем внутреннее уведомление
+        Notification.objects.create(
+            user=user,
+            ad=ad,
+            message=subject
+        )
+        
         if user.notifications_enabled and user.email:
             context = {'ad': ad, 'user': user}
             send_custom_email(
