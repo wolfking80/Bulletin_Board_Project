@@ -4,9 +4,20 @@
 {% block page_title %}Настройки{% endblock page_title %}
 
 {% block styles %}
-  {{ block.super }}
-  <link rel="stylesheet" href="{% static "users/css/pages/settings.css" %}">
+{{ block.super }}
+<link rel="stylesheet" href="{% static " users/css/pages/settings.css" %}">
 {% endblock styles %}
+
+
+{% block scripts %}
+<script>
+  window.FIREBASE_API_KEY = "{{ FIREBASE_API_KEY }}";
+  window.USER_PHONE_NUMBER = "{{ request.user.phone_number }}";
+  window.MARK_PHONE_NUMBER_AS_VERIFIED_URL = "{% url 'users:mark_phone_number_as_verified' %}";
+</script>
+<script src="{% static 'users/js/phone-number-verification.js' %}" type="module" defer></script>
+<script type="module" src="{% static 'js/notifications.js' %}" defer></script>
+{% endblock scripts %}
 
 {% block profile_page_content %}
 <div class="row">
@@ -69,36 +80,94 @@
   </div>
 </div>
 
-<!-- Уведомления -->
-<div class="col-md-6 mb-4">
-  <div class="card h-100">
-    <div class="card-body">
-      <div class="d-flex align-items-center mb-3">
-        <div class="icon-wrapper {% if user.notifications_enabled %}bg-success{% else %}bg-secondary{% endif %} text-white rounded-circle me-3" id="notif-icon-bg">
-          <i class="bi {% if user.notifications_enabled %}bi-bell-fill{% else %}bi-bell-slash{% endif %}" id="notif-icon"></i>
+<div class="row">
+  <!-- Уведомления -->
+  <div class="col-md-6 mb-4">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="d-flex align-items-center mb-3">
+          <div
+            class="icon-wrapper {% if user.notifications_enabled %}bg-success{% else %}bg-secondary{% endif %} text-white rounded-circle me-3"
+            id="notif-icon-bg">
+            <i class="bi {% if user.notifications_enabled %}bi-bell-fill{% else %}bi-bell-slash{% endif %}"
+              id="notif-icon"></i>
+          </div>
+          <h5 class="card-title mb-0">Email-уведомления</h5>
         </div>
-        <h5 class="card-title mb-0">Email-уведомления</h5>
-      </div>
-      <p class="card-text text-muted mb-3" id="notif-text">
-        {% if user.notifications_enabled %}
+        <p class="card-text text-muted mb-3" id="notif-text">
+          {% if user.notifications_enabled %}
           Вы получаете уведомления о статусе ваших объявлений (VIP, Топ, Модерация).
-        {% else %}
+          {% else %}
           Уведомления отключены. Вы не узнаете об изменении статуса ваших объявлений.
-        {% endif %}
-      </p>
-      <button onclick="handleToggleNotif(this)" 
-              data-url="{% url 'users:toggle_notifications' %}" 
-              class="btn {% if user.notifications_enabled %}btn-outline-danger{% else %}btn-outline-success{% endif %}" 
-              id="notif-btn">
-        <i class="bi bi-power me-2"></i>
-        <span id="btn-text">{% if user.notifications_enabled %}Отключить{% else %}Включить{% endif %}</span>
-      </button>
+          {% endif %}
+        </p>
+        <button onclick="handleToggleNotif(this)" data-url="{% url 'users:toggle_notifications' %}"
+          class="btn {% if user.notifications_enabled %}btn-outline-danger{% else %}btn-outline-success{% endif %}"
+          id="notif-btn">
+          <i class="bi bi-power me-2"></i>
+          <span id="btn-text">{% if user.notifications_enabled %}Отключить{% else %}Включить{% endif %}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Номер телефона -->
+  <div class="col-md-6 mb-4 mx-auto">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-center align-items-center mb-2">
+          <div class="icon-wrapper bg-info text-white rounded-circle me-3">
+            <i class="bi bi-telephone-fill"></i>
+          </div>
+          <h5 class="card-title mb-0">Номер телефона</h5>
+        </div>
+
+        <div class="phone-content">
+          {% if user.phone_number %}
+          <div class="d-flex align-items-center justify-content-center mb-3">
+            <div class="d-flex flex-column align-items-center">
+              <p class="card-text mb-1 fs-4"><strong>{{ user.phone_number }}</strong></p>
+              {% if user.phone_number_verified %}
+              <span class="badge bg-success">
+                <i class="bi bi-check-circle me-1"></i>Подтверждён
+              </span>
+              {% else %}
+              <span class="badge bg-warning text-dark">
+                <i class="bi bi-exclamation-circle me-1"></i>Не подтверждён
+              </span>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="btn-group w-100" role="group">
+            {% if not user.phone_number_verified %}
+            <button class="btn btn-danger flex-fill me-1" data-bs-toggle="modal"
+              data-bs-target="#verifyPhoneNumberModal">
+              <i class="bi bi-shield-check me-2"></i>Подтвердить
+            </button>
+            {% endif %}
+            <button class="btn btn-outline-primary flex-fill" data-bs-toggle="modal"
+              data-bs-target="#setPhoneNumberModal">
+              <i class="bi bi-pencil me-2"></i>Изменить
+            </button>
+          </div>
+          {% else %}
+          <div class="text-center py-3">
+            <i class="bi bi-telephone-x text-muted fs-2"></i>
+            <p class="text-muted mt-2 mb-3">Номер телефона не указан</p>
+
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#setPhoneNumberModal">
+              <i class="bi bi-plus-circle me-2"></i>Добавить номер
+            </button>
+          </div>
+          {% endif %}
+        </div>
+      </div>
     </div>
   </div>
 </div>
-{% endblock profile_page_content %}
 
-{% block scripts %}
-  {{ block.super }}
-  <script type="module" src="{% static 'js/notifications.js' %}"></script>
-{% endblock scripts %}
+{% include "users/includes/set_phone_number_modal.html" %}
+{% include "users/includes/verify_phone_number_modal.html" %}
+
+{% endblock profile_page_content %}

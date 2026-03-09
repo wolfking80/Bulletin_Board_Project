@@ -1,0 +1,35 @@
+<!-- Модальное окно для добавления/изменения номера телефона -->
+<div class="modal fade" id="setPhoneNumberModal" tabindex="-1" aria-labelledby="setPhoneNumberModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="setPhoneNumberModalLabel">
+          <i class="bi bi-telephone me-2"></i>
+          {% if user.phone_number %}Изменить{% else %}Добавить{% endif %} номера телефона
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form method="POST" action="{% url 'users:set_phone_number' %}">
+          {% csrf_token %}
+          <div class="mb-3">
+            <input 
+              type="tel"
+              class="form-control"
+              name="phone_number"
+              placeholder="+7(8) (XXX) XXX-XX-XX" 
+              value="{{ user.phone_number|default_if_none:'' }}"
+              required
+            >
+            <div class="form-text">Введите номер телефона в формате +7XXXXXXXXXX или 8XXXXXXXXXX</div>
+          </div>
+          <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-check-circle me-2"></i>Сохранить
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
