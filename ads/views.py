@@ -9,8 +9,7 @@ from django.http import JsonResponse
 from django.contrib.auth import get_user_model
 from django.contrib import messages
 
-from django.db.models import F, Q, Avg, FloatField, Count
-from django.db.models.functions import Cast
+from django.db.models import F, Q, Avg, FloatField, Count, Case, When
 
 from ads.models import Advertisement, Category, Tag, Favorite, SellerRating, AdQuestion
 from ads.forms import AdvertisementForm
@@ -30,9 +29,17 @@ def get_sub_tree_ids(category):
   
 # Вспомогательная универсальная функция
 def get_ads_queryset(request):
+  # Исправляем аннотацию для PostgreSQL
   qs = Advertisement.objects.select_related('promotion').annotate(
-        fav_count=Count('favorited_by', distinct=True),
-        seller_rating=Avg(Cast('owner__received_ratings__is_positive', FloatField())) * 100
+    fav_count=Count('favorited_by', distinct=True),
+    # Явно превращаем True в 1.0, а False в 0.0 для расчета среднего
+    seller_rating=Avg(
+      Case(
+        When(owner__received_ratings__is_positive=True, then=1.0),
+        When(owner__received_ratings__is_positive=False, then=0.0),
+        output_field=FloatField(),
+      )
+     ) * 100
     )
 
   owner_id = request.GET.get('owner_id')
