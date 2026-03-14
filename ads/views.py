@@ -43,7 +43,7 @@ def get_ads_queryset(request):
     )
 
   owner_id = request.GET.get('owner_id')
-  show_all = request.GET.get('show_all') == 'True'
+  show_all = request.GET.get('show_all') in ['True', '1', True]
 
   if owner_id:
     qs = qs.filter(owner_id=owner_id)
