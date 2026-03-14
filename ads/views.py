@@ -98,7 +98,27 @@ def get_ads_queryset(request):
   if min_rating:
     qs = qs.filter(Q(seller_rating__gte=min_rating) | Q(seller_rating__isnull=True))
 
-  return qs.order_by('-promotion__is_top', '-promotion__is_vip', '-promotion__is_urgent','-created_at').distinct()
+  search_params = ['search', 'min_price', 'max_price', 'min_rating']
+    
+  if any(request.GET.get(p) for p in search_params):
+        # Если есть поиск/фильтры: сначала платные ТОПы, потом Цена и Рейтинг
+    ordering = [
+      '-promotion__is_top', 
+      F('price').asc(nulls_last=True), 
+      F('seller_rating').desc(nulls_last=True)
+    ]
+  else:
+        # Для главной: вся иерархия платных услуг
+    ordering = [
+      '-promotion__is_top', 
+      '-promotion__is_vip', 
+      '-promotion__is_urgent'
+    ]
+
+    # чтобы пагинация не двоила
+    ordering.extend(['-created_at', '-id'])
+    
+  return qs.order_by(*ordering).distinct()
 
 
 class AdsListView(FavoriteMixin, ListView):                # Создаем класс на основе ListView
@@ -404,18 +424,6 @@ def load_more_ads_view(request):
   limit = 6 
   
   ads_query = get_ads_queryset(request)
-  
-  # Если в запросе есть хоть один параметр поиска, 
-  # заставляем API сортировать ТАК ЖЕ, как вьюшка поиска
-  params = ['search', 'min_price', 'max_price', 'min_rating']
-  if any(request.GET.get(p) for p in params):
-    ads_query = ads_query.order_by(
-      F('price').asc(nulls_last=True), 
-      F('seller_rating').desc(nulls_last=True), 
-      '-created_at','-id').distinct()
-  else:
-  # Для обычной главной страницы оставляем стандартную сортировку
-    ads_query = ads_query.order_by('-created_at', '-id').distinct()
     
   total_count = ads_query.count()
         

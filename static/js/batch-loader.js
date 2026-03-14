@@ -51,9 +51,27 @@ class BatchLoader {
       // универсальная точка вставки - подгружаем карточки в «ряд» на главной и вопросы списком в деталях
         const row = this.container.querySelector('.row') || this.container;
 
-        row.insertAdjacentHTML("beforeend", formattedHtml);
+        // создаем временный «виртуальный» элемент для разбора строки
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = formattedHtml;
 
-        this.offset += this.batchSize;
+    // находим все новые карточки в этом куске
+        const newCards = tempDiv.querySelectorAll('.ad-card-container');
+        let addedCount = 0;
+
+        newCards.forEach(card => {
+        const cardId = card.querySelector('.card')?.id;
+        
+        // ПРОВЕРКА: вставляем только если такого ID еще нет на странице
+        if (cardId && !document.getElementById(cardId)) {
+            row.appendChild(card); // Вместо insertAdjacentHTML используем appendChild
+            addedCount++;
+          }
+        });
+
+    // КОРРЕКТИРОВКА: увеличиваем смещение только на РЕАЛЬНО добавленные
+    // Это исключает «исчезновение» объявлений при 20+ ТОПах
+        this.offset += addedCount;
         this.hasMore = data.has_more;
       }
     } catch (error) {
