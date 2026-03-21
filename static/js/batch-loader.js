@@ -19,6 +19,19 @@ class BatchLoader {
     this.init();
   }
 
+  async checkFullFill() {
+  // Даем браузеру 100мс на отрисовку новых карточек
+  setTimeout(async () => {
+    const dh = document.documentElement.scrollHeight;
+    const wh = window.innerHeight;
+
+    // Если данных еще много, а скролл так и не появился (или он короче 100px)
+    if (this.hasMore && !this.loading && dh <= wh + 100) {
+      await this.loadMore();
+    }
+  }, 100); 
+}
+
   init() {
     if (this.triggerType === 'scroll') {
       window.addEventListener('scroll', () => {
@@ -26,6 +39,7 @@ class BatchLoader {
           this.loadMore();
         }
       });
+      this.checkFullFill(); 
     } else if (this.triggerType === 'button' && this.loadMoreBtn) {
       this.loadMoreBtn.addEventListener('click', () => this.loadMore());
     }
@@ -73,6 +87,11 @@ class BatchLoader {
     // Это исключает «исчезновение» объявлений при 20+ ТОПах
         this.offset += addedCount;
         this.hasMore = data.has_more;
+
+        // ПРОВЕРКА: если после вставки всё еще нет скролла — зовем loadMore снова
+        if (this.hasMore) {
+          this.checkFullFill();
+        }
       }
     } catch (error) {
       console.error("Ошибка загрузки:", error);
