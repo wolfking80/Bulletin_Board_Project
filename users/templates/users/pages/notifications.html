@@ -29,10 +29,17 @@
       {% if n.ad %}
       {# Оборачиваем ссылку в контейнер с position-relative, чтобы ссылка кликалась только здесь #}
       <div class="position-relative">
-        <a href="{% url 'ads:ad_details' n.ad.slug %}" class="stretched-link small text-primary text-decoration-none">
+        {# ссылка ведет на обработчик, который поставит галочку "прочитано" и перенаправит дальше #}
+        <a href="{% url 'users:read_notification' n.id %}"
+          class="stretched-link small text-primary text-decoration-none">
           Перейти к объявлению <i class="bi bi-arrow-right"></i>
         </a>
       </div>
+      {% else %}
+      {# Если объявление удалено — показываем заглушку #}
+      <small class="text-muted d-block mt-1">
+        <i class="bi bi-info-circle"></i> Объявление удалено
+      </small>
       {% endif %}
     </div>
 

@@ -18,26 +18,26 @@
   {% block styles %}{% endblock styles %}
 </head>
 
-<body class="d-flex flex-column min-vh-100" data-bs-theme="{{ current_theme }}" 
+<body class="d-flex flex-column min-vh-100" data-bs-theme="{{ current_theme }}"
   data-theme-toggle-url="{% url 'users:toggle_theme' %}">
   <header>
     <nav class="navbar navbar-expand-sm navbar-dark rounded-bottom" style="
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-    <div class="container-fluid">
-      <!-- Логотип с иконкой -->
-      <a class="navbar-brand fw-bold" href="{% url 'ads:main_page' %}">
-        <span class="d-inline-block align-middle">
-          {% bs_icon 'megaphone' extra_classes='me-2' %}
-          BulletinBoard
-        </span>
-      </a>
-      
-      <!-- Кнопка для мобильной навигации -->
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>      
+      <div class="container-fluid">
+        <!-- Логотип с иконкой -->
+        <a class="navbar-brand fw-bold" href="{% url 'ads:main_page' %}">
+          <span class="d-inline-block align-middle">
+            {% bs_icon 'megaphone' extra_classes='me-2' %}
+            BulletinBoard
+          </span>
+        </a>
+
+        <!-- Кнопка для мобильной навигации -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+          aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
         <div class="collapse navbar-collapse" id="navbarNav">
           <ul class="navbar-nav me-auto">
             <li class="nav-item">
@@ -50,7 +50,7 @@
             <li class="nav-item">
               <a class="nav-link
               {% if request.resolver_match.url_name == 'my_favorites' %}active{% endif %}"
-              href="{% url 'ads:my_favorites' %}">★ Мои избранные
+                href="{% url 'ads:my_favorites' %}">★ Мои избранные
               </a>
             </li>
             {% endif %}
@@ -75,15 +75,17 @@
           <ul class="navbar-nav ms-auto">
             {% if request.user.is_authenticated %}
             <li class="nav-item">
-            <a href="{% url 'users:notifications' %}" class="btn btn-outline-light position-relative">
-              <i class="bi bi-bell"></i>
+              <a href="{% url 'users:notifications' %}" class="btn btn-outline-light position-relative me-2">
+                <i class="bi bi-bell"></i>
+                {# Счетчик покажется, только если есть непрочитанные #}
                 {% if unread_notifications_count > 0 %}
-                  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                  id="notif-badge">
                   {{ unread_notifications_count }}
-                  </span>
+                </span>
                 {% endif %}
               </a>
-              </li>
+            </li>
             <li class="nav-item">
               <a class="nav-link d-flex align-items-center 
                 {% if request.resolver_match.url_name == 'profile' and request.resolver_match.kwargs.username == request.user.username %}active{% endif %}"
@@ -95,12 +97,11 @@
             <li class="nav-item d-flex align-items-center">
               <form method="POST" action="{% url 'users:logout' %}" class="ms-3">
                 {% csrf_token %}
-                <button type="submit" 
-                class="nav-link btn btn-link p-0
+                <button type="submit" class="nav-link btn btn-link p-0
                 {% if request.resolver_match.url_name == 'logout' %}active{% endif %}">
-                Выход
+                  Выход
                 </button>
-                </form>
+              </form>
             </li>
             {% else %}
             <li class="nav-item">
@@ -112,8 +113,8 @@
             <li class="nav-item">
               <a class="nav-link 
               {% if request.resolver_match.url_name == 'registration' %}active{% endif %}"
-              href="{% url 'users:registration' %}">Регистрация
-            </a>
+                href="{% url 'users:registration' %}">Регистрация
+              </a>
             </li>
             {% endif %}
           </ul>
@@ -125,27 +126,27 @@
   <footer class="footer mt-5 py-3 text-white rounded-top" style="
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.1);">
-  <div class="container d-flex justify-content-between align-items-center">
-    <span class="small opacity-75">© 2026 <strong>BulletinBoard</strong></span>
-    <span class="small opacity-50">Все права защищены</span>
-  </div>
-</footer>
+    <div class="container d-flex justify-content-between align-items-center">
+      <span class="small opacity-75">© 2026 <strong>BulletinBoard</strong></span>
+      <span class="small opacity-50">Все права защищены</span>
+    </div>
+  </footer>
 
   <button id="scrollToTopBtn" class="scroll-to-top disabled">
-      {% bs_icon 'arrow-up' size="25px" %}
-    </button>
+    {% bs_icon 'arrow-up' size="25px" %}
+  </button>
 
-    {% if messages %}
-      <div class="position-fixed top-0 start-50 translate-middle-x p-3">
-        {% for message in messages %}
-          <div class="alert alert-{{ message.tags }} alert-dismissible fade show m-0 auto-dismiss" role="alert">
-            {{ message }}
-            <button class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-          </div>
-        {% endfor %}
-      </div>
-    {% endif %}
-    {% block scripts %}{% endblock scripts %}
+  {% if messages %}
+  <div class="position-fixed top-0 start-50 translate-middle-x p-3">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show m-0 auto-dismiss" role="alert">
+      {{ message }}
+      <button class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% block scripts %}{% endblock scripts %}
 </body>
 
 </html>

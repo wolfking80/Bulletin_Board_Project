@@ -1,5 +1,7 @@
 {% extends 'layouts/base.html' %}
 
+{% load static %}
+
 {% block page_title %}Объявления в категории {{ category.name }}{% endblock page_title %}
 
 {% block page_content %}
@@ -17,4 +19,8 @@
     <p>В этой категории пока нет объявлений.</p>
   {% endif %}
 </div>
+
+<script type="module" src="{% static 'js/favorites.js' %}"></script>
+<script type="module" src="{% static 'js/ad_list.js' %}"></script>
+
 {% endblock page_content %}

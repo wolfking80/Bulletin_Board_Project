@@ -101,8 +101,8 @@
           Уведомления отключены. Вы не узнаете об изменении статуса ваших объявлений.
           {% endif %}
         </p>
-        <button onclick="handleToggleNotif(this)" data-url="{% url 'users:toggle_notifications' %}"
-          class="btn {% if user.notifications_enabled %}btn-outline-danger{% else %}btn-outline-success{% endif %}"
+        <button data-url="{% url 'users:toggle_notifications' %}"
+          class="btn toggle-notif-btn {% if user.notifications_enabled %}btn-outline-danger{% else %}btn-outline-success{% endif %}"
           id="notif-btn">
           <i class="bi bi-power me-2"></i>
           <span id="btn-text">{% if user.notifications_enabled %}Отключить{% else %}Включить{% endif %}</span>

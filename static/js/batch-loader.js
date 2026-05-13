@@ -6,116 +6,120 @@ class BatchLoader {
     this.container = document.getElementById(containerId);
     if (!this.container) return;
 
-    this.offset = Number(this.container.dataset.initialOffset);
-    this.hasMore = this.container.dataset.hasMore === 'True';
-    this.batchSize = Number(this.container.dataset.batchSize);
-    this.loadMoreUrl = this.container.dataset.loadMoreUrl;
+    // Инициализация данных из dataset
+    const ds = this.container.dataset;
+    this.offset = Number(ds.initialOffset);
+    this.hasMore = ds.hasMore === 'True';
+    this.loadMoreUrl = ds.loadMoreUrl;
+    this.triggerType = ds.triggerType;
+    this.loadMoreBtn = document.getElementById(ds.loadMoreBtnId);
+
     this.loading = false;
-
-    // Тип триггера
-    this.triggerType = this.container.dataset.triggerType;
-    this.loadMoreBtn = document.getElementById(this.container.dataset.loadMoreBtnId);
-
     this.init();
   }
 
-  async checkFullFill() {
-  // Даем браузеру 100мс на отрисовку новых карточек
-  setTimeout(async () => {
-    const dh = document.documentElement.scrollHeight;
-    const wh = window.innerHeight;
-
-    // Если данных еще много, а скролл так и не появился (или он короче 100px)
-    if (this.hasMore && !this.loading && dh <= wh + 100) {
-      await this.loadMore();
-    }
-  }, 100); 
-}
-
   init() {
     if (this.triggerType === 'scroll') {
+      // Используем throttle или простую проверку для оптимизации скролла
       window.addEventListener('scroll', () => {
-        if ((window.scrollY + window.innerHeight) > (document.documentElement.scrollHeight - 200)) {
-          this.loadMore();
-        }
+        const threshold = document.documentElement.scrollHeight - window.innerHeight - 200;
+        if (window.scrollY > threshold) this.loadMore();
       });
-      this.checkFullFill(); 
+      this.checkFullFill();
     } else if (this.triggerType === 'button' && this.loadMoreBtn) {
       this.loadMoreBtn.addEventListener('click', () => this.loadMore());
     }
   }
 
+  // Проверяем, заполнен ли экран. Если нет — подгружает еще.
+  async checkFullFill() {
+    if (this.triggerType === 'button') return;
+
+    if (!this.hasMore || this.loading) return;
+
+    // Ждем отрисовки (requestAnimationFrame лучше чем setTimeout)
+    requestAnimationFrame(async () => {
+      const dh = document.documentElement.scrollHeight;
+      const wh = window.innerHeight;
+      if (dh <= wh + 100) {
+        await this.loadMore();
+      }
+    });
+  }
+
   async loadMore() {
     if (this.loading || !this.hasMore) return;
-
     this.loading = true;
-    this.toggleInterface(true); // Скрываем кнопку/показываем спиннер
+    this.toggleInterface(true);
 
     try {
-      const params = window.location.search.replace('?', '&');
-      const ownerId = this.container.dataset.ownerId ? `&owner_id=${this.container.dataset.ownerId}` : '';
-      const showAll = this.container.dataset.showAll === 'True' ? `&show_all=1` : '';
-      const isFav = this.container.dataset.isFavorites === 'True' ? '&is_fav=1' : '';
-      const url = `${this.loadMoreUrl}?offset=${this.offset}${params}${isFav}${ownerId}${showAll}`;
+      // Используем URLSearchParams для чистоты кода
+      const urlParams = new URLSearchParams(window.location.search);
+      urlParams.set('offset', this.offset);
 
+      const ds = this.container.dataset;
+      if (ds.ownerId) urlParams.set('owner_id', ds.ownerId);
+      if (ds.showAll === 'True') urlParams.set('show_all', '1');
+      if (ds.isFavorites === 'True') urlParams.set('is_fav', '1');
+
+      if (ds.category) {
+        urlParams.set('category', ds.category);
+      }
+
+      const url = `${this.loadMoreUrl}?${urlParams.toString()}`;
       const data = await getAction(url);
 
-      if (data && data.html) {
-        const formattedHtml = formatDatesInHTML(data.html);
-      // универсальная точка вставки - подгружаем карточки в «ряд» на главной и вопросы списком в деталях
-        const row = this.container.querySelector('.row') || this.container;
-
-        // создаем временный «виртуальный» элемент для разбора строки
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = formattedHtml;
-
-    // находим все новые карточки в этом куске
-        const newCards = tempDiv.querySelectorAll('.ad-card-container');
-        let addedCount = 0;
-
-        newCards.forEach(card => {
-        const cardId = card.querySelector('.card')?.id;
-        
-        // ПРОВЕРКА: вставляем только если такого ID еще нет на странице
-        if (cardId && !document.getElementById(cardId)) {
-            row.appendChild(card); // Вместо insertAdjacentHTML используем appendChild
-            addedCount++;
-          }
-        });
-
-    // КОРРЕКТИРОВКА: увеличиваем смещение только на РЕАЛЬНО добавленные
-    // Это исключает «исчезновение» объявлений при 20+ ТОПах
-        this.offset += addedCount;
+      if (data?.html) {
+        this.renderBatch(data.html);
         this.hasMore = data.has_more;
-
-        // ПРОВЕРКА: если после вставки всё еще нет скролла — зовем loadMore снова
-        if (this.hasMore) {
-          this.checkFullFill();
-        }
+        if (this.hasMore) this.checkFullFill();
       }
     } catch (error) {
-      console.error("Ошибка загрузки:", error);
+      console.error("Ошибка загрузки batch:", error);
     } finally {
       this.loading = false;
-      this.toggleInterface(false); // Возвращаем кнопку, если есть еще данные
+      this.toggleInterface(false);
     }
   }
 
-  // Управление кнопкой и спиннером
+  renderBatch(html) {
+    const target = this.container.querySelector('.row') || this.container;
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+
+    // Ищем либо карточки объявлений, либо любые прямые элементы вопросов/ответов
+    const newItems = tempDiv.querySelectorAll('.ad-card-container, .question-container, [id^="question-"]');
+
+    // если кастомных классов нет, берем всех прямых потомков пришедшего HTML
+    const itemsToAppend = newItems.length > 0 ? newItems : tempDiv.children;
+
+    let addedCount = 0;
+    Array.from(itemsToAppend).forEach(item => {
+      // Проверяем на дубликаты по ID (чтобы не вставлять то, что уже есть в DOM)
+      if (!item.id || !document.getElementById(item.id)) {
+        target.appendChild(item);
+        addedCount++;
+      }
+    });
+
+    // Если сервер ничего не вернул, принудительно останавливаем лоадер
+    if (addedCount === 0) {
+      this.hasMore = false;
+      this.container.dataset.hasMore = 'False';
+      return;
+    }
+
+    this.offset += addedCount;
+  }
+
+
   toggleInterface(isLoading) {
     const spinner = document.getElementById("loadingSpinner");
+    spinner?.classList.toggle("d-none", !isLoading);
 
-    if (isLoading) {
-      spinner?.classList.remove("d-none");
-      if (this.triggerType === 'button') this.loadMoreBtn?.classList.add("d-none");
-    } else {
-      spinner?.classList.add("d-none");
-      // Показываем кнопку снова, только если данные еще остались
-      if (this.triggerType === 'button' && this.hasMore) {
-        this.loadMoreBtn?.classList.remove("d-none");
-      } else if (this.triggerType === 'button' && !this.hasMore) {
-        this.loadMoreBtn?.remove(); // Если больше нет, кнопку больше не показываем
-      }
+    if (this.triggerType === 'button' && this.loadMoreBtn) {
+      this.loadMoreBtn.classList.toggle("d-none", isLoading || !this.hasMore);
+      if (!this.hasMore && !isLoading) this.loadMoreBtn.remove();
     }
   }
 }

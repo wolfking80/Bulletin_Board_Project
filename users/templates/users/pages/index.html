@@ -1,40 +1,59 @@
 {% extends "users/layouts/profile_base.html" %}
-{% load static %} 
+{% load static %}
 
-{% block page_title %}Профиль{% endblock page_title %}
+{% block page_title %}Профиль {{ profile_user.username }}{% endblock page_title %}
 
 {% block profile_page_content %}
-
 <div class="container mt-4">
-
-  {% if user == request.user %}
-    <h1>Мои объявления</h1>
+  {# Заголовок #}
+  {% if request.user == profile_user %}
+  <h1 class="mb-4">Мои объявления</h1>
   {% else %}
-    <h1>Объявления пользователя {{ user }}</h1>
+  <h1 class="mb-4">Объявления пользователя {{ profile_user.username }}</h1>
   {% endif %}
-  
-  <div class="rating-box mb-4">
-    <h6>Рейтинг пользователя {{ user }}: <span id="trust-percent">{{ trust_percent }}</span>%</h6>
-    
-    <div class="progress mb-2" style="height: 12px; width: 250px; background-color: #e9ecef;">
-    <!-- Зеленая часть (Позитив) -->
-      <div id="pos-bar" class="progress-bar bg-success" role="progressbar" 
-        style="width: {{ trust_percent }}%" aria-valuenow="{{ trust_percent }}" aria-valuemin="0" aria-valuemax="100"></div>
-        
-    <!-- Красная часть (Негатив)  вычисляем остаток: 100 - trust_percent   -->
-      <div id="neg-bar" class="progress-bar bg-danger" role="progressbar" 
-        style="width: {{ neg_percent }}%"> 
+
+  {# БЛОК РЕЙТИНГА (Звезды) #}
+  <div class="rating-section mb-4">
+    {# --- ОБЩИЙ РЕЙТИНГ (видят все) --- #}
+    <div class="d-flex align-items-center gap-3 mb-1">
+      <div class="precise-stars-container">
+        <div class="stars-gray">★★★★★</div>
+        <!-- Ширина вычисляется как: рейтинг * 20 (например, 4.6 * 20 = 92%) -->
+        <div id="stars-gold-layer" class="stars-gold" data-avg="{{ rating.avg|default:0 }}">
+          ★★★★★
+        </div>
+
+      </div>
+
+      <div>
+        <strong class="fs-3" id="avg-rating-display">{{ rating.avg }}</strong>
+        <span class="text-muted ms-1">
+          (<span id="total-votes-count">{{ rating.total_count }}</span> оценок)
+        </span>
       </div>
     </div>
-    <button class="btn rating-btn {% if user_choice == 'plus' %}btn-success{% else %}btn-outline-success{% endif %} btn-sm" 
-      data-url="{% url 'ads:rate_seller' object.id 'plus' %}"
-      {% if request.user == object %}disabled{% endif %}>👍 <span id="pos-count">{{ pos_rating }}</span>
-    </button>
 
-    <button class="btn rating-btn {% if user_choice == 'minus' %}btn-danger{% else %}btn-outline-danger{% endif %} btn-sm" 
-      data-url="{% url 'ads:rate_seller' object.id 'minus' %}"
-      {% if request.user == object %}disabled{% endif %}>👎 <span id="neg-count">{{ neg_rating }}</span>
-    </button>
+    {# --- БЛОК ГОЛОСОВАНИЯ (только для гостей) --- #}
+    {% if user.is_authenticated and not is_owner %}
+    <div class="card border-0 bg-light p-3 shadow-sm mt-3" style="max-width: 320px;">
+      <p class="small mb-2 fw-medium text-secondary text-uppercase" style="font-size: 0.7rem;">
+        Ваша оценка продавцу:
+      </p>
+
+      <div class="rating-stars-container d-flex gap-1" data-url="{% url 'ads:rate_seller' profile_user.id %}">
+        {% for i in "12345" %}
+        <span
+          class="star-btn fs-3 {% if forloop.counter <= user_current_score %}text-warning{% else %}text-secondary opacity-50{% endif %}"
+          data-score="{{ forloop.counter }}">★</span>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+
+  {# Список объявлений #}
+  {% include 'ads/includes/ad_list_container.html' %}
 </div>
 
 {% block scripts %}
@@ -42,7 +61,4 @@
 <script type="module" src="{% static 'js/ad_list.js' %}"></script>
 {% endblock scripts %}
 
-  {% include 'ads/includes/ad_list_container.html' %}
-
-</div>
 {% endblock profile_page_content %}

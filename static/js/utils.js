@@ -1,51 +1,68 @@
-function getCookie(cookieKey) {            // функция ищет конкретное значение в куках браузера
-  let cookieValue = null;                  // создаем переменную для хранения результата, по умолчанию она «пустая»
-  if (document.cookie && document.cookie !== "") {    // проверяем: есть ли в браузере вообще какие-либо куки и не пустая ли это строка
-    const cookies = document.cookie.split(';');   // куки хранятся в одной длинной строке через точку с запятой. Мы «разрезаем» эту строку в массив отдельных кук
-    for (let cookie of cookies) {                 // перебираем каждую куку из полученного массива
-      cookie = cookie.trim();                     // удаляем лишние пробелы по краям
-      if (cookie.startsWith(cookieKey + "=")) {   // проверяем: начинается ли текущая строка с искомого имени и знака «равно» (например, csrftoken=...)
-                                                  // если нашли: вырезаем всё, что идет после знака =, и декодируем спецсимволы в нормальный текст
-        cookieValue = decodeURIComponent(cookie.substring(cookieKey.length + 1));
-        break;                                     // прерываем цикл, так как нужная кука уже найдена
-      }
+/**
+ * Получение куки по ключу (например, для CSRF-токена Django)
+ */
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
     }
-  }
-  return cookieValue;                            // возвращаем найденный токен (или null, если ничего не нашли)
+    return cookieValue;
 }
 
-
+/**
+ * Универсальный GET запрос
+ */
 export async function getAction(url) {
-  const response = await fetch(url);
-
-  if (!response.ok) {
-    console.error("Request failed", response.status);
-    return null;
-  }
-
-  return await response.json();
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        return await response.json();
+    } catch (error) {
+        console.error("GET Request failed:", error);
+        return null;
+    }
 }
 
+/**
+ * Универсальный POST запрос
+ * Поддерживает FormData и обычные объекты (авто-конвертация в JSON)
+ */
+export async function postAction(url, data = null) {
+    const headers = {
+        'X-CSRFToken': getCookie('csrftoken'),
+    };
 
-export async function postAction(url, formData = null) {
-  const config = {
-    method: "POST",
-    headers: {
-      'X-CSRFToken': getCookie('csrftoken')
+    let body = data;
+
+    // Если передали обычный объект (не FormData), превращаем в JSON
+    if (data && !(data instanceof FormData)) {
+        headers['Content-Type'] = 'application/json';
+        body = JSON.stringify(data);
     }
-  };
 
-  // Добавляем body только если передан formData
-  if (formData) {
-    config.body = formData;
-  }
+    try {
+        const response = await fetch(url, {
+            method: "POST",
+            headers: headers,
+            body: body
+        });
 
-  const response = await fetch(url, config);
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            console.error("POST Request failed:", response.status, errorData);
+            return { error: true, status: response.status, data: errorData };
+        }
 
-  if (!response.ok) {
-    console.error("Request failed", response.status)
-    return null;
-  }
-
-  return await response.json();
+        return await response.json();
+    } catch (error) {
+        console.error("Network error:", error);
+        return { error: true, message: "Network error" };
+    }
 }

@@ -4,60 +4,64 @@
 {% block page_title %}Поиск объявлений{% endblock page_title %}
 
 {% block page_content %}
-  <h1>Найти объявление</h1>
+<h1>Найти объявление</h1>
 
-  <form method="GET">
-    <input type="text" name="search" placeholder="Введите запрос..." value="{{ request.GET.search }}">
+<form method="GET">
+  <input type="text" name="search" placeholder="Введите запрос..." value="{{ request.GET.search }}">
 
-    <label>
-      <input type="checkbox" name="search_category" {% if request.GET.search_category %}checked{%endif%}>
-      Искать в категориях
-    </label>
+  <label>
+    <input type="checkbox" name="search_category" {% if request.GET.search_category %}checked{%endif%}>
+    Искать в категориях
+  </label>
 
-    <label>
-      <input type='checkbox' name='search_tag' {% if request.GET.search_tag %}checked{% endif %}>
-      Искать в тэгах
-    </label>
+  <label>
+    <input type='checkbox' name='search_tag' {% if request.GET.search_tag %}checked{% endif %}>
+    Искать в тэгах
+  </label>
 
-    <div style="margin-top: 10px; padding: 10px; border: 1px solid #eee;">
-      <input type="number" name="min_price" value="{{ request.GET.min_price }}" placeholder="Цена от">
-      <input type="number" name="max_price" value="{{ request.GET.max_price }}" placeholder="до">
-        
-      <input type="number" name="min_rating" value="{{ request.GET.min_rating }}" placeholder="Рейтинг от %" min="0" max="100" style="width: 13.5em;">
-    </div>
+  <div style="margin-top: 10px; padding: 10px; border: 1px solid #eee;">
+    <input type="number" name="min_price" value="{{ request.GET.min_price }}" placeholder="Цена от">
+    <input type="number" name="max_price" value="{{ request.GET.max_price }}" placeholder="до">
 
-    <button type="submit" class="btn btn-primary">Найти</button>
-    <a href="{% url 'ads:ad_search' %}" class="btn btn-outline-secondary">Очистить</a>
-  </form>
-  
-  {% if search_performed %}
-    {% if ads %}
+    <input type="number" name="min_rating" value="{{ request.GET.min_rating }}" class="form-control"
+      placeholder="Рейтинг от (1-5)" min="1" max="5" step="0.1">
+  </div>
+
+  <button type="submit" class="btn btn-primary">Найти</button>
+  <a href="{% url 'ads:ad_search' %}" class="btn btn-outline-secondary">Очистить</a>
+</form>
+
+{% if search_performed %}
+  {% if ads %}
     <div id="adsContainer" 
-      data-initial-offset="{{ ads|length }}" 
-      data-has-more="{{ has_more_ads|yesno:'True,False' }}" 
-      data-batch-size="{{ ads_per_batch|default:6 }}"
-      data-load-more-url="{% url 'ads:load_more_ads' %}"
-      data-is-favorites="{{ is_favorites_page|default:'False' }}">
-      <div class="row">
-        {% for ad in ads %}
-          {% if request.user == ad.owner or ad.status == 'published' %}
-            {% include 'ads/includes/ad_card.html' %}
-          {% endif %}
-        {%endfor%}
-      </div>
-    </div>  
+        data-initial-offset="{{ ads|length }}" 
+        data-has-more="{{ has_more_ads|yesno:'True,False' }}" 
+        data-batch-size="{{ ads_per_batch|default:6 }}" 
+        data-load-more-url="{% url 'ads:load_more_ads' %}"
+        {# ВАЖНО: передаем текущие параметры поиска в JS #}
+        data-search-query="{{ request.GET.search }}"
+        data-min-price="{{ request.GET.min_price }}"
+        data-min-rating="{{ request.GET.min_rating }}"
+        data-is-search="True">
 
-    <div id="loadingSpinner" class="text-center d-none my-3">
-      <div class="spinner-border text-primary" role="status"></div>
+    <div class="row">
+        {% for ad in ads %}
+            {# Просто выводим карточку, фильтрация уже в QuerySet #}
+            {% include 'ads/includes/ad_card.html' with ad=ad favorite_ids=favorite_ids %}
+        {% endfor %}
+     </div>
     </div>
 
+        <div id="loadingSpinner" class="text-center d-none my-4">
+            <div class="spinner-border text-primary" role="status"></div>
+        </div>
     {% else %}
-    <p>По Вашему запросу ничего не найдено</p>
+        <p class="alert alert-warning">По Вашему запросу ничего не найдено</p>
     {% endif %}
-  {% else %}
-    <p>Введите запрос для поиска объявлений</p>
-  {% endif %}
-  
+{% else %}
+    <p class="text-muted">Введите запрос для поиска объявлений</p>
+{% endif %}
+
 <script type="module" src="{% static 'js/favorites.js' %}"></script>
 <script type="module" src="{% static 'js/ad_list.js' %}"></script>
 

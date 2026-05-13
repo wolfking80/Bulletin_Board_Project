@@ -11,27 +11,29 @@
   <aside class="profile-sidebar">
     <div class="user-info">
       <div class="avatar">
-        {% if user.avatar %}
-        <img src="{{ user.avatar.url }}" alt="{{ user.username }}">
-        {% else %}
+    {# Проверяем аватарку просматриваемого профиля ИЛИ аватарку текущего пользователя из request #}
+    {% if profile_user.avatar or not profile_user and request.user.avatar %}
+        <img src="{% if profile_user.avatar %}{{ profile_user.avatar.url }}{% else %}{{ request.user.avatar.url }}{% endif %}" 
+             alt="{{ profile_user.username|default:request.user.username }}">
+    {% else %}
         <div class="avatar-placeholder">
-          {{ user.username|first|upper }}
+            {{ profile_user.username|default:request.user.username|first|upper }}
         </div>
-        {% endif %}
-      </div>
-      <h3>{{ user.username }}</h3>
-      <p class="user-email">{{ user.email }}</p>
+    {% endif %}
+</div>
+      <h3>{{ profile_user.username }}</h3>
+      <p class="user-email">{{ profile_user.email }}</p>
     </div>
 
     <nav class="profile-nav">
       <ul>
         <li>
-          <a href="{% url 'users:profile' username=user.username %}"
+          <a href="{% url 'users:profile' username=profile_user.username|default:user.username %}"
             class="{% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
             <i class="bi bi-person me-2"></i>Профиль
           </a>
         </li>
-        {% if user == request.user %}
+        {% if not profile_user or request.user == profile_user %}
           <li>
             <a href="{% url 'ads:my_favorites' %}"
               class="{% if request.resolver_match.url_name == 'my_favorites' %}active{% endif %}">

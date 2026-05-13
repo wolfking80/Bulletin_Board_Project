@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.db.models import Avg
 from phonenumber_field.modelfields import PhoneNumberField
 
 
@@ -21,6 +22,28 @@ class CustomUser(AbstractUser):
     verbose_name = 'Пользователь'
     verbose_name_plural = "Пользователи"
     db_table = "users"
+    
+  @property
+  def avatar_url(self):
+    # Безопасный способ получить аватар
+    if self.avatar and hasattr(self.avatar, 'url'):
+        return self.avatar.url
+    return None
+    
+  @property
+  def rating_data(self):
+        # Расчет данных для отрисовки звездного рейтинга
+        # Считаем среднее значение из связанных оценок (related_name='received_ratings' в SellerRating)
+        avg = self.received_ratings.aggregate(Avg('score'))['score__avg'] or 0
+        full = int(avg)
+        half = 1 if (avg - full) >= 0.5 else 0
+        return {
+            'avg': round(avg, 1),
+            'full': range(full),
+            'half': range(half),
+            'empty': range(5 - full - half),
+            'total_count': self.received_ratings.count()
+        }
     
     
 class Notification(models.Model):

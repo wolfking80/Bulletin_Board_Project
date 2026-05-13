@@ -1,24 +1,29 @@
 from django.contrib.auth import get_user_model
-
-from django.urls import reverse_lazy
+from django.db import transaction
+from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DetailView, TemplateView, ListView
 from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView, PasswordResetView
 from django.contrib import messages
 from django.http import JsonResponse
 from phonenumber_field.phonenumber import PhoneNumber
 from django.views.decorators.http import require_POST
+from django.shortcuts import get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect
 from django.contrib.auth.tokens import default_token_generator
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import never_cache
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.utils.encoding import force_bytes, force_str
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils import timezone
 from datetime import timedelta
 
+from phonenumbers import NumberParseException
+
 from users.models import Notification
 
-from config.settings import DEFAULT_LOGIN_REDIRECT_URL, FIREBASE_API_KEY
+from config.settings import FIREBASE_API_KEY
 from users.forms import CustomAuthenticationForm, CustomUserCreationForm
 from users.utils import send_custom_email
 
@@ -31,10 +36,12 @@ class RegisterView(CreateView):
   form_class = CustomUserCreationForm
   
   def form_valid(self, form):
+    # Оборачиваем в транзакцию: письмо уйдет только если юзер реально создался
+    with transaction.atomic():
     # Сохраняем пользователя как неактивного
-    user = form.save(commit=False)
-    user.email_confirmed = False
-    user.save()
+      user = form.save(commit=False)
+      user.email_confirmed = False
+      user.save()
       
     # Отправляем письмо активации
     self.send_activation_email(user)
@@ -83,81 +90,62 @@ def activate_account_view(request, uidb64, token):
 class CustomLoginView(LoginView):
   template_name = 'users/pages/login.html'
   authentication_form = CustomAuthenticationForm
-  
+
   def get_success_url(self):
-    next_url = self.request.GET.get('next', DEFAULT_LOGIN_REDIRECT_URL)
-    if next_url == DEFAULT_LOGIN_REDIRECT_URL:
-      return reverse_lazy(next_url, kwargs={'username': self.request.user.username})
-    return next_url
-  
-  def form_invalid(self, form):
-    messages.warning(self.request, 'Ошибка входа!')
-    return super().form_invalid(form)
+    next_url = self.request.GET.get('next')
+    if next_url:
+        return next_url
+    return reverse('users:profile', kwargs={'username': self.request.user.username})
   
   
 class CustomLogoutView(LogoutView):
   next_page = reverse_lazy('ads:ad_list')
   
   
-
 @require_POST
 @login_required
 def set_phone_number(request):
-  try:
-    # Преобразуем строку в объект PhoneNumber
-    parsed_phone_number = PhoneNumber.from_string(request.POST.get('phone_number'), region='RU')
-    if parsed_phone_number.is_valid():
-      # Проверяем, не пытается ли пользователь установить заново свой же номер телефона
-      if request.user.phone_number == parsed_phone_number:
-        messages.info(request, 'Этот номер телефона уже привязан к вашему аккаунту')
-        return redirect('users:settings')
-      
-      # Проверяем, не подтвержден ли этот номер телефона у другого пользователя
-      user_verified_this_number = User.objects.filter(
-        phone_number=parsed_phone_number,
-        phone_number_verified=True
-      )
-      
-      if user_verified_this_number.exists():
-        messages.warning(request, 'Этот номер телефона уже используется другим пользователем')
-        return redirect('users:settings')
+    phone_raw = request.POST.get('phone_number')
+    user = request.user
+    
+    try:
+        parsed_phone = PhoneNumber.from_string(phone_raw, region='RU')
+        if not parsed_phone.is_valid():
+            raise ValueError("Invalid number")
 
-      # Определяем сообщение в зависимости от того, был ли номер телефона до этого
-      if request.user.phone_number:
-        message = 'Номер телефона успешно изменён'
-      else:
-        message = 'Номер телефона успешно добавлен'
+        if user.phone_number == parsed_phone:
+            messages.info(request, 'Этот номер уже привязан.')
+            return redirect('users:settings')
 
-      request.user.phone_number = parsed_phone_number
-      request.user.phone_number_verified = False  # Сбрасываем статус верификации (если до этого номер телефона был верифицирован)
-      request.user.save()
-      messages.success(request, message)
-    else:
-      messages.warning(request, 'Некорректный формат номера телефона')
-  except:
-    messages.warning(request, 'Указанное вами, похоже, не является номером телефона.')
-  
-  return redirect('users:settings')
+        # Проверка на дубликаты у других подтвержденных юзеров
+        if User.objects.filter(phone_number=parsed_phone, phone_number_verified=True).exists():
+            messages.warning(request, 'Номер уже занят другим пользователем.')
+            return redirect('users:settings')
+
+        # Сохраняем
+        user.phone_number = parsed_phone
+        user.phone_number_verified = False
+        user.save()
+        messages.success(request, 'Номер телефона обновлен.')
+
+    except (NumberParseException, ValueError):
+        messages.warning(request, 'Некорректный формат номера телефона.')
+    
+    return redirect('users:settings')
 
 
 @require_POST
 @login_required
 def mark_phone_number_as_verified(request):
-  # В JS мы уже проверили код
-  # Обновляем статус верификации номера телефона
-  request.user.phone_number_verified = True
-  request.user.save()
+  user = request.user
+  user.phone_number_verified = True
+  user.save(update_fields=['phone_number_verified'])
 
-  # Удаляем этот номер телефона у других пользователей
-  users_not_verified_this_number = User.objects.filter(
-    phone_number=request.user.phone_number
-  ).exclude(id=request.user.id)
+  # ОПТИМИЗАЦИЯ: удаляем этот номер у всех остальных одним запросом
+  User.objects.filter(
+    phone_number=user.phone_number
+  ).exclude(id=user.id).update(phone_number=None, phone_number_verified=False)
 
-  if users_not_verified_this_number.exists():
-    for user in users_not_verified_this_number:
-      user.phone_number = None
-      user.save()
-  
   return JsonResponse({'success': True})
   
   
@@ -192,17 +180,16 @@ class ProfilePasswordResetView(PasswordResetView):
 
 @require_POST
 def toggle_theme(request):
+  """Смена темы (база для юзеров, сессия для гостей)"""
   if request.user.is_authenticated:
-    # Для авторизованных — меняем в базе
     new_theme = 'light' if request.user.selected_theme == 'dark' else 'dark'
     request.user.selected_theme = new_theme
+    # update_fields критически важен для производительности моделей с кучей полей
     request.user.save(update_fields=["selected_theme"])
   else:
-    # Для неавторизованных — меняем в сессии
-    current_theme = request.session.get('theme', 'dark')
-    new_theme = 'light' if current_theme == 'dark' else 'dark'
+    new_theme = 'light' if request.session.get('theme', 'dark') == 'dark' else 'dark'
     request.session['theme'] = new_theme
-  
+    
   return JsonResponse({'new_theme': new_theme})
 
 
@@ -215,53 +202,46 @@ class SettingsView(TemplateView):
 
 
 class ProfileView(DetailView):
-  model = User
-  slug_url_kwarg = 'username'
-  slug_field = 'username'
-  template_name = 'users/pages/index.html'
-  context_object_name = 'user' 
-  
-  def get_context_data(self, **kwargs):
-    context = super().get_context_data(**kwargs)
-    # Проверяем, мой профиль или чужой
-    is_owner = self.request.user == self.object
-    # Формируем запрос
-    ads_qs = self.object.ads.all()
-    if not is_owner:
-      # В чужом профиле — только опубликованные
-      ads_qs = ads_qs.filter(status='published')
-    
-    ads_qs = ads_qs.order_by('-created_at')
+    model = User
+    slug_url_kwarg = 'username'
+    slug_field = 'username'
+    template_name = 'users/pages/index.html'
+    context_object_name = 'profile_user'
 
-    # Настройки для BatchLoader
-    context['ads'] = ads_qs[:3]
-    context['has_more_ads'] = ads_qs.count() > 3
-    context['ads_per_batch'] = 3
-    context['owner_id'] = self.object.id
-    # Флаг для JS, чтобы он знал, можно ли подтягивать неопубликованные
-    context['show_all'] = is_owner
-    
-    pos = self.object.received_ratings.filter(is_positive=True).count()
-    neg = self.object.received_ratings.filter(is_positive=False).count()
-    total = pos + neg
-    
-    context['pos_rating'] = pos
-    context['neg_rating'] = neg
-    
-    if total > 0:
-      context['trust_percent'] = round((pos / total) * 100)
-      context['neg_percent'] = 100 - context['trust_percent']
-    else:
-      context['trust_percent'] = 0
-      context['neg_percent'] = 0
-    if self.request.user.is_authenticated:
-      user_rating = self.object.received_ratings.filter(voter=self.request.user).first()
-      context['user_choice'] = 'plus' if user_rating and user_rating.is_positive else \
-                                'minus' if user_rating else 'none'
-    
-    return context
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        profile_user = self.object
+        is_owner = self.request.user == profile_user
+
+        #  Работа с объявлениями
+        ads_qs = profile_user.ads.all().order_by('-created_at')
+        if not is_owner:
+            ads_qs = ads_qs.filter(status='published')
+
+        # Контекст для BatchLoader
+        context.update({
+            'ads': ads_qs[:3],
+            'has_more_ads': ads_qs.count() > 3,
+            'ads_per_batch': 3,
+            'owner_id': profile_user.id,
+            'show_all': is_owner,
+            'is_owner': is_owner,
+        })
+
+        # НОВЫЙ РЕЙТИНГ (Звезды)
+        # Берем готовые данные (avg, full, half, empty) из модели User
+        context['rating'] = profile_user.rating_data
+
+        # Оценка текущего пользователя
+        if self.request.user.is_authenticated:
+            user_rating = profile_user.received_ratings.filter(voter=self.request.user).first()
+            # Передаем оценку (число 1-5), которую поставил залогиненный юзер, или 0
+            context['user_current_score'] = user_rating.score if user_rating else 0
+
+        return context
   
-  
+# полностью запрещаем браузеру и промежуточным серверам кэшировать эту страницу
+@method_decorator(never_cache, name='dispatch')  
 class NotificationListView(LoginRequiredMixin, ListView):
   model = Notification
   template_name = 'users/pages/notifications.html'
@@ -287,5 +267,23 @@ def toggle_notifications(request):
   user = request.user
   # Переключаем флаг
   user.notifications_enabled = not user.notifications_enabled
-  user.save()
+  user.save(update_fields=['notifications_enabled'])
   return JsonResponse({'notifications_enabled': user.notifications_enabled})
+
+
+@login_required
+def read_and_redirect(request, notification_id):
+    # Ищем уведомление, принадлежащее именно этому пользователю
+    notification = get_object_or_404(Notification, id=notification_id, user=request.user)
+    
+    # Помечаем как прочитанное
+    if not notification.is_read:
+        notification.is_read = True
+        notification.save(update_fields=['is_read'])
+    
+    # Перенаправляем на страницу объявления
+    if notification.ad:
+        return redirect('ads:ad_details', ad_slug=notification.ad.slug)
+    
+    # Если объявления нет (удалено), возвращаем в список уведомлений
+    return redirect('users:notifications')

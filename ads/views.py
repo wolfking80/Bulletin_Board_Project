@@ -1,15 +1,18 @@
+import random
+from django.db import transaction
+
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
+from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.urls import reverse_lazy
-from django.shortcuts import render, get_object_or_404
+from django.urls import reverse, reverse_lazy
+from django.shortcuts import get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.template.loader import render_to_string
 from django.http import JsonResponse
 from django.contrib.auth import get_user_model
-from django.contrib import messages
 
-from django.db.models import F, Q, Avg, FloatField, Count, Case, When
+from django.db.models import F, Q, Avg, Count
 
 from ads.models import Advertisement, Category, Tag, Favorite, SellerRating, AdQuestion
 from ads.forms import AdvertisementForm
@@ -18,482 +21,465 @@ from .mixins import FavoriteMixin, OwnerRequiredMixin
 
 User = get_user_model()
 
-
-def get_sub_tree_ids(category):
-  # Собирает ID категории и всех её вложенных уровней (дети, внуки и т.д.)
-  ids = {category.id}
-  for child in category.children.all():
-    ids.update(get_sub_tree_ids(child))
-  return ids
-  
-  
 # Вспомогательная универсальная функция
 def get_ads_queryset(request):
-  # Исправляем аннотацию для PostgreSQL
-  qs = Advertisement.objects.select_related('promotion').annotate(
-    fav_count=Count('favorited_by', distinct=True),
-    # Явно превращаем True в 1.0, а False в 0.0 для расчета среднего
-    seller_rating=Avg(
-      Case(
-        When(owner__received_ratings__is_positive=True, then=1.0),
-        When(owner__received_ratings__is_positive=False, then=0.0),
-        output_field=FloatField(),
-      )
-     ) * 100
+    # Инициализация базового набора данных с оптимизацией
+    qs = Advertisement.objects.select_related('promotion', 'category', 'owner').with_metrics()
+
+    # Фильтрация по статусу и владельцу
+    owner_id = request.GET.get('owner_id')
+    show_all = request.GET.get('show_all') in ['True', '1']
+    
+    if owner_id:
+        qs = qs.filter(owner_id=owner_id)
+    
+    if not show_all:
+        qs = qs.filter(status='published')
+
+    # Избранное
+    is_fav_page = request.GET.get('is_fav') == '1' or 'my-favorites' in request.path
+    if is_fav_page and request.user.is_authenticated:
+        qs = qs.filter(favorited_by__user=request.user).exclude(owner=request.user)
+
+    category_param = request.GET.get('category')
+    if category_param and category_param != 'None':
+    # Проверяем, что нам пришло: число (ID) или строка (слаг)
+      if category_param.isdigit():
+        # Если это число (старая логика), ищем по ID
+        selected_cat = Category.objects.filter(id=int(category_param)).first()
+      else:
+        # Если это строка (наш новый слаг 'nedvizhimost'), ищем сразу по слагу
+        selected_cat = Category.objects.filter(slug=category_param).first()
+
+      if selected_cat:
+        # Ищем саму категорию и всех её потомков через иерархию слагов
+        qs = qs.filter(category__slug__startswith=selected_cat.slug)
+
+    # Поиск и фильтры
+    search_query = request.GET.get('search')
+    qs = qs.search(
+        search_query, 
+        search_category=request.GET.get('search_category'),
+        search_tag=request.GET.get('search_tag')
+    ).apply_filters(
+        min_price=request.GET.get('min_price'),
+        max_price=request.GET.get('max_price'),
+        min_rating=request.GET.get('min_rating')
     )
 
-  owner_id = request.GET.get('owner_id')
-  show_all = request.GET.get('show_all') in ['True', '1', True]
+    # Сортировка
+    is_searching = any(request.GET.get(p) for p in ['search', 'min_price', 'max_price', 'min_rating'])
+    return qs.smart_order(is_search=is_searching)
 
-  if owner_id:
-    qs = qs.filter(owner_id=owner_id)
-    if not show_all:
-      qs = qs.filter(status='published')
-  else:
-    qs = qs.filter(status='published')
 
-# Проверка на "Избранное"
-  is_fav_page = request.GET.get('is_fav') == '1' or 'my-favorites' in request.path
-  if is_fav_page and request.user.is_authenticated:
-    fav_ids = list(request.user.favorites.values_list('ad_id', flat=True))
-    qs = qs.filter(id__in=fav_ids).exclude(owner=request.user).distinct()
-  
-# Получение параметров
-  search = request.GET.get('search')
-  search_category = request.GET.get('search_category')
-  search_tag = request.GET.get('search_tag')
-  min_price = request.GET.get('min_price')
-  max_price = request.GET.get('max_price')
-  min_rating = request.GET.get('min_rating')
-  
-  category_id = request.GET.get('category')
-  if category_id:
-    # Находим саму категорию в базе (без ошибок если ID нет)
-    selected_cat = Category.objects.filter(id=category_id).first()
-    if selected_cat:
-      # Собираем ID всей ветки (рекурсия) и фильтруем объявления
-        qs = qs.filter(category_id__in=get_sub_tree_ids(selected_cat))
+class BaseAdListView(FavoriteMixin, ListView):
+    context_object_name = 'ads'
+    ads_per_batch = 6
 
-  if search:
-    # Сначала ОБЯЗАТЕЛЬНО создаем пустой сет, чтобы код не падал
-    all_cat_ids = set() 
-    
-    # Собираем ID только если стоит галочка
-    if search_category:
-      matched_cats = Category.objects.filter(name__icontains=search)
-      for cat in matched_cats:
-        all_cat_ids.update(get_sub_tree_ids(cat))
-    
-    # Базовый запрос
-    query = Q(title__icontains=search) | Q(text__icontains=search)
-    
-    # Добавляем ID в запрос, только если они были найдены
-    if all_cat_ids:
-      query |= Q(category_id__in=all_cat_ids)
+    def get_queryset(self):
+        # Берем базовый набор данных
+        qs = get_ads_queryset(self.request).with_metrics()
         
-    # Тэги (поиск по тексту в тэгах)
-    if search_tag:
-      query |= Q(tags__name__icontains=search)
+        # Даем возможность дочерним классам добавить свои фильтры (поиск, категории и т.д.)
+        qs = self.filter_queryset(qs)
         
-    qs = qs.filter(query)
-
-# Фильтры цен и рейтинга
-  if min_price:
-    qs = qs.filter(Q(price__gte=min_price) | Q(price__isnull=True))
-  if max_price:
-    qs = qs.filter(Q(price__lte=max_price) | Q(price__isnull=True))
-  if min_rating:
-    qs = qs.filter(Q(seller_rating__gte=min_rating) | Q(seller_rating__isnull=True))
-
-  search_params = ['search', 'min_price', 'max_price', 'min_rating']
-    
-  if any(request.GET.get(p) for p in search_params):
-        # Если есть поиск/фильтры: сначала платные ТОПы, потом Цена и Рейтинг
-    ordering = [
-      '-promotion__is_top', 
-      F('price').asc(nulls_last=True), 
-      F('seller_rating').desc(nulls_last=True)
-    ]
-  else:
-        # Для главной: вся иерархия платных услуг
-    ordering = [
-      '-promotion__is_top', 
-      '-promotion__is_vip', 
-      '-promotion__is_urgent'
-    ]
-
-    # чтобы пагинация не двоила
-    ordering.extend(['-created_at', '-id'])
-    
-  return qs.order_by(*ordering).distinct()
-
-
-class AdsListView(FavoriteMixin, ListView):                # Создаем класс на основе ListView
-  context_object_name = 'ads'              # Имя переменной в шаблоне
-  template_name = 'ads/pages/ad_list.html' # Путь к шаблону
-  ads_per_batch = 6
-  
-  def get_queryset(self):
-    # Просто вызываем функцию и берем первые 6
-    self.ads_query = get_ads_queryset(self.request)
-    return self.ads_query[:self.ads_per_batch]
-  
-  def get_context_data(self, **kwargs):
-    context = super().get_context_data(**kwargs)
-    context["has_more_ads"] = self.ads_query.count() > self.ads_per_batch
-    context["ads_per_batch"] = self.ads_per_batch
-    return context
-  
-  
-class AdSearchView(ListView):
-  template_name = 'ads/pages/ad_search.html'
-  context_object_name = 'ads'
-  ads_per_batch = 6
-  
-  def get_queryset(self):
-  # Вызываем универсальную функцию
-    qs = get_ads_queryset(self.request)
-
-  # Если юзер ничего не ввел, возвращаем пустой QuerySet
-    params = ['search', 'min_price', 'max_price', 'min_rating', 'category']
-    if not any(self.request.GET.get(p) for p in params):
-      return Advertisement.objects.none()
-
-    self.full_search_qs = qs.order_by(
-      F('price').asc(nulls_last=True), 
-      F('seller_rating').desc(nulls_last=True), 
-      '-created_at',
-      '-id'
-    ).distinct()
-    
-    return self.full_search_qs[:self.ads_per_batch]
-
-  def get_context_data(self, **kwargs):
-    context = super().get_context_data(**kwargs)
-    if self.request.user.is_authenticated:
-      # Достаем все ID объявлений, которые лайкнул текущий юзер
-      # Используем related_name='favorites' из модели Favorite
-      context['favorite_ids'] = list(
-        self.request.user.favorites.values_list('ad_id', flat=True)
-      )
-    # Флаг: был ли запрос вообще
-    context["search_performed"] = any(self.request.GET.values())
-    if hasattr(self, 'full_search_qs'):
-      context["has_more_ads"] = self.full_search_qs.count() > self.ads_per_batch
-    context["ads_per_batch"] = self.ads_per_batch    
-    return context
-  
-  
-class CategoryAdsListView(FavoriteMixin, ListView):
-  template_name = 'ads/pages/ads_category.html'
-  context_object_name = 'ads'
-  ads_per_batch = 6
-    
-  def get_queryset(self):
-    #  Находим выбранную категорию по слагу
-    self.category = get_object_or_404(Category, slug=self.kwargs['category_slug'])
-    
-    # Собираем ID самой категории и ВСЕХ её потомков на любую глубину
-    family_ids = get_sub_tree_ids(self.category)
-    
-    # Вызываем универсальную функцию (она найдет всё по сайту)
-    qs = get_ads_queryset(self.request)
-
-    # Ищем саму категорию ИЛИ тех, у кого этот объект является родителем (children)
-    return qs.filter(category_id__in=family_ids).order_by('-created_at', '-id')
-    
-  def get_context_data(self, **kwargs):
-    context = super().get_context_data(**kwargs)
-    # Получение объекта категории для заголовка страницы
-    context['category'] = get_object_or_404(
-      Category, slug=self.kwargs['category_slug']
-      )
-    return context  
-    
-
-class TagAdsListView(FavoriteMixin, ListView):
-  template_name = 'ads/pages/ad_tags.html'  # Шаблон для тегов
-  context_object_name = 'ads'              # Имя переменной в шаблоне
-  ads_per_batch = 6
-    
-  def get_queryset(self):
-  # Получаем базовый набор данных (рейтинги, фильтры, поиск уже внутри)
-    qs = get_ads_queryset(self.request)
+        # Применяем сортировку к ПОЛНОМУ отфильтрованному набору
+        self.full_queryset = qs.smart_order(is_search=self.is_search_mode())
         
-  # Фильтруем по тегу из URL
-  # Используем .distinct(), так как ManyToMany (теги) может дублировать строки
-    return qs.filter(
-      tags__slug=self.kwargs['tag_slug']
-    ).order_by('-created_at', '-id').distinct()
-    
-  def get_context_data(self, **kwargs):
-    context = super().get_context_data(**kwargs)
-  # Передаем сам объект тега для заголовка страницы
-    context['tag'] = get_object_or_404(
-      Tag, slug=self.kwargs['tag_slug']
-      )
-    return context
-  
-  
-class AdDetailView(FavoriteMixin, DetailView):            # Класс для детального просмотра
-    model = Advertisement                   #  Работаем с моделью Advertisement
-    context_object_name = 'ad'              # Имя переменной в шаблоне
-    template_name = 'ads/pages/ad_details.html'  # Шаблон деталей
-    slug_field = 'slug'                    # Поле модели для поиска
-    slug_url_kwarg = 'ad_slug'             # Имя параметра из URL
-    questions_per_batch = 2
-    
-    def get_object(self, queryset=None):
-      ad = super().get_object(queryset)      # получаем само объявление из базы
-      
-      user = self.request.user              # запоминаем, кто сейчас открыл страницу (авторизованный юзер или гость)
+        # И только теперь делаем срез для первой страницы
+        return self.full_queryset[:self.ads_per_batch]
 
-      session_key = f'ad_{ad.id}_viewed' # создаем уникальный ключ для текущего браузера (например, "ad_32_viewed")
-      if not self.request.session.get(session_key, False) and ad.owner != user:  # если в сессии нет этого ключа (человек зашел впервые) И этот человек не является владельцем
-        Advertisement.objects.filter(id=ad.id).update(views=F("views") + 1)  # запрос в БД: « + 1 к просмотрам». F-выражение нужно, чтобы избежать проблем, если два человека нажмут кнопку одновременно
-        ad.views = ad.views + 1      # обновляем цифру в текущей переменной, чтобы на странице сразу отобразилось актуальное число
-        self.request.session[session_key] = True   # записываем в сессию (куки браузера) флаг: «этот пользователь это объявление уже видел»
-        
-      if user.is_authenticated and user != ad.owner and not ad.viewed_users.filter(id=user.id).exists(): # проверка: юзер вошел в аккаунт И он не автор И его еще нет в списке «кто смотрел» в БД
-        ad.viewed_users.add(user)   # добавляем связь между пользователем и объявлением в специальную таблицу
+    def filter_queryset(self, qs):
+        # По умолчанию ничего не фильтруем, переопределим в детях
+        return qs
 
-      return ad                     # возвращаем полностью обработанное объявление в шаблон
-    
+    def is_search_mode(self):
+        # Флаг для smart_order, по умолчанию False
+        return False
+
     def get_context_data(self, **kwargs):
-      context = super().get_context_data(**kwargs)
-      ad = self.get_object() # текущее объявление
-      
-    # Получаем 3 похожих объявления
-      related_ads = Advertisement.objects.filter(  # фильтруем по категории
-        category=self.object.category,             # та же категория, что и у просматриваемого
-        status='published'                         # только опубликованные
-      ).exclude(id=self.object.id).order_by('?')[:3]  # исключаем просматриваемое объявление из списка и выдаем 3 случайных
-    
-      context['related_ads'] = related_ads    # добавляем в контекст похожие объявления
-      
-      # Получаем все вопросы к этому объявлению
-      questions_query = ad.questions.filter(parent__isnull=True).order_by('-created_at')
-    
-      # Передаем в шаблон только первую порцию
-      context["questions"] = questions_query[:self.questions_per_batch]
-      # Проверяем, нужно ли показывать кнопку "Загрузить еще"
-      context["has_more_questions"] = questions_query.count() > self.questions_per_batch
-      # Передаем размер порции, чтобы JS знал шаг смещения (offset)
-      context["questions_per_batch"] = self.questions_per_batch        
-    
-      if self.request.user.is_authenticated:
-        context['favorite_ids'] = self.request.user.favorites.values_list('ad_id', flat=True) # для корректного отображения отметки "избранных" объявлений
+        context = super().get_context_data(**kwargs)
+        context["has_more_ads"] = self.full_queryset.count() > self.ads_per_batch
+        context["ads_per_batch"] = self.ads_per_batch
+        return context
+
+class AdsListView(BaseAdListView):
+    template_name = 'ads/pages/ad_list.html'
+
+    def get_queryset(self):
+        return super().get_queryset()[:self.ads_per_batch]
+
+class AdSearchView(BaseAdListView):
+    template_name = 'ads/pages/ad_search.html'
+
+    def is_search_mode(self):
+        return True
+
+    def filter_queryset(self, qs):
+        query = self.request.GET.get('search')
         
-      return context
-    
-    
-# --- БАЗОВЫЙ КЛАСС ДЛЯ СОЗДАНИЯ И РЕДАКТИРОВАНИЯ ---
-class BaseAdEditView(LoginRequiredMixin):
+        # Если параметров поиска нет, возвращаем пустоту
+        if not any([query, self.request.GET.get('min_price'), self.request.GET.get('min_rating')]):
+            return qs.none()
+
+        # Применяем поиск и фильтры К ЦЕЛОМУ КВЕРИСЕТУ
+        qs = qs.search(
+            query, 
+            search_category=self.request.GET.get('search_category') == 'on',
+            search_tag=self.request.GET.get('search_tag') == 'on'
+        ).apply_filters(
+            min_price=self.request.GET.get('min_price'),
+            max_price=self.request.GET.get('max_price'),
+            min_rating=self.request.GET.get('min_rating')
+        )
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Флаг для шаблона, чтобы понимать, показывать ли результаты или надпись "Введите запрос"
+        query_params = ['search', 'min_price', 'min_rating']
+        context['search_performed'] = any(self.request.GET.get(p) for p in query_params)
+        return context
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Флаг, что поиск был запущен
+        context['search_performed'] = any(self.request.GET.values())
+        return context
+
+
+class CategoryAdsListView(BaseAdListView):
+    template_name = 'ads/pages/ads_category.html'
+
+    def filter_queryset(self, qs):
+        # Находим категорию по слагу из URL
+        self.category = get_object_or_404(Category, slug=self.kwargs['category_slug'])
+        # Фильтруем по дереву слагов 
+        return qs.filter(category__slug__startswith=self.category.slug)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['category'] = self.category
+        context['title'] = f"Категория: {self.category.name}"
+        return context
+  
+
+class TagAdsListView(BaseAdListView):
+    template_name = 'ads/pages/ad_tags.html'
+
+    def filter_queryset(self, qs):
+        # Сохраняем слаг тега в атрибут класса, чтобы он был доступен везде
+        self.tag_slug = self.kwargs.get('tag_slug')
+        return qs.filter(tags__slug=self.tag_slug)
+
+    def get_context_data(self, **kwargs):
+        # Вызываем родительский метод
+        context = super().get_context_data(**kwargs)
+        
+        # Ищем объект тега в базе по слагу
+        tag_obj = Tag.objects.filter(slug=self.tag_slug).first()
+        
+        # Если нашли — берем красивое имя (name), если нет — используем слаг из URL
+        tag_name = tag_obj.name if tag_obj else self.tag_slug
+        
+        # Формируем итоговый заголовок
+        context['title'] = f"Объявления с тегом: #{tag_name}"
+        return context
+
+
+class AdDetailView(FavoriteMixin, DetailView):
+    model = Advertisement
+    context_object_name = 'ad'
+    template_name = 'ads/pages/ad_details.html'
+    slug_url_kwarg = 'ad_slug'
+    questions_per_batch = 2
+
+    def get_object(self, queryset=None):
+        # Добавляем select_related, чтобы не дергать базу ради владельца или категории в шаблоне
+        if queryset is None:
+            queryset = self.get_queryset()
+        
+        ad = super().get_object(queryset.select_related('owner', 'category'))
+        self._update_views(ad)
+        return ad
+
+    def _update_views(self, ad):
+        """Логика инкремента просмотров вынесена в отдельный метод"""
+        session_key = f'ad_v_{ad.id}'
+        if not self.request.session.get(session_key):
+            # Атомарный апдейт в базе
+            Advertisement.objects.filter(pk=ad.pk).update(views=F("views") + 1)
+            ad.views += 1 # Обновляем объект в памяти для текущего рендера
+            self.request.session[session_key] = True
+
+            # Учет авторизованных уникальных просмотров
+            user = self.request.user
+            if user.is_authenticated and user != ad.owner:
+                # Используем .add(), Django сам проверит уникальность, если есть Unique Together
+                ad.viewed_users.add(user)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        ad = self.object
+        
+        # Оптимизация 'Похожие объявления' (без order_by('?'))
+        # Берем последние 10 из категории и выбираем 3 случайных в Python
+        related_qs = Advertisement.objects.filter(
+            category=ad.category, status='published'
+        ).exclude(id=ad.id).order_by('-created_at')[:10]
+        context['related_ads'] = random.sample(list(related_qs), min(len(related_qs), 3))
+
+        # Вопросы (используем префетч для ответов, если они будут нужны)
+        questions_query = ad.questions.filter(parent__isnull=True).select_related('author')
+        context.update({
+            "questions": questions_query[:self.questions_per_batch],
+            "has_more_questions": questions_query.count() > self.questions_per_batch,
+            "questions_per_batch": self.questions_per_batch
+        })
+        return context
+
+
+class BaseAdEditView(LoginRequiredMixin, SuccessMessageMixin):
     model = Advertisement
     form_class = AdvertisementForm
     template_name = 'ads/pages/ad_form.html'
-    slug_url_kwarg = 'ad_slug'
 
     def form_valid(self, form):
-        # Если это создание нового — ставим владельца
-        if not form.instance.pk:
-            form.instance.owner = self.request.user
+        with transaction.atomic(): # Оборачиваем в транзакцию
+            if not form.instance.pk:
+                form.instance.owner = self.request.user
+            
+            self.object = form.save()
+            
+            # Оптимизация работы с тегами
+            tags_names = form.cleaned_data.get('tags_input', [])
+            if tags_names:
+              tag_objects = []
+              for name in tags_names:
+                name = name.lower().strip()
+                if not name: continue
+                
+                # get_or_create сразу сохраняет объект в базу, если его нет
+                tag, created = Tag.objects.get_or_create(name=name)
+                tag_objects.append(tag)
+            
+              self.object.tags.set(tag_objects)
         
-        response = super().form_valid(form)
-        
-        # Универсальная логика тегов (удаляет старые, добавляет новые)
-        tags_names = form.cleaned_data.get('tags_input', [])
-        tags_objs = [Tag.objects.get_or_create(name=n)[0] for n in tags_names]
-        self.object.tags.set(tags_objs)
-        
-        messages.success(self.request, self.get_success_message())
-        return response
+        return super().form_valid(form)
+
 
     def get_success_url(self):
-        return reverse_lazy('ads:ad_details', kwargs={'ad_slug': self.object.slug})
+    # self.object — это только что сохраненное объявление
+      return reverse('ads:ad_details', kwargs={'ad_slug': self.object.slug})
+
       
 
 class AdCreateView(BaseAdEditView, CreateView):
-  def get_context_data(self, **kwargs):
-    return {**super().get_context_data(**kwargs), 'title': "Создать объявление", 'submit_button_text': "Опубликовать"}
-    
-  def get_success_message(self):
-    return "Объявление успешно создано!"
+    # Используем extra_context для простых строк вместо переопределения метода
+    extra_context = {
+        'title': "Создать объявление", 
+        'submit_button_text': "Опубликовать"
+    }
 
+    def get_success_message(self, cleaned_data):
+        return "Объявление успешно создано!"
 
 class AdUpdateView(OwnerRequiredMixin, BaseAdEditView, UpdateView):
-  def get_context_data(self, **kwargs):
-    return {**super().get_context_data(**kwargs), 'title': "Редактировать", 'submit_button_text': "Сохранить"}
-
-  def get_success_message(self):
-    return "Изменения сохранены!"
-  
-  
-class AdDeleteView(LoginRequiredMixin, OwnerRequiredMixin, DeleteView):  # Для удаления
-  model = Advertisement                   # Модель
-  context_object_name = 'ad'              # Имя переменной в шаблоне
-  template_name = 'ads/pages/confirm_ad_delete.html'  # Шаблон подтверждения
-  success_url = reverse_lazy('ads:ad_list')  # Куда редиректить после удаления
-  slug_url_kwarg = 'ad_slug'
-  
-  
-class MainPageView(TemplateView):          # Просто отображает шаблон
-  template_name = 'ads/pages/index.html'  # Указываем шаблон
-  
-  def get_context_data(self, **kwargs):
-      context = super().get_context_data(**kwargs)
-      context["categories"] = Category.objects.filter(parent__isnull=True)
-      return context
+    extra_context = {
+        'title': "Редактировать", 
+        'submit_button_text': "Сохранить"
+    }
+    slug_url_kwarg = 'ad_slug'
     
-  
+    def form_valid(self, form):
+        ad = form.save(commit=False)
+        
+        # Список полей, изменение которых требует повторной проверки
+        critical_fields = ['title', 'text', 'price', 'category', 'goods_image']
+        
+        # Если пользователь поменял хотя бы одно критическое поле — сбрасываем статус
+        if any(field in form.changed_data for field in critical_fields):
+            ad.status = 'under_review'
+            
+        ad.save()
+        form.save_m2m()
+        return super().form_valid(form)
+
+    def get_success_message(self, cleaned_data):
+        return "Изменения сохранены!"
+      
+
+class AdDeleteView(LoginRequiredMixin, OwnerRequiredMixin, DeleteView):
+    model = Advertisement
+    template_name = 'ads/pages/confirm_ad_delete.html'
+    success_url = reverse_lazy('ads:ad_list')
+    slug_url_kwarg = 'ad_slug'
+    
+
+class MainPageView(TemplateView):
+    template_name = 'ads/pages/index.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Подгружаем категории вместе с количеством объявлений
+        context["categories"] = Category.objects.filter(parent__isnull=True).with_ad_count()
+        return context
+      
+
 @login_required
 @require_POST
 def toggle_favorite(request, ad_id):
-    # Добавить/удалить из избранного
     ad = get_object_or_404(Advertisement, id=ad_id)
-    # Проверяем, есть ли уже в избранном
-    favorite = Favorite.objects.filter(user=request.user, ad=ad).first()
+    # Используем get_or_create: если объект есть — удаляем, если нет — он создастся
+    favorite, created = Favorite.objects.get_or_create(user=request.user, ad=ad)
     
-    if favorite:
-        favorite.delete()  # удаляем
+    if not created:
+        favorite.delete()
         is_favorite = False
     else:
-        Favorite.objects.create(user=request.user, ad=ad)  # добавляем
         is_favorite = True
-    
+
     return JsonResponse({
-      'is_favorite': is_favorite,
-      'fav_count': ad.favorited_by.count()
-      })
-  
-  
-class MyFavoritesView(LoginRequiredMixin, FavoriteMixin, ListView):
-    template_name = 'ads/pages/ad_list.html'  # Используем тот же шаблон
-    context_object_name = 'ads'
-    ads_per_batch = 6
-    
-    def get_queryset(self):
-    # Вызываем ТУ ЖЕ функцию, она сама поймет, что это избранное по URL
-      self.ads_query = get_ads_queryset(self.request)
-      return self.ads_query[:self.ads_per_batch]
+        'is_favorite': is_favorite,
+        'fav_count': ad.favorited_by.count() # Здесь count оправдан, так как это точечный JSON-ответ
+    })
+
+class MyFavoritesView(BaseAdListView):
+    template_name = 'ads/pages/ad_list.html'
+
+    def filter_queryset(self, qs):
+        # Базовая функция get_ads_queryset уже умеет находить избранное,
+        # если в URL есть 'my-favorites'. Но для надежности 
+        # (если URL изменится) лучше явно отфильтровать здесь:
+        return qs.filter(favorited_by__user=self.request.user).exclude(owner=self.request.user)
 
     def get_context_data(self, **kwargs):
-      context = super().get_context_data(**kwargs)
-      context['title'] = 'Мои избранные объявления'
-      context['is_favorites_page'] = True
-      context["has_more_ads"] = self.ads_query.count() > self.ads_per_batch
-      context["ads_per_batch"] = self.ads_per_batch
-      return context
-      
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'title': 'Мои избранные объявления',
+            'is_favorites_page': True
+        })
+        return context
+     
       
 @login_required
-@require_POST         # разрешает только POST-запросы. Это защита: нельзя изменить рейтинг, просто перейдя по ссылке.
-def rate_seller(request, seller_id, rating_type):  # принимаем запрос, ID продавца и тип клика (plus или minus)
-  seller = get_object_or_404(User, id=seller_id)   # ищем продавца в базе. Если такого ID нет, выдаст ошибку 404
-  if request.user == seller:                       # проверка на «самолайк». Если ID текущего юзера совпадает с ID продавца, возвращаем ошибку 400
-    return JsonResponse({'error': 'Self-rating not allowed'}, status=400)
+@require_POST
+def rate_seller(request, seller_id):
+    seller = get_object_or_404(User, id=seller_id)
+    score = int(request.POST.get('score', 0))
 
-  is_positive = (rating_type == 'plus')      # превращаем строку из URL в булево значение (True, если нажали плюс)
-  rating = SellerRating.objects.filter(voter=request.user, seller=seller).first()  # ищем в базе, голосовал ли этот юзер за этого продавца ранее
-    
-  user_choice = 'none' # статус для JS, какую кнопку закрасить в итоге
-    
-  if rating:            # если голос уже существует
-    if rating.is_positive == is_positive:  # если нажали ту же кнопку, что и раньше, то удаляем голос
-      rating.delete()
-    else:
-      rating.is_positive = is_positive     # если нажали противоположную кнопку, то меняем значение в базеs
-      rating.save()
-      user_choice = rating_type # ставим статус plus или minu
-  else:                         # если голоса еще не было, просто создаем новую запись SellerRating и ставим статус
-    SellerRating.objects.create(voter=request.user, seller=seller, is_positive=is_positive)
-    user_choice = rating_type
-    
-  pos = seller.received_ratings.filter(is_positive=True).count()   # считаем общее количество «пальцев вверх» у продавца
-  neg = seller.received_ratings.filter(is_positive=False).count()  # считаем количество «пальцев вниз»
-  total = pos + neg                                                # общее число проголосовавших
-    
-  # Считаем процент (защита от деления на ноль)
-  trust_percent = round((pos / total) * 100) if total > 0 else 0
+    if request.user == seller:
+        return JsonResponse({'error': 'Self-rating not allowed'}, status=400)
+    if score not in range(1, 6):
+        return JsonResponse({'error': 'Invalid score'}, status=400)
 
-  return JsonResponse({         # упаковываем все новые цифры и статус user_choice в JSON-пакет и отправляем обратно в JS
-    'pos': pos,
-    'neg': neg,
-    'trust_percent': trust_percent,
-    'user_choice': user_choice
-  })  
-  
-  
+    # Создаем или обновляем оценку
+    rating, created = SellerRating.objects.update_or_create(
+        voter=request.user, 
+        seller=seller,
+        defaults={'score': score}
+    )
+
+    # Считаем среднее и количество голосов
+    stats = seller.received_ratings.aggregate(
+        avg_rating=Avg('score'),
+        total_votes=Count('id')
+    )
+
+    return JsonResponse({
+        'avg_rating': round(stats['avg_rating'], 1) if stats['avg_rating'] else 0,
+        'total_votes': stats['total_votes'],
+        'user_score': score
+    })
+
 def load_more_ads_view(request):
-  import time
-  time.sleep(1)
-  offset = int(request.GET.get("offset", 0))
-  limit = 6 
-  
-  ads_query = get_ads_queryset(request)
+    """AJAX подгрузка объявлений"""
+    offset = int(request.GET.get("offset", 0))
+    limit = 6
     
-  total_count = ads_query.count()
+    # Используем оптимизированную функцию
+    qs = get_ads_queryset(request).with_metrics()
+    
+    # Проверяем, передал ли JS-лоадер слаг текущей категории в GET-параметрах
+    category_slug = request.GET.get('category')
+    if category_slug and category_slug != 'None':
+        # Фильтруем по иерархии слагов (включая все подкатегории)
+        qs = qs.filter(category__slug__startswith=category_slug)
         
-  ads = list(ads_query[offset:offset + limit])
-  
-  fav_ids = []
-  if request.user.is_authenticated:
-    fav_ids = list(request.user.favorites.values_list('ad_id', flat=True))
-  
-  html = ''.join([render_to_string("ads/includes/ad_card.html", {"ad": ad, "favorite_ids": fav_ids}, request=request) for ad in ads])
+    # Считаем ОБЩЕЕ количество доступных объявлений строго в этой ветке
+    total_count = qs.count()
     
-  return JsonResponse({
-    'html': html,
-    'has_more': (offset + len(ads)) < total_count and len(ads) == limit
-  })
-  
-  
+    # Сортируем ПОЛНЫЙ отфильтрованный набор и берем нужную пачку (срез)
+    ads = qs.smart_order()[offset : offset + limit]
+    
+    # Отрезаем ровно столько, сколько нужно для проверки "есть ли еще"
+    # (делаем срез на 1 больше лимита, чтобы понять, есть ли следующая страница без .count())
+    has_more = (offset + limit) < total_count
+
+    # Подгружаем избранное для авторизованного пользователя
+    fav_ids = []
+    if request.user.is_authenticated:
+        fav_ids = list(request.user.favorites.values_list('ad_id', flat=True))
+
+    # Генерируем HTML каждой карточки и склеиваем их
+    html = "".join([
+        render_to_string("ads/includes/ad_card.html", {
+            "ad": ad, 
+            "favorite_ids": fav_ids,
+            "request": request # Важно для проверки владельца внутри карточки
+        }, request=request)
+        for ad in ads
+    ])
+
+    return JsonResponse({
+        'html': html,
+        'has_more': has_more
+    })
+
 @login_required
 @require_POST
 def add_question_view(request, ad_id):
-  text = request.POST.get('text', '').strip()
-  parent_id = request.POST.get('parent_id') # ID родителя
-  if not text:
-    return JsonResponse({'success': False, 'error': 'Текст вопроса не может быть пустым'})
+    text = request.POST.get('text', '').strip()
+    if not text or len(text) < 2:
+        return JsonResponse({'success': False, 'error': 'Слишком короткий текст'})
+
+    ad = get_object_or_404(Advertisement, id=ad_id)
+    parent_id = request.POST.get('parent_id')
     
-  ad = get_object_or_404(Advertisement, id=ad_id)
-  # данные для создания  
-  question_data = {'ad': ad, 'author': request.user, 'text': text}
-  # если пришел parent_id, находим родительский вопрос и привязываем его
-  if parent_id:
-    question_data['parent'] = get_object_or_404(AdQuestion, id=parent_id)
-  # создаем запись (либо вопрос, либо ответ)      
-  question = AdQuestion.objects.create(**question_data)
-  # Рендерим кусочек HTML для вставки  
-  question_html = render_to_string("ads/includes/question_container.html", 
-                            {"question": question}, request=request)
+    parent = get_object_or_404(AdQuestion, id=parent_id) if parent_id else None
     
-  return JsonResponse({
-    'success': True,
-    'question_html': question_html,
-    'questions_count': ad.questions.count()
-}) 
-  
-  
+    question = AdQuestion.objects.create(
+        ad=ad, author=request.user, text=text, parent=parent
+    )
+
+    html = render_to_string("ads/includes/question_container.html", {
+        "question": question
+    }, request=request)
+
+    return JsonResponse({
+        'success': True,
+        'question_html': html,
+        'questions_count': ad.questions.count()
+    })
+    
+    
 def load_more_questions_view(request, ad_id):
-  offset = int(request.GET.get("offset", 0))
-  limit = 2
-  import time
-  time.sleep(1)
-
-  ad = get_object_or_404(Advertisement, id=ad_id)
-  questions_query = ad.questions.filter(parent__isnull=True).order_by('-created_at')
+    offset = int(request.GET.get("offset", 0))
+    limit = 2
+    ad = get_object_or_404(Advertisement, id=ad_id)
     
-  questions = questions_query[offset : offset + limit]
-
-  html = ''.join([
-    render_to_string("ads/includes/question_container.html", {"question": q}, request=request)
-    for q in questions
-  ])
+    # Берем только основные вопросы (не ответы)
+    questions_query = ad.questions.filter(parent__isnull=True).order_by('-created_at')
+    questions = questions_query[offset : offset + limit]
     
-  has_more = offset + limit < questions_query.count()
-
-  return JsonResponse({
-    'html': html,
-    'has_more': has_more
-  })           
+    # Рендерим каждый вопрос отдельно и склеиваем в одну строку
+    html = ''.join([
+        render_to_string("ads/includes/question_container.html", {"question": q}, request=request)
+        for q in questions
+    ])
+    
+    has_more = offset + limit < questions_query.count()
+    return JsonResponse({
+        'html': html,
+        'has_more': has_more
+    })          

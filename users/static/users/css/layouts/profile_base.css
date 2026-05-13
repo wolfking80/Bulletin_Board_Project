@@ -145,3 +145,30 @@
   font-size: inherit;
   border-left: 3px solid transparent;
 }
+
+.star-btn {
+    transition: transform 0.2s;
+    display: inline-block;
+}
+.star-btn:hover {
+    transform: scale(1.2);
+    color: #ffc107 !important; /* Желтый при наведении */
+}
+
+.precise-stars-container {
+    position: relative; /* Чтобы золото позиционировалось внутри */
+    display: inline-block;
+    font-family: serif; 
+    line-height: 1;
+}
+
+.stars-gold {
+    position: absolute; /* Накладываем поверх серых */
+    top: 0;
+    left: 0;
+    overflow: hidden; /* Обрезаем лишние звезды по ширине */
+    white-space: nowrap; /* Чтобы звезды не переносились на новую строку */
+    color: #ffc107;
+    width: 0; /* Будет изменено скриптом */
+    transition: width 0.5s ease; /* Для плавного появления */
+}

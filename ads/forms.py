@@ -1,7 +1,23 @@
 from django import forms
-from .models import Advertisement
+from .models import Advertisement, Category
+
+
+class CategoryChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        # Если есть родитель, выводим "Родитель > Категория", иначе просто имя
+        if obj.parent:
+            return f"{obj.parent.name} — {obj.name}"
+        return obj.name
+      
 
 class AdvertisementForm(forms.ModelForm):
+  # Переопределяем стандартное поле выбора категории
+    category = CategoryChoiceField(
+      # Загружаем все категории из базы данных для отображения в списке
+        queryset=Category.objects.all().select_related('parent').order_by('parent__name', 'name'),
+        label="Категория",
+        empty_label="Выберите категорию"
+    )
     tags_input = forms.CharField(
     required=False,
     widget=forms.TextInput(attrs={

@@ -1,9 +1,10 @@
-import BatchLoader from './batch-loader.js';
 import { postAction } from './utils.js';
 import { formatDate } from './format_to_local_date.js';
 
-
-window.questionsBatchLoader = new BatchLoader('questionsList');
+// Инициализируем лоадер (он подхватит настройки из data-атрибутов)
+const questionsBatchLoader = document.getElementById('questionsList')
+  ? new (await import('./batch-loader.js')).default('questionsList')
+  : null;
 
 class QuestionManager {
   constructor() {
@@ -11,99 +12,93 @@ class QuestionManager {
   }
 
   init() {
-    // Делегирование кликов (Ответить / Отмена)
+    // Делегирование кликов
     document.addEventListener('click', (e) => {
       const replyBtn = e.target.closest('.reply-btn');
-      if (replyBtn) this.handleReplyClick(replyBtn);
+      if (replyBtn) return this.handleReplyClick(replyBtn);
 
       const cancelBtn = e.target.closest('.cancel-reply-btn');
-      if (cancelBtn) this.handleCancelReplyClick(cancelBtn);
+      if (cancelBtn) return this.handleCancelReplyClick(cancelBtn);
     });
 
-    // ЕДИНЫЙ обработчик для всех ОТПРАВОК (submit)
+    // Единый обработчик отправок
     document.addEventListener('submit', (e) => {
       const form = e.target;
-    
-    // Если это ГЛАВНАЯ форма вопроса
       if (form.id === 'questionForm') {
         e.preventDefault();
-        this.handleMainSubmit(e); 
-      }
-    
-    // Если это форма ОТВЕТА
-      else if (form.classList.contains('reply-form')) {
+        this.handleMainSubmit(form);
+      } else if (form.classList.contains('reply-form')) {
         e.preventDefault();
         this.handleReplyFormSubmit(form);
       }
     });
   }
 
-  // Логика главного вопроса
-  async handleMainSubmit(event) {
-    event.preventDefault();
-    const form = event.target.closest('#questionForm');
+  async handleMainSubmit(form) {
+    // собираем все данные из полей формы
     const formData = new FormData(form);
     const url = form.dataset.addQuestionUrl;
     const errorEl = document.getElementById('questionErrors');
-    // Скрываем предыдущие ошибки
-    if (errorEl) {
-        errorEl.classList.add('d-none');
-        errorEl.textContent = '';
-    }
+    const submitBtn = form.querySelector('button[type="submit"]');
+    // Скрываем блок с ошибками (если они горели от предыдущей неудачной попытки)
+    this.toggleError(errorEl, null);
+    // Блокируем кнопку отправки, пока идет сетевой запрос
+    submitBtn.disabled = true;
 
     try {
       const data = await postAction(url, formData);
-      if (data.success) {
-        form.querySelector('textarea').value = '';
+      // Если успешное сохранение вопроса
+      if (data?.success) {
+      // Очищаем текстовое поле формы  
+        form.reset();
+
         const list = document.getElementById('questionsList');
 
-        // Убираем заглушку "Вопросов нет"
-        const empty = list.querySelector('#emptyMessage');
-        if (empty) empty.remove();
+        // Удаляем сообщение о пустоте
+        list.querySelector('#emptyMessage')?.remove();
 
-        // Вставляем новый вопрос В НАЧАЛО
+        // Вставляем и форматируем
         list.insertAdjacentHTML('afterbegin', data.question_html);
         formatDate(list.firstElementChild.querySelector('.date-field'));
 
-        // Сдвигаем offset лоадера, чтобы не было дублей при дозагрузке
-        if (window.questionsBatchLoader) {
-          window.questionsBatchLoader.offset += 1;
-        }
-        // Обновляем счетчик вопросов в заголовке
+        // Если на странице работает пагинатор (BatchLoader), 
+        // JS увеличивает его внутреннее смещение (offset) на 1. 
+        // Это нужно, чтобы при следующем скролле пагинатор 
+        // не подгрузил с сервера дубликат из-за сдвига базы данных
+        if (questionsBatchLoader) questionsBatchLoader.offset += 1;
+
         this.updateCounter(data.questions_count);
       } else {
-        errorEl.textContent = data.error;
-        errorEl.classList.remove('d-none');
+        this.toggleError(errorEl, data.error || 'Ошибка валидации');
       }
     } catch (err) {
-      console.error(err);
-      if (errorEl) {
-          errorEl.textContent = 'Ошибка соединения с сервером';
-          errorEl.classList.remove('d-none');
-      }
+      this.toggleError(errorEl, 'Ошибка соединения с сервером');
+    } finally {
+      submitBtn.disabled = false;
     }
   }
 
-  // Логика ответа на вопрос
   async handleReplyFormSubmit(form) {
     const textarea = form.querySelector('textarea');
+    const text = textarea.value.trim();
+    if (!text) return;
+
     const formData = new FormData();
-    formData.append('text', textarea.value.trim());
+    formData.append('text', text);
     formData.append('parent_id', form.dataset.parentId);
-    const url = form.dataset.addQuestionUrl;
 
-    const data = await postAction(url, formData);
-    if (data.success) {
-      // Очищаем текстовое поле и скрываем форму
-      textarea.value = '';
+    const data = await postAction(form.dataset.addQuestionUrl, formData);
+
+    if (data?.success) {
+      form.reset();
       form.closest('.reply-form-container').classList.add('d-none');
+      
+      // Находим блок существующих ответов (.replies) именно внутри карточки текущего вопроса
+      const repliesContainer = form.closest('.question-container').querySelector('.replies');
+      // Вставляем новый ответ в самый конец списка ответов
+      repliesContainer.insertAdjacentHTML('beforeend', data.question_html);
+      formatDate(repliesContainer.lastElementChild.querySelector('.date-field'));
 
-      // Вставляем ответ В КОНЕЦ ветки текущего вопроса
-      const container = form.closest('.question-container').querySelector('.replies');
-      container.insertAdjacentHTML('beforeend', data.question_html);
-      // Форматируем дату нового ответа
-      formatDate(container.lastElementChild.querySelector('.date-field'));
-      // Обновляем счетчик вопросов в заголовке
       this.updateCounter(data.questions_count);
     } else {
       alert(data.error);
@@ -112,18 +107,28 @@ class QuestionManager {
 
   handleReplyClick(btn) {
     const formContainer = document.getElementById(`replyForm${btn.dataset.questionId}`);
-    // Скрываем все другие открытые формы
+    // Находит все формы ответов на странице и закрывает их, 
+    // чтобы на экране была открыта строго одна форма за раз
     document.querySelectorAll('.reply-form-container').forEach(el => el.classList.add('d-none'));
-    // Показываем текущую форму
-    formContainer.classList.remove('d-none');
-    // Фокусируемся на текстовом поле
-    formContainer.querySelector('textarea').focus();
+    // Открываем форму ответа для выбранного вопроса
+    formContainer?.classList.remove('d-none');
+    // Автоматически ставит курсор мыши в текстовое поле, 
+    // чтобы пользователь мог сразу печатать текст
+    formContainer?.querySelector('textarea')?.focus();
   }
-
+  
+  // Срабатывает при клике на «Отмена». 
+  // Прячет форму ответа и полностью очищает набранный текст
   handleCancelReplyClick(btn) {
     const container = btn.closest('.reply-form-container');
     container.classList.add('d-none');
     container.querySelector('textarea').value = '';
+  }
+
+  toggleError(el, message) {
+    if (!el) return;
+    el.textContent = message || '';
+    el.classList.toggle('d-none', !message);
   }
 
   updateCounter(count) {

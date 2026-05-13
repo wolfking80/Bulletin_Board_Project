@@ -1,49 +1,53 @@
 {% if ads %}
 <!-- Добавляем ID и настройки для JS (BatchLoader) -->
-<div id="adsContainer" 
-  data-initial-offset="{{ ads|length }}" 
-  data-has-more="{{ has_more_ads|yesno:'True,False' }}" 
-  data-batch-size="{{ ads_per_batch|default:6 }}"
-  data-load-more-url="{% url 'ads:load_more_ads' %}"
-  data-owner-id="{{ owner_id }}"
-  data-show-all="{{ show_all|yesno:'True,False' }}"
-  data-is-favorites="{{ is_favorites_page|default:'False' }}"
-  data-trigger-type="scroll">
-<!-- Список в виде карточек -->
+<div id="adsContainer" data-initial-offset="{{ ads|length }}" data-has-more="{{ has_more_ads|yesno:'True,False' }}"
+  data-batch-size="{{ ads_per_batch|default:6 }}" data-load-more-url="{% url 'ads:load_more_ads' %}"
+  data-category="{% if category %}{{ category.slug }}{% endif %}"
+  data-owner-id="{% if profile_user %}{{ profile_user.id }}{% elif owner_id %}{{ owner_id }}{% endif %}"
+  data-show-all="{{ show_all|yesno:'True,False' }}" data-is-favorites="{{ is_favorites_page|default:'False' }}"
+  data-trigger-type="{{ trigger_type|default:'scroll' }}">
+  <!-- Список в виде карточек -->
   <div class="row">
-  {% for ad in ads %}
-    {% if request.user == ad.owner or ad.status == 'published' %}
-      {% include 'ads/includes/ad_card.html' %}
-    {% endif %}
-  {% endfor %}
+    {% for ad in ads %}
+    {% include 'ads/includes/ad_card.html' with ad=ad favorite_ids=favorite_ids %}
+    {% endfor %}
   </div>
 </div>
 
+{# Показываем кнопку ТОЛЬКО если выбран режим кнопки и есть что подгружать #}
+{% if has_more_ads and trigger_type == 'button' %}
+<div class="text-center my-3">
+  <button id="loadMoreBtn" class="btn btn-outline-primary shadow-sm">
+    Показать еще вопросы
+  </button>
+</div>
+{% endif %}
+
 <!-- Добавляем спиннер, который будет появляться при скролле -->
 <div id="loadingSpinner" class="text-center d-none my-4">
-    <div class="spinner-border text-warning" role="status"></div>
+  <div class="spinner-border text-warning" role="status"></div>
 </div>
 
 {% else %}
 {% if is_favorites_page %}
-  <!-- Сообщение ТОЛЬКО для страницы ИЗБРАННОГО -->
-  <div class="alert alert-info text-center py-5">
-    <h4 class="alert-heading">У вас пока нет избранных объявлений</h4>
-    <p>Нажимайте на звездочку ★ на карточках объявлений, чтобы добавить их сюда.</p>
-    <hr>
-    <a href="{% url 'ads:ad_list' %}" class="btn btn-primary">
-      Посмотреть все объявления
-    </a>
-  </div>
+<!-- Сообщение ТОЛЬКО для страницы ИЗБРАННОГО -->
+<div class="alert alert-info text-center py-5">
+  <h4 class="alert-heading">У вас пока нет избранных объявлений</h4>
+  <p>Нажимайте на звездочку ★ на карточках объявлений, чтобы добавить их сюда.</p>
+  <hr>
+  <a href="{% url 'ads:ad_list' %}" class="btn btn-primary">
+    Посмотреть все объявления
+  </a>
+</div>
 
-  {% else %}
-  <!-- Сообщение для ВСЕХ остальных страниц -->
-  <div class="alert alert-info text-center py-5">
-    <h4 class="alert-heading">Объявлений пока нет!</h4>
-    <hr>
-    <a href="{% url 'ads:create_ad' %}" class="btn btn-success">
-      Создать первое объявление
-    </a>
-  </div>
-  {% endif %}
+{% else %}
+<!-- Сообщение для ВСЕХ остальных страниц -->
+<div class="alert alert-info text-center py-5">
+  <h4 class="alert-heading">Объявлений пока нет!</h4>
+  <hr>
+  <a href="{% url 'ads:create_ad' %}" class="btn btn-success">
+    Создать первое объявление
+  </a>
+</div>
+{% endif %}
 {% endif %}
