@@ -46,7 +46,7 @@ INSTALLED_APPS = [
     'django_bootstrap_icons',
     'ads',
     'users',
-    'phonenumber_field.modelfields', 
+    'phonenumber_field', 
 ]
 
 MIDDLEWARE = [
