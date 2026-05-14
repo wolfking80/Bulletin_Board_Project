@@ -29,7 +29,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
 
 
 # Application definition
@@ -46,7 +46,8 @@ INSTALLED_APPS = [
     'django_bootstrap_icons',
     'ads',
     'users',
-    'paid_services'
+    'promo',
+    'widget_tweaks',
     'phonenumber_field', 
 ]
 
@@ -167,3 +168,9 @@ DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
 
 # Ключ доступа к firebase приложению
 FIREBASE_API_KEY = os.getenv('FIREBASE_API_KEY')
+
+# Конфигурация для отправки уведомлений о новой заявке в телеграмм-боте
+
+TELEGRAM_BOT_TOKEN=os.getenv("TELEGRAM_BOT_TOKEN")
+PERSONAL_CHAT_ID=os.getenv("PERSONAL_CHAT_ID")
+SITE_URL = os.getenv("SITE_URL", "http://127.0.0.1:8000")

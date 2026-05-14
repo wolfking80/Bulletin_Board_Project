@@ -9,7 +9,7 @@
   <!-- Список в виде карточек -->
   <div class="row">
     {% for ad in ads %}
-    {% include 'ads/includes/ad_card.html' with ad=ad favorite_ids=favorite_ids %}
+    {% include 'ads/includes/ad_card.html' with ad=ad favorite_ids=favorite_ids request=request %}
     {% endfor %}
   </div>
 </div>

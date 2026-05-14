@@ -1,0 +1,44 @@
+body[data-bs-theme="dark"] {
+    --bg-card: #1e1e24;             /* Темная карточка отзыва */
+    --bg-text-block: #2a2a32;       /* Более темная подложка под текст внутри */
+    --text-main: #ffffff;           /* Белый никнейм */
+    --text-muted-dark: #e0e0e5;     /* Насыщенный текст самого отзыва */
+    --border-color: #3a3a45;
+}
+
+body[data-bs-theme="light"] {
+    --bg-card: #f8f9fa;             /* Светло-серая карточка отзыва */
+    --bg-text-block: #ffffff;       /* Чисто белый фон под текст отзыва */
+    --text-main: #111111;           /* Черный сочный никнейм */
+    --text-muted-dark: #212529;     /* Насыщенный черный текст отзыва */
+    --border-color: #ced4da;
+}
+
+/* Стили карточки отзыва */
+.review-item-card {
+    background-color: var(--bg-card) !important;
+    border: 1px solid var(--border-color) !important;
+    transition: transform 0.2s ease;
+}
+
+.review-item-card:hover {
+    transform: translateX(4px); /* Мягкий сдвиг вправо при наведении */
+}
+
+/* Окрашивание текста */
+.review-item-card h5.text-dark {
+    color: var(--text-main) !important;
+}
+
+.review-text-body {
+    background-color: var(--bg-text-block) !important;
+    border-color: var(--border-color) !important;
+}
+
+.style-text {
+    color: var(--text-muted-dark) !important;
+}
+
+.stars-display span.text-dark {
+    color: var(--text-main) !important;
+}

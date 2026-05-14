@@ -1,0 +1,25 @@
+{% extends "layouts/base.html" %}
+{% load static %}
+
+{% block page_title %}Спасибо!{% endblock %}
+
+{% block page_content %}
+<div class="container my-5">
+  <div class="thanks-card text-center">
+    <i class="bi bi-check-circle-fill success-icon"></i>
+    <h2>Спасибо за вашу заявку!</h2>
+    <p>Мы получили ваш запрос на приобретение услуги и свяжемся с вами в ближайшее время.</p>
+
+    <div class="mt-4">
+      <a href="{% url 'ads:ad_list' %}" class="btn submit-btn" style="text-decoration: none; display: inline-block;">
+        <i class="bi bi-house-door me-2"></i> На главную
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static "promo/css/pages/request_thanks.css" %}">
+{% endblock %}

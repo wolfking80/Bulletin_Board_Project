@@ -1,0 +1,93 @@
+{% extends "layouts/base.html" %}
+{% load static %}
+
+{% block page_title %}Отзывы: {{ service.name }}{% endblock %}
+
+{% block page_content %}
+<div class="container my-5" style="max-width: 800px;">
+  <!-- Шапка страницы -->
+  <div class="d-flex justify-content-between align-items-center mb-5 border-bottom pb-3 flex-wrap gap-3">
+    <div>
+      <h1 class="h2 fw-bold mb-1 text-primary">{{ service.name }}</h1>
+      <p class="text-muted mb-0">Отзывы пользователей о работе услуги продвижения</p>
+    </div>
+    {# Кнопка оставить отзыв (показывается только тем, кто реально использовал услугу) #}
+    {% if user_has_used %}
+    <a href="{% url 'promo:create_review' service.id %}" class="btn btn-primary shadow-sm py-2">
+      <i class="bi bi-plus-circle me-2"></i> Оставить отзыв
+    </a>
+    {% endif %}
+  </div>
+
+  <!-- Список отзывов -->
+  <div class="reviews-list-stack d-flex flex-column gap-4">
+    {% for review in reviews %}
+    {# Каждая карточка отзыва — независимый контрастный блок #}
+    <div class="review-item-card p-4 rounded-3 shadow-sm bg-light border border-opacity-50">
+      <!-- Upper часть отзыва: Автор, Звезды, Дата -->
+      <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+        <div class="d-flex align-items-center gap-3">
+
+          {% if review.author.avatar and review.author.avatar.url %}
+          <img src="{{ review.author.avatar.url }}" alt="{{ review.author.username }}" class="rounded-circle border"
+            style="width: 45px; height: 45px; object-fit: cover; flex-shrink: 0;">
+          {% elif review.author.profile.avatar and review.author.profile.avatar.url %}
+          <img src="{{ review.author.profile.avatar.url }}" alt="{{ review.author.username }}"
+            class="rounded-circle border" style="width: 45px; height: 45px; object-fit: cover; flex-shrink: 0;">
+          {% else %}
+          {# Выводим первые 2 буквы юзернейма большими буквами, как в профиле #}
+          <div class="rounded-circle d-flex align-items-center justify-content-center border fw-bold shadow-sm"
+            style="width: 45px; height: 45px; flex-shrink: 0; background: var(--avatar-accent-color, #0d6efd); color: #ffffff; font-size: 0.95rem; letter-spacing: 0.5px;">
+            {{ review.author.username|slice:":2"|upper }}
+          </div>
+          {% endif %}
+
+          <div>
+            <h5 class="h6 fw-bold mb-0 text-dark">{{ review.author.username }}</h5>
+            <small class="text-muted">{{ review.created_at|date:"d E Y в H:i" }}</small>
+          </div>
+        </div>
+        <!-- Отображение звезд на CSS-маске -->
+        <div
+          class="stars-display text-warning bg-body px-2 py-1 rounded border border-light border-opacity-10 shadow-sm"
+          style="letter-spacing: 2px; font-size: 1.1rem;">
+          <span class="fw-bold text-dark fs-6 me-2">{{ review.rating }}</span>
+          {% for i in "12345" %}
+          {% if forloop.counter <= review.rating %} <span style="color: #ffc107;">★</span>
+            {% else %}
+            <span style="color: #ccc;">★</span>
+            {% endif %}
+            {% endfor %}
+        </div>
+      </div>
+      <!-- Текст самого отзыва -->
+      <div class="review-text-body p-3 bg-white rounded border border-light">
+        <p class="mb-0 text-secondary-dark style-text" style="line-height: 1.6; word-break: break-word;">
+          {{ review.text|linebreaksbr }}
+        </p>
+      </div>
+    </div>
+    {% empty %}
+    <!-- Если отзывов в базе данных PostgreSQL еще нет -->
+    <div class="text-center py-5 rounded-3 bg-light border border-dashed">
+      <i class="bi bi-chat-left-dots text-muted display-4 mb-3 d-block"></i>
+      <h3 class="h5 fw-bold text-secondary">Пока нет ни одного отзыва</h3>
+      <p class="text-muted small px-3">Станьте первым, кто поделится своим мнением о качестве работы услуги продвижения!
+      </p>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Кнопка возврата назад -->
+  <div class="mt-5 text-center">
+    <a href="{% url 'promo:services_list' %}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left me-2"></i> Вернуться к каталогу услуг
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+{{ block.super }}
+<link class="sync-css" rel="stylesheet" href="{% static 'promo/css/pages/reviews.css' %}">
+{% endblock %}

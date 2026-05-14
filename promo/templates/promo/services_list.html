@@ -1,0 +1,92 @@
+{% extends "layouts/base.html" %}
+{% load static %}
+
+{% block page_title %}Наши услуги{% endblock %}
+
+{% block page_content %}
+<div class="container my-5">
+  <h1 class="text-center mb-5 display-4 fw-bold">Наши услуги</h1>
+
+  {# Используем автоматическую сетку Bootstrap 5 для 3-х колонок #}
+  <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 justify-content-center">
+    {% for type in types %}
+    <div class="col d-flex">
+      {# Превращаем карточку в полноценный флекс-бокс Bootstrap #}
+      <div class="type-card border rounded-3 p-4 shadow-sm bg-body w-100 d-flex flex-column" style="min-height: 450px;">
+        <h2 class="text-center h4 fw-bold pb-2 mb-4 border-bottom text-primary header">{{ type.name }}</h2>
+
+        <div class="services-container d-flex flex-column gap-4 flex-grow-1">
+          {% for service in type.services.all %}
+          {# Каждую услугу оборачиваем в изолированную контрастную плашку #}
+          <div
+            class="service-item p-3 border rounded-3 bg-body-secondary d-flex flex-column h-100 shadow-sm position-relative">
+
+            {# разводим название и цену по краям через флекс #}
+            <div class="d-flex justify-content-between align-items-start gap-3 mb-3 w-100 text-nowrap">
+              <h5 class="service-title h6 fw-bold mb-0 text-wrap text-danger" style="max-width: 70%;">{{ service.name }}
+              </h5>
+              <span class="badge bg-success-subtle text-success fs-6 px-2 py-1 price-tag flex-shrink-0"
+                style="color: #4ECDC4 !important;">{{ service.price }} ₽</span>
+            </div>
+
+            <p class="service-description small text-muted flex-grow-1 mb-4">{{ service.description }}</p>
+
+            <div class="rating-container mb-3 p-2 bg-body rounded border border-light border-opacity-10">
+              <div class="rating-info d-flex align-items-center small">
+                {% if service.average_rating %}
+                <div class="stars text-warning me-2" style="letter-spacing: 2px;">
+                  <div class="rating d-flex justify-content-center align-items-center gap-1">
+                    <input type="radio" name="rating" id="star_1" value="1" class="d-none">
+                    <label for="star_1" class="star" title="1 Звезда">★</label>
+
+                    <input type="radio" name="rating" id="star_2" value="2" class="d-none">
+                    <label for="star_2" class="star" title="2 Звезд">★</label>
+
+                    <input type="radio" name="rating" id="star_3" value="3" class="d-none">
+                    <label for="star_3" class="star" title="3 Звезд">★</label>
+
+                    <input type="radio" name="rating" id="star_4" value="4" class="d-none">
+                    <label for="star_4" class="star" title="4 Звезд">★</label>
+
+                    <input type="radio" name="rating" id="star_5" value="5" class="d-none">
+                    <label for="star_5" class="star" title="5 Звезд">★</label>
+                  </div>
+                </div>
+                <span class="rating-text fw-semibold text-primary ms-1">{{ service.average_rating|floatformat:1 }} <span
+                    class="text-muted">/ 5</span></span>
+                {% else %}
+                <span class="no-rating text-muted small"><i class="bi bi-chat-left text-secondary me-1"></i> Пока нет
+                  отзывов</span>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="service-actions d-flex justify-content-between align-items-center gap-2 mt-auto w-100">
+              <a href="{% url 'promo:create_request' service.id %}"
+                class="btn btn-primary btn-sm px-3 flex-grow-1 fw-medium text-white">
+                <i class="bi bi-cart-plus me-1"></i> Купить
+              </a>
+              <div class="reviews-link flex-shrink-0">
+                <a href="{% url 'promo:service_review_list' service.id %}"
+                  class="btn btn-outline-primary btn-sm px-3 fw-medium d-flex align-items-center gap-1">
+                  <i class="bi bi-chat-dots"></i> Отзывы
+                  <span class="badge bg-primary text-white ms-1 reviews-count" style="font-size: 0.75rem;">
+                    {{ service.reviews_count|default:0 }}</span>
+                </a>
+              </div>
+            </div>
+
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'promo/css/pages/services.css' %}">
+{% endblock %}

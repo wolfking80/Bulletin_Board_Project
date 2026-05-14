@@ -1,0 +1,187 @@
+body[data-bs-theme="dark"] {
+    --bg-element: #1e1e24;
+    --bg-element-2: #2a2a32;
+    --text-primary: #ffffff;
+    --text-secondary: #a0a0a5;
+    --text-secondary-2: #b0b0b5;
+    --shadow-color: rgba(0, 0, 0, 0.4);
+    --border-color: #3a3a45;
+}
+
+body[data-bs-theme="light"] {
+    --bg-element: #ffffff;
+    --bg-element-2: #f8f9fa;
+    --text-primary: #111111;
+    --text-secondary: #212529;
+    --text-secondary-2: #6c757d;
+    --shadow-color: rgba(0, 0, 0, 0.06);
+    --border-color: #dee2e6;
+}
+
+/* Карточка категории/типа услуг — РАСШИРЕНА под сетку Bootstrap */
+.type-card { 
+    background: var(--bg-element, #ffffff); 
+    border-radius: 15px; 
+    padding: 25px; 
+    box-shadow: 0 8px 32px var(--shadow-color); 
+    backdrop-filter: blur(4px); 
+    height: 100%; 
+    width: 100% !important;
+    margin: 0 auto; 
+    border: 1px solid var(--border-color) !important;
+} 
+
+/* Заголовок тарифа */
+.header { 
+    color: #4ECDC4; 
+    font-weight: 600; 
+    padding-bottom: 15px; 
+    margin-bottom: 25px; 
+    border-bottom: 2px solid var(--border-color); 
+} 
+
+/* Контейнер конкретной услуги продвижения */
+.service-item { 
+    background: var(--bg-element-2); 
+    border-radius: 12px; 
+    padding: 20px; 
+    margin-bottom: 20px; 
+    transition: transform 0.3s ease, box-shadow 0.3s ease; 
+    position: relative;
+    width: 100% !important;
+} 
+
+/* Анимация парения при наведении мыши */
+.service-item:hover { 
+    transform: translateY(-5px); 
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1); 
+} 
+
+/* Заголовок услуги — ИСПРАВЛЕНО ВЫЛЕЗАНИЕ ЦЕНЫ */
+.service-header { 
+    display: flex !important; 
+    justify-content: space-between !important; 
+    align-items: center !important; 
+    margin-bottom: 15px !important; 
+    width: 100% !important;
+    gap: 15px !important;       /* Защитный зазор между текстом и ценой */
+} 
+
+.service-title { 
+    color: #FF6B6B; 
+    margin: 0; 
+    font-weight: 600; 
+    font-size: 1.1rem;
+} 
+
+/* Тег цены — ИСПРАВЛЕНО НАЛОЖЕНИЕ */
+.price-tag { 
+    color: #4ECDC4; 
+    font-weight: bold; 
+    padding: 5px 15px; 
+    white-space: nowrap !important; /* Запрещаем перенос цены */
+    background: rgba(78, 205, 196, 0.1);
+    border-radius: 8px;
+    flex-shrink: 0 !important;      /* Запрещаем сжимать блок цены */
+} 
+
+.service-description { 
+    color: var(--text-secondary-2); 
+    font-size: 0.95rem; 
+    margin-bottom: 20px; 
+} 
+
+.rating-container { 
+    margin-bottom: 20px; 
+} 
+
+.rating-info { 
+    display: flex; 
+    align-items: center; 
+    gap: 10px; 
+}
+
+.stars { 
+    display: flex; 
+    gap: 2px; 
+} 
+
+.star { 
+    color: var(--text-secondary); 
+    font-size: 1.2rem; 
+} 
+
+.star.filled { 
+    color: #FFD700; 
+    text-shadow: 0 0 5px rgba(255, 215, 0, 0.5); 
+} 
+
+.rating-text { 
+    color: rgb(72, 145, 255); 
+    font-size: 0.9rem; 
+} 
+
+.slash { 
+    color: var(--text-primary); 
+} 
+
+.no-rating { 
+    color: var(--text-secondary); 
+    font-style: italic; 
+} 
+
+/* Контейнер кнопок — ИСПРАВЛЕНО ВЫЛЕЗАНИЕ ОТЗЫВОВ */
+.service-actions { 
+    display: flex !important; 
+    justify-content: space-between !important; 
+    align-items: center !important; 
+    gap: 10px !important;
+    width: 100% !important;
+} 
+
+.reviews-link { 
+    display: flex !important; 
+    align-items: center !important; 
+    gap: 8px !important; 
+} 
+
+/* Полупрозрачный бэйдж счетчика отзывов */
+.reviews-count { 
+    background: rgba(78, 205, 196, 0.1); 
+    color: #4ECDC4; 
+    padding: 2px 10px; 
+    border-radius: 12px; 
+    font-size: 0.8rem; 
+    backdrop-filter: blur(4px); 
+    border: 1px solid var(--border-color); 
+    flex-shrink: 0 !important; /* Запрещаем сжимать бэйдж числа */
+} 
+
+/* Кнопки */
+.service-actions .btn-primary { 
+    background: #0d6efd !important; 
+    color: #ffffff !important;
+    border: none; 
+    padding: 8px 16px; 
+    transition: transform 0.2s ease; 
+    border-radius: 6px;
+    font-weight: 500;
+} 
+
+.service-actions .btn-primary:hover { 
+    transform: scale(1.03); 
+    background: #0b5ed7 !important; 
+} 
+
+.service-actions .btn-outline-primary { 
+    border: 1px solid #4ECDC4 !important; 
+    color: #4ECDC4 !important; 
+    background: transparent !important;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-weight: 500;
+} 
+
+.service-actions .btn-outline-primary:hover { 
+    background: rgba(78, 205, 196, 0.1) !important; 
+}

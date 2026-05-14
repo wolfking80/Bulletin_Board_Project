@@ -1,0 +1,30 @@
+{% extends "layouts/base.html" %}
+{% load static %}
+
+{% block page_title %}Спасибо!{% endblock %}
+
+{% block page_content %}
+<div class="container my-5">
+  <div class="thanks-card text-center">
+    <i class="bi bi-check-circle-fill success-icon"></i>
+    <h2>Спасибо за ваш отзыв!</h2>
+    <p>Мы ценим ваше мнение</p>
+
+    <div class="mt-4 d-flex gap-2 justify-content-center">
+      <a href="{% url 'promo:services_list' %}" class="btn submit-btn"
+        style="text-decoration: none; padding: 10px 20px;">
+        <i class="bi bi-arrow-left me-2"></i> К услугам
+      </a>
+      <a href="{% url 'users:profile' username=request.user.username %}" class="btn submit-btn"
+        style="text-decoration: none; padding: 10px 20px;">
+        <i class="bi bi-person me-2"></i> В профиль
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static "promo/css/pages/review_thanks.css" %}">
+{% endblock %}

@@ -1,0 +1,40 @@
+body[data-bs-theme="dark"] {
+    --bg-element: #1e1e24;          /* Контрастный темно-серый фон карточки */
+    --text-primary: #ffffff;        /* Белый текст */
+    --text-secondary: #a0a0a5;      /* Серый текст */
+    --shadow-color: rgba(0, 0, 0, 0.5); /* Глубокая тень для темной темы */
+    --border-color: #3a3a45;
+}
+
+body[data-bs-theme="light"] {
+    --bg-element: #ffffff;          /* Белая карточка */
+    --text-primary: #212529;        /* Темный контрастный текст */
+    --text-secondary: #495057;      /* Насыщенный серый текст */
+    --shadow-color: rgba(0, 0, 0, 0.08); /* Мягкая тень, чтобы карточка выделялась на фоне */
+    --border-color: #dee2e6;        /* Четкая граница карточки */
+}
+
+/* Добавляем тонкую видимую рамку для карточки на светлой теме, чтобы она не сливалась */
+.thanks-card {
+    border: 1px solid var(--border-color) !important;
+}
+
+
+
+/* Контейнер карточки "Спасибо за отзыв" */
+.thanks-card {
+    background: var(--bg-element, #ffffff);
+    border-radius: 15px;
+    padding: 40px;
+    max-width: 600px;
+    margin: 0 auto;
+    box-shadow: 0 8px 32px var(--shadow-color, rgba(0, 0, 0, 0.05));
+}
+
+/* Иконка сердечка или галочки */
+.success-icon {
+    font-size: 64px;
+    color: #4ECDC4;
+    margin-bottom: 20px;
+    display: inline-block;
+}

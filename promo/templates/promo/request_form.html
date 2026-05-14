@@ -1,0 +1,71 @@
+{% extends "layouts/base.html" %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block page_title %}Купить услугу{% endblock %}
+
+{% block page_content %}
+<div class="container my-5">
+
+  <div class="request-card p-4 rounded-3 shadow bg-body-tertiary mx-auto" style="max-width: 600px;">
+    <h2 class="text-center h3 fw-bold mb-4">Оформление заявки</h2>
+
+    <div class="selected-service mb-4 p-3 rounded-3 bg-primary bg-opacity-10 border border-primary border-opacity-25">
+      <h4 class="h6 text-primary text-uppercase fw-bold mb-2">Выбранная услуга:</h4>
+      <div class="ps-2 border-start border-primary border-3">
+        <h5 class="fw-bold mb-1" style="color: #FF6B6B; white-space: nowrap;">{{ service.name }}</h5>
+        <p class="fs-4 fw-bold text-success mb-1">{{ service.price }} ₽</p>
+        <p class="small text-muted mb-0">{{ service.description }}</p>
+      </div>
+    </div>
+
+    <form method="post" class="p-4 rounded-3 bg-light border shadow-sm vstack gap-3" novalidate>
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+      {% for error in form.non_field_errors %}
+      <div class="alert alert-danger mb-0 py-2 small">
+        {{ error }}
+      </div>
+      {% endfor %}
+      {% endif %}
+
+      {% for field in form %}
+      <div class="d-block w-100 mb-3" style="height: auto !important; clear: both !important;">
+        <label for="{{ field.id_for_label }}" class="form-label fw-semibold d-block mb-2 text-secondary">
+          <i
+            class="bi bi-{% if field.name == 'phone' %}telephone{% elif field.name == 'ad' %}card-list{% elif field.name == 'type' or field.name == 'service' %}tags{% else %}chat-text{% endif %}-fill text-primary me-2"></i>
+          {{ field.label }}
+        </label>
+
+        <div class="d-block" style="height: auto !important;">
+          {% if field.name == 'ad' or field.name == 'type' or field.name == 'service' %}
+          {{ field|add_class:"form-select border-primary border-opacity-50 p-2 shadow-sm" }}
+          {% else %}
+          {{ field|add_class:"form-control border-primary border-opacity-50 p-2 shadow-sm" }}
+          {% endif %}
+        </div>
+
+        {% if field.errors %}
+        {% for error in field.errors %}
+        <div class="text-danger mt-1 small d-block fw-bold">
+          <i class="bi bi-exclamation-circle me-1"></i> {{ error }}
+        </div>
+        {% endfor %}
+        {% endif %}
+      </div>
+      {% endfor %}
+
+      <div class="d-grid pt-2">
+        <button type="submit" class="btn btn-primary btn-lg shadow-sm py-2 fs-6 fw-medium">
+          <i class="bi bi-send me-2"></i> Отправить заявку
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+{{ block.super }}
+{% endblock %}

@@ -1,0 +1,84 @@
+/* Настройки для ТЁМНОЙ темы */
+body[data-bs-theme="dark"] {
+    --bg-element: #1e1e24;          /* Контрастный темно-серый фон карточки */
+    --bg-element-2: #2a2a32;        /* Фон внутренней формы */
+    --text-primary: #ffffff;        /* Чистый белый для заголовков */
+    --text-secondary: #e0e0e5;      /* Насыщенный светло-серый для надписей полей */
+    --text-secondary-2: #c0c0c5;    /* Текст внутри полей */
+    --shadow-color: rgba(0, 0, 0, 0.5);
+    --border-color: #3a3a45;
+}
+
+/* Настройки для СВЕТЛОЙ темы (Убираем бледность и слияние) */
+body[data-bs-theme="light"] {
+    --bg-element: #ffffff;          /* Белая карточка */
+    --bg-element-2: #f1f3f5;        /* Контрастная серая подложка формы */
+    --text-primary: #111111;        /* Глубокий черный цвет для главного заголовка */
+    --text-secondary: #212529;      /* Чёрный насыщенный цвет для надписей (label) полей */
+    --text-secondary-2: #495057;    /* Контрастный текст подсказок и ошибок */
+    --shadow-color: rgba(0, 0, 0, 0.08);
+    --border-color: #ced4da;        /* Четкая серая граница текстового поля */
+}
+
+/* Принудительно красим элементы формы в сочные контрастные цвета переменной --text-secondary */
+.review-card h2 {
+    color: var(--text-primary) !important;
+    font-weight: 700 !important;
+}
+
+.form-card .form-label {
+    color: var(--text-secondary) !important;
+    font-weight: 600 !important;
+}
+
+/* Текст, который пользователь пишет внутри поля отзыва */
+.form-card .form-control {
+    color: var(--text-primary) !important;
+    background-color: var(--bg-element) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+/* Насыщенный цвет для текста "Оценка" над звездами */
+.info-item-rf label.form-label {
+    color: var(--text-secondary) !important;
+}
+
+
+/* ИНТЕРАКТИВНЫЕ ЗВЕЗДЫ РЕЙТИНГА */
+.star {
+    font-size: 32px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: var(--text-secondary, #6c757d);
+    text-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+    display: inline-block; /* Необходимо для работы свойства transform */
+}
+
+/* Эффект наведения мыши на звезду */
+.star.hovered {
+    color: #FFD700;
+    transform: scale(1.1);
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+/* Выбранная звезда */
+.star.selected {
+    color: #FFD700;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+/* Кнопка отправки формы */
+.submit-btn {
+    background: #0d6efd;
+    color: var(--text-primary-2, #ffffff);
+    padding: 12px;
+    border: none;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+    border-radius: 8px;
+}
+
+.submit-btn:hover {
+    background: #0b5ed7;
+    transform: scale(1.02);
+    color: var(--text-primary-2, #ffffff);
+}

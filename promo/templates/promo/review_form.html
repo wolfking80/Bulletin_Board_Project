@@ -1,0 +1,96 @@
+{% extends "layouts/base.html" %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block page_title %}Оставить отзыв{% endblock %}
+
+{% block page_content %}
+<div class="container my-5">
+  <div class="review-card">
+    <h2 class="text-center mb-4">Мой отзыв</h2>
+
+    {% if error_message %}
+    <div class="alert alert-warning border-warning shadow-sm mb-4 d-flex align-items-center gap-2">
+      <i class="bi bi-exclamation-triangle-fill fs-5 text-warning"></i>
+      <div class="fw-medium">{{ error_message }}</div>
+    </div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" class="needs-validation form-card" novalidate>
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+      {% for error in form.non_field_errors %}
+      <div class="alert alert-danger mb-3">
+        {{ error }}
+      </div>
+      {% endfor %}
+      {% endif %}
+
+      {% for field in form %}
+      {% if field.name != 'rating' %}
+      <div class="info-item-rf mb-3">
+        <label for="{{ field.id_for_label }}" class="form-label fw-medium">
+          <i class="bi bi-chat-text-fill text-primary me-2"></i> {{ field.label }}
+        </label>
+        {{ field|add_class:"form-control" }}
+        {% if field.errors %}
+        {% for error in field.errors %}
+        <div class="text-danger mt-1">
+          <small class="fw-bold"><i class="bi bi-exclamation-circle me-1"></i> {{ error }}</small>
+        </div>
+        {% endfor %}
+        {% endif %}
+      </div>
+      {% endif %}
+      {% endfor %}
+
+      <div class="info-item-rf mb-3 text-center">
+        <label class="form-label d-block mb-2 fw-medium">
+          <i class="bi bi-star-fill text-primary me-1"></i> {{ form.rating.label }}
+        </label>
+
+        <div class="rating d-flex justify-content-center align-items-center gap-1">
+          <input type="hidden" name="rating" id="id_rating_value" value="">
+
+          {# 5 чистых кнопок-звёзд с дата-атрибутами #}
+          <span class="star-btn" data-value="1" title="1 Звезда"
+            style="cursor: pointer; font-size: 1.8rem; color: #ccc; transition: color 0.2s;">★</span>
+          <span class="star-btn" data-value="2" title="2 Звезды"
+            style="cursor: pointer; font-size: 1.8rem; color: #ccc; transition: color 0.2s;">★</span>
+          <span class="star-btn" data-value="3" title="3 Звезды"
+            style="cursor: pointer; font-size: 1.8rem; color: #ccc; transition: color 0.2s;">★</span>
+          <span class="star-btn" data-value="4" title="4 Звезды"
+            style="cursor: pointer; font-size: 1.8rem; color: #ccc; transition: color 0.2s;">★</span>
+          <span class="star-btn" data-value="5" title="5 Звезд"
+            style="cursor: pointer; font-size: 1.8rem; color: #ccc; transition: color 0.2s;">★</span>
+        </div>
+
+        {% if form.rating.errors %}
+        {% for error in form.rating.errors %}
+        <div class="text-danger mt-1">
+          <small class="fw-bold">{{ error }}</small>
+        </div>
+        {% endfor %}
+        {% endif %}
+      </div>
+
+      <div class="d-grid mt-4">
+        <button type="submit" class="btn submit-btn py-2">
+          <i class="bi bi-send me-2"></i> Отправить отзыв
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'promo/css/pages/review_form.css' %}">
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script src="{% static 'promo/js/review_rating.js' %}" defer></script>
+{% endblock %}
