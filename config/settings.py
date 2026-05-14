@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'django_bootstrap_icons',
     'ads',
     'users',
+    'paid_services'
     'phonenumber_field', 
 ]
 
