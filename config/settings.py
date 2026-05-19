@@ -27,9 +27,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG') == "True"
 
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '157.22.175.25', 'billboardshop.ru', 'www.billboardshop.ru']
 
 
 # Application definition
@@ -130,14 +130,22 @@ USE_TZ = True
 
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+if DEBUG:
+    MEDIA_ROOT = BASE_DIR / 'media/'
+else:
+    MEDIA_ROOT = '/home/werewolf/Bulletin_Board_Project/media'
 
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
-STATICFILES_DIRS = [BASE_DIR / 'static/']
+
+if DEBUG:
+    STATICFILES_DIRS = [BASE_DIR / 'static/']
+else:
+    STATIC_ROOT = '/home/werewolf/Bulletin_Board_Project/static'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
