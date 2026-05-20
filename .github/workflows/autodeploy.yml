@@ -18,7 +18,7 @@ jobs:
         with:
           # Используем секреты из GitHub для подключения
           host: ${{ secrets.UBUNTU_HOST }}
-          username: ${{ secrets.UBUNTU_USERNAME }}
+          username: ${{ secrets.UBUNTU_USER }}
           password: ${{ secrets.UBUNTU_PASSWORD }}
 
           # Команды выполняемые на сервере
