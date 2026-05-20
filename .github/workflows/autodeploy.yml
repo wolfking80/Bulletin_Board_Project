@@ -1,0 +1,70 @@
+# Название нашего workflow для отображения в интерфейсе GitHub
+name: Deploy
+
+# Указываем когда запускать - при push в main ветку
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Деплоим на сервер, подключаемся через SSH
+      - name: Deploy
+        uses: appleboy/ssh-action@master
+        with:
+          # Используем секреты из GitHub для подключения
+          host: ${{ secrets.UBUNTU_HOST }}
+          username: ${{ secrets.UBUNTU_USERNAME }}
+          password: ${{ secrets.UBUNTU_PASSWORD }}
+
+          # Команды выполняемые на сервере
+          script: |
+            # Переходим в директорию проекта
+            cd /home/werewolf/Bulletin_Board_Project
+
+            # Обновляем код из репозитория
+            git pull
+
+            # Активируем виртуальное окружение
+            source venv/bin/activate
+
+            # Обновляем зависимости
+            pip install -r requirements.txt
+
+            # Создаём и применяем миграции
+            python manage.py makemigrations
+            python manage.py migrate
+
+
+            # Создаём файл .env из отдельных секретов
+            echo "DEBUG=${{ secrets.ENV_DEBUG }}" > .env
+            echo "SECRET_KEY=${{ secrets.ENV_SECRET_KEY }}" >> .env
+
+            echo "EMAIL_HOST=${{ secrets.ENV_EMAIL_HOST }}" >> .env
+            echo "EMAIL_PORT=${{ secrets.ENV_EMAIL_PORT }}" >> .env
+            echo "EMAIL_USE_SSL=${{ secrets.ENV_EMAIL_USE_SSL }}" >> .env
+            echo "EMAIL_HOST_USER=${{ secrets.ENV_EMAIL_HOST_USER }}" >> .env
+            echo "EMAIL_HOST_PASSWORD=${{ secrets.ENV_EMAIL_HOST_PASSWORD }}" >> .env
+            echo "DEFAULT_FROM_EMAIL=${{ secrets.ENV_DEFAULT_FROM_EMAIL }}" >> .env
+
+            echo "FIREBASE_API_KEY=${{ secrets.ENV_FIREBASE_API_KEY }}" >> .env
+
+            echo "DB_NAME=${{ secrets.ENV_DB_NAME }}" >> .env
+            echo "DB_USER=${{ secrets.ENV_DB_USER }}" >> .env
+            echo "DB_PASSWORD=${{ secrets.ENV_DB_PASSWORD }}" >> .env
+            echo "DB_HOST=${{ secrets.ENV_DB_HOST }}" >> .env
+            echo "DB_PORT=${{ secrets.ENV_DB_PORT }}" >> .env
+
+            echo "TELEGRAM_BOT_TOKEN=${{ secrets.ENV_TELEGRAM_BOT_TOKEN }}" >> .env
+            echo "PERSONAL_CHAT_ID=${{ secrets.ENV_PERSONAL_CHAT_ID }}" >> .env
+
+
+            # Собираем статику
+            python manage.py collectstatic --noinput
+
+            # Перезапускаем systemd сервис (Gunicorn)
+            sudo systemctl restart billboard.service
