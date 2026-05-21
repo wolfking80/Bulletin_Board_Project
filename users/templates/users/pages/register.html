@@ -14,7 +14,23 @@
           <form method="POST">
             {% csrf_token %}
 
-            {% bootstrap_form form %}
+            {% bootstrap_form form exclude='agree_to_terms' %}
+
+            <div class="mb-3">
+              <div class="form-check">
+                {{ form.agree_to_terms }}
+                <label class="form-check-label" for="{{ form.agree_to_terms.id_for_label }}">
+                  {{ form.agree_to_terms.label|safe }}
+                </label>
+                {% if form.agree_to_terms.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in form.agree_to_terms.errors %}
+                      {{ error }}
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+            </div>
             
             <div class="d-grid gap-2 mb-3">
               <button type="submit" class="btn btn-primary">

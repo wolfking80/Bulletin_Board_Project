@@ -37,6 +37,14 @@ class CustomUserCreationForm(UserCreationForm):
         required=True, 
         help_text="Обязательно для активации аккаунта"
     )
+    # чекбокс с соглашением
+    agree_to_terms = forms.BooleanField(
+        required=True,
+        label='Я ознакомлен(а) и согласен(на) с <a href="/terms/" target="_blank">пользовательским соглашением</a>',
+        error_messages={
+            'required': 'Для регистрации необходимо принять пользовательское соглашение.'
+        }
+    )
 
     class Meta(UserCreationForm.Meta):
         model = User
