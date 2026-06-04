@@ -1,51 +1,65 @@
 {% extends "layouts/base.html" %}
 {% load django_bootstrap5 %}
+{% load static %}
 
 {% block page_title %}Уведомления{% endblock page_title %}
 
 {% block page_content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
+<div class="d-flex justify-content-between align-items-start align-items-sm-center mb-3 flex-column flex-sm-row gap-2">
   <h2 class="h4 mb-0">Уведомления</h2>
-  {% if notifications %}
-  {# Форма для работы метода post во вьюшке #}
-  <form method="post">
-    {% csrf_token %}
-    <button type="submit" class="btn btn-sm btn-light border shadow-sm">
-      <i class="bi bi-check2-all text-warning"></i> Прочитать всё
+  <div class="notifications-actions">
+    {% if notifications %}
+    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteAllModal">
+      <i class="bi bi-trash3"></i> <span class="d-none d-sm-inline">Удалить всё</span>
     </button>
-  </form>
-  {% endif %}
+    <form method="post" class="d-inline">
+      {% csrf_token %}
+      <button type="submit" name="mark_all_read" class="btn btn-sm btn-light border shadow-sm">
+        <i class="bi bi-check2-all text-warning"></i> <span class="d-none d-sm-inline">Прочитать всё</span>
+      </button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Подсказка об автоматическом удалении -->
+<div class="alert alert-info alert-dismissible fade show mb-3" role="alert">
+  <i class="bi bi-info-circle-fill me-2"></i>
+  Уведомления старше 30 дней автоматически удаляются.
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 </div>
 
 <div class="list-group shadow-sm">
   {% for n in notifications %}
-  {# Убираем position-relative отсюда, чтобы stretched-link не перекрывала всё #}
   <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-start 
       {% if not n.is_read %}border-start border-4 border-warning{% endif %}"
     style="background-color: var(--bs-tertiary-bg); color: var(--bs-body-color);">
 
-    <div class="me-3">
+    <div class="me-3 flex-grow-1">
       <p class="mb-1 fw-medium">{{ n.message }}</p>
-      {% if n.ad %}
-      {# Оборачиваем ссылку в контейнер с position-relative, чтобы ссылка кликалась только здесь #}
-      <div class="position-relative">
-        {# ссылка ведет на обработчик, который поставит галочку "прочитано" и перенаправит дальше #}
-        <a href="{% url 'users:read_notification' n.id %}"
-          class="stretched-link small text-primary text-decoration-none">
+      <small class="text-muted">{{ n.created_at|timesince }} назад</small>
+      {% if n.content_object %}
+      <div class="mt-1">
+        <a href="{% url 'users:read_notification' n.id %}" class="small text-primary text-decoration-none">
           Перейти к объявлению <i class="bi bi-arrow-right"></i>
         </a>
       </div>
       {% else %}
-      {# Если объявление удалено — показываем заглушку #}
       <small class="text-muted d-block mt-1">
         <i class="bi bi-info-circle"></i> Объявление удалено
       </small>
       {% endif %}
     </div>
 
-    <small class="text-muted text-nowrap" style="font-size: 0.75rem;">
-      {{ n.created_at|timesince }}
-    </small>
+    <div class="d-flex flex-column align-items-end gap-1">
+      <small class="text-muted text-nowrap" style="font-size: 0.7rem;">
+        {{ n.created_at|date:"d.m.Y H:i" }}
+      </small>
+      <button class="btn btn-sm btn-link text-danger p-0 delete-one-btn" data-id="{{ n.id }}"
+        style="font-size: 0.7rem;">
+        <i class="bi bi-trash3"></i> Удалить
+      </button>
+    </div>
   </div>
   {% empty %}
   <div class="text-center py-5 opacity-50">
@@ -54,4 +68,32 @@
   </div>
   {% endfor %}
 </div>
+
+<!-- Модальное окно подтверждения удаления всех -->
+<div class="modal fade" id="deleteAllModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Удалить все уведомления?</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p>Вы уверены, что хотите удалить <strong>все</strong> уведомления?</p>
+        <p class="text-muted small mb-0">Это действие нельзя отменить.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+        <form method="post" class="d-inline">
+          {% csrf_token %}
+          <button type="submit" name="delete_all" class="btn btn-danger">Удалить всё</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% block scripts %}
+{{ block.super }}
+<script type="module" src="{% static 'js/notifications_page.js' %}" defer></script>
+{% endblock scripts %}
 {% endblock page_content %}

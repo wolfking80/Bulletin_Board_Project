@@ -1,0 +1,139 @@
+/* Кастомный dropdown для уведомлений */
+.custom-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 350px;
+    background: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    display: none !important;
+    flex-direction: column;
+    margin-top: 8px;
+}
+
+.custom-dropdown.show {
+    display: flex !important;
+}
+
+.custom-dropdown .dropdown-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--bs-border-color);
+    background: var(--bs-tertiary-bg);
+    border-radius: 12px 12px 0 0;
+}
+
+.custom-dropdown .notifications-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.custom-dropdown .dropdown-footer {
+    padding: 8px;
+    border-top: 1px solid var(--bs-border-color);
+    background: var(--bs-tertiary-bg);
+    border-radius: 0 0 12px 12px;
+}
+
+/* Элемент уведомления */
+.notification-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid var(--bs-border-color);
+}
+
+.notification-item:hover {
+    background: var(--bs-tertiary-bg);
+}
+
+.notification-item.unread {
+    background: var(--bs-secondary-bg);
+    font-weight: bold;
+}
+
+.notification-read-btn {
+    background: transparent;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    color: var(--bs-primary);
+    font-size: 0.8rem;
+    margin-top: 8px;
+    transition: opacity 0.2s ease;
+}
+
+.notification-read-btn:hover {
+    opacity: 0.8;
+    text-decoration: underline;
+}
+
+.mark-all-read-btn {
+    background: transparent;
+    border: none;
+    color: var(--bs-primary);
+    transition: opacity 0.2s ease;
+}
+
+.mark-all-read-btn:hover {
+    opacity: 0.8;
+    text-decoration: underline;
+}
+
+/* Анимация тряски колокольчика */
+@keyframes bellShake {
+    0% { transform: rotate(0); }
+    15% { transform: rotate(5deg); }
+    30% { transform: rotate(-5deg); }
+    45% { transform: rotate(4deg); }
+    60% { transform: rotate(-4deg); }
+    75% { transform: rotate(2deg); }
+    85% { transform: rotate(-2deg); }
+    92% { transform: rotate(1deg); }
+    100% { transform: rotate(0); }
+}
+
+.bell-shake {
+    animation: bellShake 1s ease;
+}
+
+/* Адаптив для мобильных */
+@media (max-width: 576px) {
+    .custom-dropdown {
+        width: 280px;
+        right: -20px;
+    }
+    
+    .notification-item {
+        padding: 8px 12px;
+    }
+
+    .notifications-actions {
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 5px;
+    }
+    
+    .notifications-actions .btn {
+        font-size: 0.75rem;
+        padding: 4px 8px;
+    }
+}
+
+/* Принудительно прячем дропдаун, если на нем НЕТ класса .show */
+  .custom-dropdown:not(.show) {
+      display: none !important;
+      opacity: 0 !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+  }
+
+  /* Показываем строго тогда, когда JS добавил класс .show */
+  .custom-dropdown.show {
+      display: block !important;
+      opacity: 1 !important;
+      visibility: visible !important;
+      pointer-events: auto !important;
+  }

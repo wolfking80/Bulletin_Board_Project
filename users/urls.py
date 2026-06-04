@@ -54,7 +54,15 @@ urlpatterns = [
     ), name='profile_password_reset_instructions_sent'),
     path("toggle-theme/", views.toggle_theme, name="toggle_theme"),
     path('settings/', views.SettingsView.as_view(), name='settings'),
-    path('notifications/', views.NotificationListView.as_view(), name='notifications'),
+    # API уведомлений
+    path('notifications/', views.NotificationListViewJSON.as_view(), name='notifications_json'),
+    path('notifications/mark-read/<int:pk>/', views.MarkNotificationReadView.as_view(), name='mark_notification_read'),
+    path('notifications/mark-all-read/', views.MarkAllNotificationsReadView.as_view(), name='mark_all_read'),
+    path('notifications/unread-count/', views.UnreadNotificationsCountView.as_view(), name='unread_count'),
+    path('notifications/delete/<int:pk>/', views.DeleteNotificationView.as_view(), name='delete_notification'),
+    path('notifications/delete-all/', views.DeleteAllNotificationsView.as_view(), name='delete_all_notifications'),
+    
+    path('notifications/all/', views.NotificationListView.as_view(), name='notifications'),
     path('notifications/read/<int:notification_id>/', views.read_and_redirect, name='read_notification'),
     path("<str:username>/", views.ProfileView.as_view(), name='profile'),
 ]
