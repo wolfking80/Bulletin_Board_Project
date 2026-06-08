@@ -35,6 +35,24 @@ jobs:
             # Обновляем зависимости
             pip install -r requirements.txt
 
+            #  ВАЖНО! СОЗДАЁМ СИСТЕМНОГО ПОЛЬЗОВАТЕЛЯ ПЕРЕД МИГРАЦИЯМИ
+            echo "✅ Создаём системного пользователя ID=1 (если его нет)..."
+            python manage.py shell -c "
+              from django.contrib.auth import get_user_model
+              User = get_user_model()
+              User.objects.get_or_create(
+                id=1,
+                defaults={
+                    'username': 'system_bot',
+                    'email': 'system@bot.local',
+                    'is_active': False,
+                    'is_staff': False,
+                    'is_superuser': False
+                }
+              )
+              print('✅ Системный пользователь ID=1 готов')
+              "
+
             # Создаём и применяем миграции
             python manage.py makemigrations
             python manage.py migrate
