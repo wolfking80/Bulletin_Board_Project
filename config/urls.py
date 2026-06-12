@@ -13,6 +13,7 @@ urlpatterns = [
     
     path('terms/', TemplateView.as_view(template_name='legal/terms.html'), name='terms_of_use'),
     path('privacy/', TemplateView.as_view(template_name='legal/privacy.html'), name='privacy_policy'),
+    path('contacts/', TemplateView.as_view(template_name='legal/contacts.html'), name='contacts'),
 ]
 
 if settings.DEBUG:
