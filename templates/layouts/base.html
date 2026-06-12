@@ -184,8 +184,12 @@
     {% endfor %}
   </div>
   {% endif %}
+
   <script src="{% static 'js/core.js' %}" type="module" defer></script>
   <script type="module" src="{% static 'js/bell_notifications.js' %}" defer></script>
+
+  {% block scripts %}{% endblock scripts %}
+  
 </body>
 
 </html>

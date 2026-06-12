@@ -1,16 +1,14 @@
 import sys
 
-from django.shortcuts import render
-
-# Create your views here.
-import random
 from django.shortcuts import render, get_object_or_404, redirect
-from django.views.generic import View, CreateView, ListView
+from django.views.generic import FormView, View, ListView
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Avg, Prefetch, Count, Q
 
-from .forms import PaidServiceRequestForm, PaidServiceReviewForm
-from .models import Type, Review, Service, Purchase
+from .forms import PaidServiceRequestForm, PaidServiceReviewForm, PaymentOrderForm
+from .models import Type, Review, Service, Purchase, PaymentOrder
+from .services import YooKassaPaymentService
 from ads.models import Advertisement
 
 
@@ -159,3 +157,79 @@ class ServiceReviewListView(ListView):
             context["user_has_used"] = False
 
         return context
+
+
+class CreatePaymentOrderView(LoginRequiredMixin, FormView):
+    """Создание заказа на оплату"""
+    template_name = 'promo/payment_form.html'
+    form_class = PaymentOrderForm
+    
+    def dispatch(self, request, *args, **kwargs):
+        self.service = get_object_or_404(Service, id=self.kwargs['service_id'])
+        return super().dispatch(request, *args, **kwargs)
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['service'] = self.service
+        return context
+    
+    def form_valid(self, form):
+        ad = form.cleaned_data['ad']
+        comment = form.cleaned_data['comment']
+        
+        payment_order = PaymentOrder.objects.create(
+            user=self.request.user,
+            service=self.service,
+            ad=ad,
+            amount=self.service.price,
+            comment=comment,
+            status='pending'
+        )
+        
+        return redirect('promo:process_payment', order_id=payment_order.id)
+    
+    def form_invalid(self, form):
+        return self.render_to_response(self.get_context_data(form=form))
+
+
+class ProcessPaymentView(LoginRequiredMixin, View):
+    """Обработка платежа: создание ссылки на YooKassa"""
+    
+    def get(self, request, order_id):
+        payment_order = get_object_or_404(
+            PaymentOrder,
+            id=order_id,
+            user=request.user,
+            status='pending'
+        )
+        
+        try:
+            payment_service = YooKassaPaymentService()
+            payment_data = payment_service.create_payment(payment_order)
+            return redirect(payment_data['confirmation_url'])
+        except Exception as e:
+            messages.error(request, f"Ошибка создания платежа: {e}")
+            return redirect('promo:services_list')
+
+
+class PaymentCallbackView(LoginRequiredMixin, View):
+    """Callback после оплаты (возврат с YooKassa)"""
+    
+    def get(self, request):
+        order_id = request.GET.get('order_id')
+        if order_id:
+            try:
+                payment_order = PaymentOrder.objects.get(id=order_id, user=request.user)
+                if payment_order.status == 'paid':
+                    messages.success(request, f"Оплата прошла успешно! Услуга активирована.")
+                else:
+                    messages.info(request, "Платёж обрабатывается. Услуга будет активирована в ближайшее время.")
+            except PaymentOrder.DoesNotExist:
+                messages.error(request, "Заказ не найден")
+        
+        return redirect('users:profile', username=request.user.username)

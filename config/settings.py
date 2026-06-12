@@ -29,7 +29,15 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG') == "True"
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '157.22.175.25', 'billboardshop.ru', 'www.billboardshop.ru']
+ALLOWED_HOSTS = ['.loca.lt', '.ngrok-free.dev', '127.0.0.1', 'localhost', '157.22.175.25', 'billboardshop.ru', 'www.billboardshop.ru']
+
+# Для CSRF с ngrok
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.ngrok-free.dev',
+]
+
+# Для правильного определения HTTPS от ngrok
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
 # Application definition
@@ -182,3 +190,8 @@ FIREBASE_API_KEY = os.getenv('FIREBASE_API_KEY')
 TELEGRAM_BOT_TOKEN=os.getenv("TELEGRAM_BOT_TOKEN")
 PERSONAL_CHAT_ID=os.getenv("PERSONAL_CHAT_ID")
 SITE_URL = os.getenv("SITE_URL", "http://127.0.0.1:8000")
+
+# === YooKassa платежная система ===
+YOOKASSA_SHOP_ID = os.getenv('YOOKASSA_SHOP_ID')
+YOOKASSA_SECRET_KEY = os.getenv('YOOKASSA_SECRET_KEY')
+YOOKASSA_RETURN_URL = os.getenv('YOOKASSA_RETURN_URL')

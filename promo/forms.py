@@ -1,5 +1,7 @@
 import re
 from django import forms
+
+from ads.models import Advertisement
 from .models import Request, Review, Service, Type
 from phonenumber_field.formfields import PhoneNumberField
 
@@ -64,3 +66,29 @@ class PaidServiceReviewForm(forms.ModelForm):
             }),
             "rating": forms.RadioSelect(choices=[(i, f"{i} Звезд") for i in range(1, 6)]),
         }
+        
+        
+class PaymentOrderForm(forms.Form):
+    """Форма для создания заказа на оплату"""
+    
+    ad = forms.ModelChoiceField(
+        queryset=Advertisement.objects.none(),
+        label="Объявление",
+        help_text="Выберите объявление, которое хотите продвинуть",
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    comment = forms.CharField(
+        label="Комментарий",
+        required=False,
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'rows': 3,
+            'placeholder': 'Дополнительные пожелания (необязательно)'
+        })
+    )
+    
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        if user:
+            self.fields['ad'].queryset = Advertisement.objects.filter(owner=user, status='published')        

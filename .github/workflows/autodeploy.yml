@@ -62,6 +62,11 @@ jobs:
             echo "DEBUG=${{ secrets.ENV_DEBUG }}" > .env
             echo "SECRET_KEY=${{ secrets.ENV_SECRET_KEY }}" >> .env
 
+            echo "SITE_URL=${{ secrets.ENV_SITE_URL }}" >> .env
+            echo "YOOKASSA_SHOP_ID=${{ secrets.ENV_YOOKASSA_SHOP_ID }}" >> .env
+            echo "YOOKASSA_SECRET_KEY=${{ secrets.ENV_YOOKASSA_SECRET_KEY }}" >> .env
+            echo "YOOKASSA_RETURN_URL=${{ secrets.ENV_YOOKASSA_RETURN_URL }}" >> .env
+
             echo "EMAIL_HOST=${{ secrets.ENV_EMAIL_HOST }}" >> .env
             echo "EMAIL_PORT=${{ secrets.ENV_EMAIL_PORT }}" >> .env
             echo "EMAIL_USE_SSL=${{ secrets.ENV_EMAIL_USE_SSL }}" >> .env
