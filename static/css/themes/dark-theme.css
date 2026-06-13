@@ -6,3 +6,40 @@ body[data-bs-theme="dark"] {
   --badge-text: #ffffff;
   --vip-text: #000000;
 }
+
+body[data-bs-theme="dark"] {
+  --avatar-accent-color: #6e0cbe;
+  --urgent-bg: linear-gradient(45deg, #ff4d4d, #f06292);
+  --top-bg: linear-gradient(45deg, #6e0cbe, #a020f0);
+  --vip-bg: linear-gradient(45deg, #ffcc00, #ff9900);
+  --badge-text: #ffffff;
+  --vip-text: #000000;
+}
+
+/* Переопределяем переменные Bootstrap */
+[data-bs-theme="dark"] {
+    --bs-secondary-color: #c0c0d8;
+    --bs-secondary-color-rgb: 192, 192, 216;
+    --bs-tertiary-color: #a0a0b8;
+    --bs-tertiary-color-rgb: 160, 160, 184;
+    --bs-body-bg: #0f0f17;
+    --bs-body-bg-rgb: 15, 15, 23;
+}
+
+/* Карточки и блоки */
+body[data-bs-theme="dark"] .card {
+    background-color: #1e1e2f !important;
+}
+
+body[data-bs-theme="dark"] .bg-light {
+    background-color: #2a2a3a !important;
+}
+
+/* Выпадающее меню */
+body[data-bs-theme="dark"] .dropdown-menu {
+    background-color: #1e1e2f !important;
+}
+
+body[data-bs-theme="dark"] .dropdown-item {
+    color: #e0e0e8 !important;
+}
