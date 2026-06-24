@@ -1,24 +1,33 @@
+/* Переводим главный контейнер в режим колонки — блоки встают друг под другом */
 .profile-container {
   display: flex;
-  gap: 30px;
+  flex-direction: column;
+  gap: 25px;
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
 }
 
-/* Боковое меню */
+/* Верхняя панель (бывшее боковое меню) — теперь растянута на 100% ширины */
 .profile-sidebar {
-  width: 300px;
+  width: 100%;
   flex-shrink: 0;
   background: var(--bs-tertiary-bg);
   border-radius: 12px;
   padding: 25px;
   box-shadow: var(--bs-box-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
+/* Блок информации пользователя — выравниваем по левому краю горизонтально */
 .user-info {
-  text-align: center;
-  margin-bottom: 30px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  text-align: left;
+  margin-bottom: 0;
   padding-bottom: 20px;
   border-bottom: 1px solid var(--bs-border-color);
 }
@@ -27,12 +36,13 @@
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  margin: 0 auto 15px;
+  margin: 0; /* Убираем auto-центрирование */
   overflow: hidden;
   background: var(--bs-primary);
   border: 3px outset var(--avatar-accent-color);
   box-shadow: 0 0 10px 3px var(--avatar-accent-color);
   background: linear-gradient(135deg, var(--bs-primary) 0%, var(--avatar-accent-color) 100%);
+  flex-shrink: 0;
 }
 
 .avatar img {
@@ -55,48 +65,69 @@
 .user-info h3 {
   margin: 0 0 5px;
   color: var(--bs-body-color);
-  font-size: 1.3rem;
+  font-size: 1.4rem;
+  font-weight: 600;
 }
 
 .user-email {
   margin: 0;
   color: var(--bs-secondary-color);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
 }
 
-/* Навигация */
+/* Навигация — переводим список в горизонтальный ряд */
 .profile-nav ul {
   list-style: none;
   padding: 0;
   margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .profile-nav li {
-  margin-bottom: 8px;
+  margin-bottom: 0; /* Сбрасываем вертикальный отступ */
 }
 
-.profile-nav a {
-  display: block;
-  padding: 12px 15px;
+/* Форма для кнопки выхода */
+.nav-link-form {
+  margin: 0;
+  padding: 0;
+}
+
+/* Общие стили элементов меню и кнопки выхода */
+.profile-nav a,
+.nav-link-button {
+  display: inline-block;
+  padding: 10px 20px;
   text-decoration: none;
   color: var(--bs-body-color);
   border-radius: 8px;
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
   font-weight: 500;
-  border-left: 3px solid transparent;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent; /* Переключаем рамку на нижнюю грань */
+  text-align: center;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
 }
 
+/* Эффект ховера адаптирован под горизонтальный ряд (смещение идет вверх) */
 .profile-nav a:hover,
 .nav-link-button:hover {
-  border-left-color: var(--bs-primary);
+  border-bottom-color: var(--bs-primary);
   background: var(--bs-tertiary-bg);
   color: var(--bs-primary);
-  transform: translateX(5px);
+  transform: translateY(-2px);
 }
 
+/* Активное состояние элемента меню */
 .profile-nav a.active {
   background: var(--bs-primary);
   color: var(--bs-white);
+  border-bottom-color: transparent;
 }
 
 .profile-nav .coming-soon {
@@ -104,71 +135,69 @@
   cursor: not-allowed;
 }
 
-/* Основной контент */
+/* Основной контент — теперь занимает всю ширину под верхней панелью */
 .profile-content {
-  flex: 1;
-  min-width: 0;
-}
-
-/* Адаптивность */
-@media (max-width: 768px) {
-  .profile-container {
-    flex-direction: column;
-    gap: 20px;
-  }
-
-  .profile-sidebar {
-    width: 100%;
-  }
-}
-
-/* Или если используете второй вариант */
-.nav-link-form {
-  margin: 0;
-  padding: 0;
-}
-
-.nav-link-button {
-  display: block;
   width: 100%;
-  padding: 12px 15px;
-  text-decoration: none;
-  color: var(--bs-body-color);
-  border-radius: 8px;
-  transition: all 0.3s ease;
-  font-weight: 500;
-  background: none;
-  border: none;
-  text-align: left;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: inherit;
-  border-left: 3px solid transparent;
 }
 
+/* --------------------------------------------------------------------------
+   СИСТЕМА ИНТЕРАКТИВНОГО РЕЙТИНГА И ЗВЕЗД
+   -------------------------------------------------------------------------- */
 .star-btn {
     transition: transform 0.2s;
     display: inline-block;
 }
 .star-btn:hover {
     transform: scale(1.2);
-    color: #ffc107 !important; /* Желтый при наведении */
+    color: #ffc107 !important;
 }
 
 .precise-stars-container {
-    position: relative; /* Чтобы золото позиционировалось внутри */
+    position: relative;
     display: inline-block;
     font-family: serif; 
     line-height: 1;
 }
 
 .stars-gold {
-    position: absolute; /* Накладываем поверх серых */
+    position: absolute;
     top: 0;
     left: 0;
-    overflow: hidden; /* Обрезаем лишние звезды по ширине */
-    white-space: nowrap; /* Чтобы звезды не переносились на новую строку */
+    overflow: hidden;
+    white-space: nowrap;
     color: #ffc107;
-    width: 0; /* Будет изменено скриптом */
-    transition: width 0.5s ease; /* Для плавного появления */
+    width: 0;
+    transition: width 0.5s ease;
+}
+
+/* --------------------------------------------------------------------------
+   АДАПТИВНОСТЬ ПОД МОБИЛЬНЫЕ УСТРОЙСТВА И ТЕЛЕФОНЫ
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  .user-info {
+    flex-direction: column;
+    text-align: center;
+    gap: 12px;
+  }
+
+  .profile-nav ul {
+    flex-direction: column;
+    width: 100%;
+    gap: 5px;
+  }
+
+  .profile-nav a,
+  .nav-link-button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    border-bottom: none;
+    border-left: 3px solid transparent; /* Возвращаем боковую линию на мобильных */
+  }
+
+  .profile-nav a:hover,
+  .nav-link-button:hover {
+    border-left-color: var(--bs-primary);
+    transform: translateX(5px);
+  }
 }
