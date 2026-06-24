@@ -228,15 +228,22 @@ class PaymentOrder(models.Model):
     def activate_service(self):
         """Активирует услугу после успешной оплаты"""
         from ads.models import AdPromotion
+        from django.utils import timezone
 
         # Обновляем или создаём AdPromotion
         promotion, created = AdPromotion.objects.get_or_create(ad=self.ad)
 
-        # Активируем нужную опцию
         service_name_lower = self.service.name.lower()
+        now = timezone.now()
+        duration = self.service.duration  # Твой DurationField из модели Service
 
-        # Если куплен пакет "Максимум" — активируем всё сразу
+        # Вспомогательная функция, чтобы не дублировать код расчета дат
+        def get_new_until_date(current_until):
+            # Если услуга уже активна и не истекла — продлеваем, иначе считаем от текущего момента
+            start_time = current_until if (current_until and current_until > now) else now
+            return start_time + duration
 
+        # Если куплен пакет "Максимум" — активируем ВСЁ сразу и выставляем даты для всех опций
         if (
             "максимум" in service_name_lower
             or "всё включено" in service_name_lower
@@ -244,31 +251,46 @@ class PaymentOrder(models.Model):
         ):
             promotion.is_top = True
             promotion.top_paid = True
+            promotion.top_until = get_new_until_date(promotion.top_until)
+
             promotion.is_vip = True
             promotion.vip_paid = True
+            promotion.vip_until = get_new_until_date(promotion.vip_until)
+
             promotion.is_urgent = True
             promotion.urgent_paid = True
+            promotion.urgent_until = get_new_until_date(promotion.urgent_until)
+
             promotion.is_colored = True
             promotion.colored_paid = True
+            promotion.colored_until = get_new_until_date(promotion.colored_until)
+            
             promotion.save()
-            return
+        else:
+            # Если куплена одиночная услуга — проверяем по ключевым словам и точечно ставим дату
+            if "топ" in service_name_lower:
+                promotion.is_top = True
+                promotion.top_paid = True
+                promotion.top_until = get_new_until_date(promotion.top_until)
 
-        if "топ" in service_name_lower:
-            promotion.is_top = True
-            promotion.top_paid = True
-        if "vip" in service_name_lower or "вип" in service_name_lower:
-            promotion.is_vip = True
-            promotion.vip_paid = True
-        if "сроч" in service_name_lower or "urgent" in service_name_lower:
-            promotion.is_urgent = True
-            promotion.urgent_paid = True
-        if "рамк" in service_name_lower or "цвет" in service_name_lower:
-            promotion.is_colored = True
-            promotion.colored_paid = True
+            if "vip" in service_name_lower or "вип" in service_name_lower:
+                promotion.is_vip = True
+                promotion.vip_paid = True
+                promotion.vip_until = get_new_until_date(promotion.vip_until)
 
-        promotion.save()
+            if "сроч" in service_name_lower or "urgent" in service_name_lower:
+                promotion.is_urgent = True
+                promotion.urgent_paid = True
+                promotion.urgent_until = get_new_until_date(promotion.urgent_until)
 
-        # Создаём запись о покупке
+            if "рамк" in service_name_lower or "цвет" in service_name_lower:
+                promotion.is_colored = True
+                promotion.colored_paid = True
+                promotion.colored_until = get_new_until_date(promotion.colored_until)
+
+            promotion.save()
+
+        # Создаём запись о покупке (Твой оригинальный код)
         from .models import Purchase
 
         Purchase.objects.get_or_create(
@@ -276,3 +298,4 @@ class PaymentOrder(models.Model):
             service=self.service,
             defaults={"ad": self.ad, "ever_used": True, "is_available": True},
         )
+

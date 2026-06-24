@@ -31,6 +31,23 @@ def send_ad_email_task(ad_id, subject, template_name):
 def create_promotion_for_new_ad(sender, instance, created, **kwargs):
     if created:
         AdPromotion.objects.get_or_create(ad=instance)
+        
+        
+# ПЕРЕХВАТЫВАЕМ СТАТУС ФЛАГОВ ДО СОХРАНЕНИЯ В БАЗУ
+@receiver(pre_save, sender=AdPromotion)
+def capture_old_promo_status(sender, instance, **kwargs):
+    if instance.pk:
+        try:
+            # Загружаем из базы чистые значения до сохранения
+            old_obj = sender.objects.only("is_vip", "is_urgent", "is_colored", "is_top").get(pk=instance.pk)
+            instance._old_promo_flags = {
+                "is_vip": old_obj.is_vip,
+                "is_urgent": old_obj.is_urgent,
+                "is_colored": old_obj.is_colored,
+                "is_top": old_obj.is_top,
+            }
+        except sender.DoesNotExist:
+            instance._old_promo_flags = None        
 
 
 @receiver(pre_save, sender=Advertisement)
@@ -80,11 +97,21 @@ def notify_moderation(sender, instance, created, **kwargs):
 @receiver(post_save, sender=AdPromotion)
 def notify_promotion(sender, instance, created, **kwargs):
     promo_fields = ["is_vip", "is_urgent", "is_colored", "is_top"]
-    activated = [f for f in promo_fields if getattr(instance, f)]
+    old_flags = getattr(instance, "_old_promo_flags", None)
 
-    if activated:
+    if created:
+        # Если запись только что создана, смотрим на любые активные флаги
+        newly_activated = [f for f in promo_fields if getattr(instance, f)]
+    elif old_flags:
+        # Если это обновление, проверяем: был False, а стал True
+        newly_activated = [f for f in promo_fields if getattr(instance, f) and not old_flags.get(f, False)]
+    else:
+        newly_activated = []
+
+    # Отправляем уведомление ТОЛЬКО если хоть один флаг переключился в True прямо сейчас
+    if newly_activated:
         content_type = ContentType.objects.get_for_model(Advertisement)
-        services = ", ".join(activated)
+        services = ", ".join(newly_activated)
         Notification.objects.create(
             recipient=instance.ad.owner,
             sender=None,

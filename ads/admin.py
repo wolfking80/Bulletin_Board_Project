@@ -22,7 +22,12 @@ class AdPromotionInline(admin.StackedInline):
     can_delete = False
     verbose_name_plural = 'Услуги продвижения (VIP, Огонек, Цвет, ТОП)'
     # поля для отображения
-    fields = ('is_vip', 'is_urgent', 'is_colored', 'is_top')
+    fields = (
+        'is_vip', 'vip_until', 
+        'is_urgent', 'urgent_until', 
+        'is_colored', 'colored_until', 
+        'is_top', 'top_until'
+    )
     
     # Регистрируем объявление с этим инлайном
 @admin.register(Advertisement)

@@ -1,3 +1,4 @@
+from django.utils import timezone
 import random
 from django.db import transaction
 
@@ -14,7 +15,7 @@ from django.contrib.auth import get_user_model
 
 from django.db.models import F, Q, Avg, Count
 
-from ads.models import Advertisement, Category, Tag, Favorite, SellerRating, AdQuestion
+from ads.models import AdPromotion, Advertisement, Category, Tag, Favorite, SellerRating, AdQuestion
 from ads.forms import AdvertisementForm
 from .mixins import FavoriteMixin, OwnerRequiredMixin 
 
@@ -23,6 +24,26 @@ User = get_user_model()
 
 # Вспомогательная универсальная функция
 def get_ads_queryset(request):
+    
+    # Автоматически сбрасываем просроченные платные услуги
+    now = timezone.now()
+    
+    AdPromotion.objects.filter(is_vip=True, vip_until__lt=now).update(
+        is_vip=False, 
+        vip_paid=False
+    )
+    AdPromotion.objects.filter(is_top=True, top_until__lt=now).update(
+        is_top=False, 
+        top_paid=False
+    )
+    AdPromotion.objects.filter(is_urgent=True, urgent_until__lt=now).update(
+        is_urgent=False, 
+        urgent_paid=False
+    )
+    AdPromotion.objects.filter(is_colored=True, colored_until__lt=now).update(
+        is_colored=False, 
+        colored_paid=False
+    )
     # Инициализация базового набора данных с оптимизацией
     qs = Advertisement.objects.select_related('promotion', 'category', 'owner').with_metrics()
 

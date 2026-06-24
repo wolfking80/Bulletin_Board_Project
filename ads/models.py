@@ -228,6 +228,12 @@ class AdPromotion(models.Model):
   is_urgent = models.BooleanField(default=False, verbose_name="Срочно (огонек)")
   is_colored = models.BooleanField(default=False, verbose_name="Выделение цветом (рамка)")
   is_top = models.BooleanField(default=False, verbose_name="Поднято в топ")
+  
+  # Сроки действия услуг
+  vip_until = models.DateTimeField(null=True, blank=True, verbose_name="VIP действует до")
+  urgent_until = models.DateTimeField(null=True, blank=True, verbose_name="Срочно действует до")
+  colored_until = models.DateTimeField(null=True, blank=True, verbose_name="Рамка действует до")
+  top_until = models.DateTimeField(null=True, blank=True, verbose_name="Топ действует до")
 
   # для проверки оплаты
   # (True становится только после успешного ответа от платежки)
